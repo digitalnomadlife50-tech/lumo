@@ -1,12 +1,44 @@
 "use client"
 
 import { useState, useRef, useEffect, useCallback } from "react"
-import Link from "next/link"
-import { ArrowRight, ArrowLeft, Pencil, Copy, Check, ChevronRight } from "lucide-react"
+import { ArrowRight, ArrowLeft, Copy, Check, ChevronRight, X, ClipboardCopy } from "lucide-react"
 
 /* ─── TYPES ─── */
-type View = "home" | "step1" | "step2" | "step3" | "step4" | "step5" | "step6" | "done"
+type View = "home" | "step1" | "analyzing" | "step2" | "step3" | "step4" | "step5" | "loading" | "step6" | "done"
 
+interface AIOutput {
+  claritySummary: string
+  messages: {
+    engineering: string
+    design: string
+    leadership: string
+  }
+}
+
+type ErrorCode = "RATE_LIMITED" | "ANTHROPIC_RATE_LIMITED" | "QUOTA_EXCEEDED" | "SERVER_ERROR" | "TIMEOUT" | "PARSE_ERROR" | "INVALID_RESPONSE" | null
+
+interface AnalysisResult {
+  realQuestion: string
+  whatMatters: string
+  whoIsAffected: string
+  howPressing: string
+  options: Array<{
+    name: string
+    description: string
+    cost: string
+  }>
+  observations: string[]
+}
+
+interface SessionDecision {
+  id: number
+  question: string
+  step: number
+  status: "Pending" | "Done"
+  decisionNum: number
+}
+
+/* ─── STATIC DATA ─── */
 const STEP_NAMES = [
   { key: "step1" as View, label: "What's happening" },
   { key: "step2" as View, label: "AI reading" },
@@ -18,66 +50,23 @@ const STEP_NAMES = [
 
 const URGENCY_OPTIONS = ["Next hour", "Today", "This week", "Next 2 weeks", "Longer"]
 
-/* ─── MOCK DATA ─── */
-const PAST_DECISIONS = [
-  {
-    id: 47,
-    question: "Push launch date to Oct 29",
-    choice: "Keeping full scope but delaying market entry by three weeks",
-    closure: "What I was giving up: the version where marketing got their original date.",
-    status: "Worked out" as const,
-    date: "2 weeks ago",
-    step: 6,
+/* ─── MOCK HARDCODED HISTORY (same for every visitor) ─── */
+const MOCK_RECENT: SessionDecision[] = [
+  { id: 1, question: "Choosing between Mixpanel and Amplitude for product analytics", step: 6, status: "Done", decisionNum: 42 },
+  { id: 2, question: "Whether to deprecate the legacy notification system", step: 6, status: "Done", decisionNum: 38 },
+  { id: 3, question: "Should we delay launch to fix the onboarding bug", step: 6, status: "Done", decisionNum: 35 },
+]
+
+const MOCK_USER = { name: "Sam K.", initials: "SK" }
+
+/* ─── EXAMPLE OUTPUT (static, no API call) ─── */
+const EXAMPLE_OUTPUT: AIOutput = {
+  claritySummary: "The real decision isn\u2019t \u2018ship vs delay.\u2019 It\u2019s whether the half-feature creates more support burden than a delayed launch. Given the support team\u2019s current load and the deadline\u2019s softness, the two-week delay is the higher-leverage choice.",
+  messages: {
+    engineering: "Heads up, leaning toward pushing the launch two weeks instead of the cut-down version we discussed. The half-feature path would mean rebuilding the navigation logic twice and supporting two notification states. Two weeks of cleaner scope is worth more than hitting Tuesday with debt we\u2019d carry for a quarter. Want to walk through what slips and what doesn\u2019t?",
+    design: "Want your read on something. The cut-down version we sketched would ship users into a state where the second action is hidden behind a settings drawer. I\u2019m worried that creates the exact discovery problem we just fixed in onboarding. Could we look at the cut-down flow together before we commit? Thinking we may push two weeks instead.",
+    leadership: "Recommendation: push the launch two weeks for the full scope rather than ship the cut-down version Tuesday. The half-feature path creates support load that would cost us 2\u20133 quarter points across the next two cycles. Two weeks gets us a cleaner launch and avoids the debt. Need your sign-off to move the date and notify stakeholders. Can we sync on this Thursday?",
   },
-  {
-    id: 46,
-    question: "Hire one senior engineer instead of two juniors",
-    choice: "Speed vs. fresh perspective and team diversity",
-    closure: "",
-    status: "Pending" as const,
-    date: "1 week ago",
-    step: 4,
-  },
-  {
-    id: 45,
-    question: "End partnership with Acme Corp",
-    choice: "Short-term revenue loss vs. technical freedom",
-    closure: "The cost was real, but so was the ceiling they put on our roadmap.",
-    status: "Mixed" as const,
-    date: "3 days ago",
-    step: 6,
-  },
-]
-
-const AI_CARDS = [
-  { label: "THE REAL QUESTION", text: "Whether to commit engineering resources to the platform migration now or after the Q4 launch.", note: "I noticed you mentioned \u201Cwe can\u2019t keep patching\u201D twice in your notes." },
-  { label: "WHAT MATTERS HERE", text: "Technical debt is compounding. But the Q4 launch is the biggest revenue moment of the year.", note: "I noticed the sales team is already pre-selling features that depend on the old architecture." },
-  { label: "WHO\u2019S AFFECTED", text: "Platform team (capacity), Product Marketing (launch messaging), Sales (pipeline promises), CTO (technical vision).", note: "I noticed Marcus was specifically called out in the Slack thread." },
-  { label: "HOW PRESSING", text: "Engineering needs direction by next Monday. Sprint planning is blocked without this.", note: "I noticed the word \u201Curgent\u201D appeared three times in the ticket." },
-]
-
-const OPTIONS = [
-  { name: "Migrate now, delay Q4 launch by 6 weeks", desc: "Full platform migration before any new feature work. Clean foundation, but the market window narrows.", keyMove: "Negotiate a revised launch date with marketing and brief the three enterprise prospects on the delay." },
-  { name: "Ship Q4 on the old stack, migrate in Q1", desc: "Hit the revenue moment, accept more technical debt. Migration becomes a Q1 priority.", keyMove: "Get the CTO to publicly commit to Q1 migration so it doesn\u2019t slip to Q2." },
-  { name: "Parallel track: skeleton migration + Q4 feature sprint", desc: "Split engineering 60/40. Ship a thinner Q4 release while starting migration foundations.", keyMove: "Hire one senior contractor for 8 weeks to absorb the migration architecture work." },
-]
-
-const AUDIENCES = [
-  { key: "team", label: "Your team" },
-  { key: "manager", label: "Your manager" },
-  { key: "person", label: "A specific person" },
-  { key: "xfn", label: "Cross-functional partners" },
-  { key: "external", label: "Customers / external" },
-  { key: "doc", label: "A status doc" },
-]
-
-const DRAFT_MESSAGES: Record<string, string> = {
-  team: "Team, we\u2019re going with the parallel track. Engineering splits 60/40 between Q4 features and migration foundations. I know this is tighter than any of us wanted, but it\u2019s the path that doesn\u2019t force us to choose between shipping and our technical future. Sprint planning Monday will reflect the new allocation. Come with questions.",
-  manager: "Marcus, wanted to give you a heads up before Monday. We\u2019re going parallel: 60% on Q4 deliverables, 40% on migration scaffolding. We\u2019ll hit the launch window, though with a thinner feature set than originally scoped. The tradeoff is we start Q1 with migration 40% done instead of 0%. I\u2019ll have the revised scope doc to you by Thursday.",
-  xfn: "Quick update on the platform decision. We\u2019re pursuing a parallel approach: Q4 launch stays on track with a focused feature set, while we begin migration foundations in parallel. For Sales: the core features enterprise prospects need will ship on schedule. For Marketing: launch date holds, but we\u2019ll need to adjust the feature narrative. I\u2019ll schedule a 30-min alignment call this week.",
-  external: "We\u2019re on track for our Q4 release. The team has been focused on ensuring the features most critical to your workflow are prioritized. You\u2019ll see the updated roadmap in our next sync.",
-  doc: "Decision: Parallel track (60/40 split)\nDate: Today\nOwner: You\nContext: Platform migration vs. Q4 launch timing\nChoice: Split engineering resources 60% Q4 features, 40% migration foundations\nNext actions: Revised sprint plan Monday, scope doc Thursday, contractor search this week\nReview date: End of Q1",
-  person: "Hey, wanted to loop you in on the platform decision before it\u2019s announced Monday. We\u2019re splitting the team 60/40 between Q4 and migration. I know this affects your project directly. Let\u2019s find 20 minutes this week to walk through what changes for your workstream.",
 }
 
 /* ─── MAIN COMPONENT ─── */
@@ -86,13 +75,26 @@ export default function ProductApp() {
   const [situation, setSituation] = useState("")
   const [urgency, setUrgency] = useState("")
   const [selectedOption, setSelectedOption] = useState<number | null>(null)
+  const [chosenDirection, setChosenDirection] = useState("")
   const [reasoning, setReasoning] = useState("")
   const [confidence, setConfidence] = useState(7)
-  const [selectedAudiences, setSelectedAudiences] = useState<string[]>([])
-  const [closureLine, setClosureLine] = useState("")
   const [copiedKey, setCopiedKey] = useState<string | null>(null)
-  const [decisionNum] = useState(48)
+  const [decisionNum] = useState(() => Math.floor(Math.random() * 900) + 100)
+  const [aiOutput, setAiOutput] = useState<AIOutput | null>(null)
+  const [aiError, setAiError] = useState<string | null>(null)
+  const [aiErrorCode, setAiErrorCode] = useState<ErrorCode>(null)
+  const [loadingText, setLoadingText] = useState(0)
+  const [loadingSlowWarning, setLoadingSlowWarning] = useState(false)
+  const [activeTab, setActiveTab] = useState<"engineering" | "design" | "leadership">("engineering")
+  const [isExampleMode, setIsExampleMode] = useState(false)
+  const [showAbout, setShowAbout] = useState(false)
+  const [analysis, setAnalysis] = useState<AnalysisResult | null>(null)
+  const [analyzingText, setAnalyzingText] = useState(0)
+  const [sectionsVisible, setSectionsVisible] = useState<number[]>([])
+  // Session-level decisions (resets on page refresh, NOT persisted)
+  const [sessionDecisions, setSessionDecisions] = useState<SessionDecision[]>([])
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const abortRef = useRef<AbortController | null>(null)
 
   const navigate = useCallback((v: View) => {
     setView(v)
@@ -100,16 +102,99 @@ export default function ProductApp() {
   }, [])
 
   const handleCopy = useCallback((key: string, text: string) => {
-    navigator.clipboard.writeText(text)
+    navigator.clipboard.writeText(text).catch(() => {
+      const el = document.createElement("textarea")
+      el.value = text
+      document.body.appendChild(el)
+      el.select()
+      document.execCommand("copy")
+      document.body.removeChild(el)
+    })
     setCopiedKey(key)
     setTimeout(() => setCopiedKey(null), 1500)
   }, [])
 
-  const toggleAudience = useCallback((key: string) => {
-    setSelectedAudiences(prev =>
-      prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
-    )
+  // Copy entire decision (all three messages + clarity summary)
+  const handleCopyAll = useCallback(() => {
+    if (!aiOutput) return
+    const formatted = [
+      `DECISION CLARITY`,
+      `───────────────`,
+      aiOutput.claritySummary,
+      ``,
+      `FOR ENGINEERING`,
+      `──────────────���`,
+      aiOutput.messages.engineering,
+      ``,
+      `FOR DESIGN`,
+      `───────────────`,
+      aiOutput.messages.design,
+      ``,
+      `FOR LEADERSHIP`,
+      `───────────────`,
+      aiOutput.messages.leadership,
+    ].join("\n")
+    handleCopy("all", formatted)
+  }, [aiOutput, handleCopy])
+
+  const resetDecision = useCallback(() => {
+    setSituation("")
+    setUrgency("")
+    setSelectedOption(null)
+    setChosenDirection("")
+    setReasoning("")
+    setConfidence(7)
+    setCopiedKey(null)
+    setAiOutput(null)
+    setAiError(null)
+    setAiErrorCode(null)
+    setLoadingSlowWarning(false)
+    setIsExampleMode(false)
+    setActiveTab("engineering")
+    setAnalysis(null)
+    setAnalyzingText(0)
   }, [])
+
+  // Analyze the user's situation after step 1
+  const handleAnalyze = async () => {
+    if (!situation.trim() || !urgency) return
+
+    setAnalyzingText(0)
+    setAiError(null)
+    setAiErrorCode(null)
+    navigate("analyzing")
+
+    // Rotate analyzing text
+    const textInterval = setInterval(() => {
+      setAnalyzingText(prev => (prev + 1) % 3)
+    }, 2500)
+
+    try {
+      const response = await fetch("/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ situation, urgency }),
+      })
+
+      const data = await response.json()
+      clearInterval(textInterval)
+
+      if (!data.success) {
+        setAiError(data.error)
+        setAiErrorCode(data.errorCode ?? "SERVER_ERROR")
+        navigate("step1")
+        return
+      }
+
+      setAnalysis(data.analysis)
+      navigate("step2")
+    } catch (err) {
+      clearInterval(textInterval)
+      const msg = err instanceof Error ? err.message : "Analysis failed"
+      setAiError(msg)
+      navigate("step1")
+    }
+  }
 
   // Auto-resize textarea
   useEffect(() => {
@@ -118,112 +203,358 @@ export default function ProductApp() {
       textareaRef.current.style.height = textareaRef.current.scrollHeight + "px"
     }
   }, [situation])
+  useEffect(() => {
+    if (!showAbout) return
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") setShowAbout(false) }
+    window.addEventListener("keydown", handler)
+    return () => window.removeEventListener("keydown", handler)
+  }, [showAbout])
+
+  // Staggered fade-in for step 2 sections
+  useEffect(() => {
+    if (view === "step2" && analysis) {
+      setSectionsVisible([])
+      const timers = [0, 250, 500, 750, 1000].map((delay, index) => {
+        return setTimeout(() => {
+          setSectionsVisible(prev => [...prev, index])
+        }, delay)
+      })
+      return () => timers.forEach(clearTimeout)
+    }
+  }, [view, analysis])
 
   const currentStepIndex = STEP_NAMES.findIndex(s => s.key === view)
 
+  const LOADING_TEXTS = [
+    "thinking through the tradeoffs...",
+    "drafting your messages...",
+    "almost there...",
+  ]
+
+  useEffect(() => {
+    if (view !== "loading") return
+    const interval = setInterval(() => setLoadingText(prev => (prev + 1) % 3), 2500)
+    return () => clearInterval(interval)
+  }, [view])
+
+  useEffect(() => {
+    if (view !== "loading") { setLoadingSlowWarning(false); return }
+    const slowTimer = setTimeout(() => setLoadingSlowWarning(true), 12000)
+    const cancelTimer = setTimeout(() => {
+      if (abortRef.current) abortRef.current.abort()
+      setAiError("This is taking too long. Lumo will retry, or you can see an example while you wait.")
+      setAiErrorCode("TIMEOUT")
+      navigate("step5")
+    }, 25000)
+    return () => { clearTimeout(slowTimer); clearTimeout(cancelTimer) }
+  }, [view, navigate])
+
+  const showExample = useCallback(() => {
+    setIsExampleMode(true)
+    setAiOutput(EXAMPLE_OUTPUT)
+    setActiveTab("engineering")
+    navigate("step6")
+  }, [navigate])
+
+  const handleGenerate = async () => {
+    // Validate nothing is empty
+    if (!situation || !urgency || !chosenDirection || !reasoning || !confidence) {
+      console.warn("MISSING FIELDS:", {
+        situation: !!situation,
+        urgency: !!urgency,
+        chosenDirection: !!chosenDirection,
+        reasoning: !!reasoning,
+        confidence: !!confidence,
+      })
+    }
+
+    setAiError(null)
+    setAiErrorCode(null)
+    setLoadingText(0)
+    setLoadingSlowWarning(false)
+
+    const controller = new AbortController()
+    abortRef.current = controller
+    navigate("loading")
+
+    const requestBody = {
+      situation,
+      urgency,
+      chosenDirection,
+      reasoning,
+      confidence,
+    }
+
+    try {
+      const response = await fetch("/api/decide", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
+        body: JSON.stringify(requestBody),
+      })
+
+      const data = await response.json()
+
+      if (!data.success) {
+        setAiErrorCode(data.errorCode ?? "SERVER_ERROR")
+        throw new Error(data.error)
+      }
+
+      setAiOutput(data)
+      setIsExampleMode(false)
+      setSessionDecisions(prev => [{
+        id: Date.now(),
+        question: situation.slice(0, 80) || chosenDirection,
+        step: 6,
+        status: "Done",
+        decisionNum,
+      }, ...prev])
+      navigate("step6")
+    } catch (err) {
+      if ((err as Error).name === "AbortError") return
+      const msg = err instanceof Error ? err.message : "Something went wrong on our end. Try again, or see an example of Lumo\u2019s output instead."
+      setAiError(msg)
+      navigate("step5")
+    }
+  }
+
+  // All decisions shown on home = session decisions first, then hardcoded mock
+  const allDecisions = [...sessionDecisions, ...MOCK_RECENT]
+  const inMotion = allDecisions.filter(d => d.status === "Pending")
+  const recentDone = allDecisions.filter(d => d.status === "Done").slice(0, 5)
+
+  /* ─────────────────────────────────────────────────────────────── RENDER ─── */
   return (
     <div style={{ minHeight: "100vh", backgroundColor: "var(--bg-canvas)" }}>
+
+      {/* === ABOUT MODAL === */}
+      {showAbout && (
+        <div
+          style={{
+            position: "fixed", inset: 0, zIndex: 100,
+            backgroundColor: "rgba(31,27,23,0.45)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            padding: "24px 16px",
+          }}
+          onClick={() => setShowAbout(false)}
+        >
+          <div
+            style={{
+              backgroundColor: "var(--bg-surface)", borderRadius: "var(--radius)",
+              border: "1px solid var(--border-default)",
+              padding: "40px", maxWidth: 540, width: "100%", position: "relative",
+              boxShadow: "0 8px 40px rgba(31,27,23,0.12)",
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setShowAbout(false)}
+              style={{
+                position: "absolute", top: 16, right: 16,
+                background: "none", border: "none", cursor: "pointer",
+                padding: 8, color: "var(--text-tertiary)", borderRadius: "var(--radius)",
+                minHeight: 44, minWidth: 44, display: "flex", alignItems: "center", justifyContent: "center",
+              }}
+              aria-label="Close"
+            >
+              <X style={{ width: 18, height: 18 }} />
+            </button>
+
+            <p className="text-eyebrow" style={{ color: "var(--accent-primary)", marginBottom: 16 }}>ABOUT LUMO</p>
+            <p style={{ fontSize: 16, lineHeight: 1.7, color: "var(--text-secondary)", marginBottom: 20 }}>
+              Lumo is a tool for IC product managers who need to think through complex decisions and communicate them clearly. AI gives you speed. Lumo gives you clarity.
+            </p>
+            <p style={{ fontSize: 16, lineHeight: 1.7, color: "var(--text-secondary)", marginBottom: 20 }}>
+              This is a demo. The output is generated by Claude in real time based on your inputs. No data is saved between sessions.
+            </p>
+            <p style={{ fontSize: 16, lineHeight: 1.7, color: "var(--text-secondary)", marginBottom: 32 }}>
+              Built by Terrance Range in a weekend with Claude, v0, and Vercel.
+            </p>
+
+            <div style={{ borderTop: "1px solid var(--border-default)", paddingTop: 24 }}>
+              <p className="text-eyebrow" style={{ color: "var(--text-tertiary)", marginBottom: 12 }}>THE STACK</p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {[
+                  ["Frontend", "Next.js 16, React 19, Tailwind CSS v4"],
+                  ["AI", "Claude 3.5 Sonnet via Anthropic API"],
+                  ["Design", "Custom design system in CSS, v0 for scaffolding"],
+                  ["Deploy", "Vercel"],
+                ].map(([label, value]) => (
+                  <div key={label} style={{ display: "flex", gap: 12, fontSize: 14 }}>
+                    <span style={{ color: "var(--text-tertiary)", minWidth: 80 }}>{label}</span>
+                    <span style={{ color: "var(--text-primary)" }}>{value}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ marginTop: 28 }}>
+              <a
+                href="https://linkedin.com/in/terrancerange"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-secondary"
+                style={{ fontSize: 14, padding: "10px 20px", minHeight: 44 }}
+              >
+                Connect on LinkedIn
+                <ArrowRight style={{ width: 14, height: 14 }} />
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* === HEADER === */}
       <header style={{
         position: "fixed", top: 0, left: 0, right: 0, zIndex: 50,
         height: 64, borderBottom: "1px solid var(--border-default)",
         backgroundColor: "var(--bg-canvas)",
-        padding: "0 32px", display: "flex", alignItems: "center", justifyContent: "space-between",
+        padding: "0 24px", display: "flex", alignItems: "center", justifyContent: "space-between",
       }}>
-        <button onClick={() => navigate("home")} style={{ display: "flex", alignItems: "center", gap: 3, background: "none", border: "none", cursor: "pointer", padding: 0 }}>
-          <span style={{ fontSize: 24, fontWeight: 600, letterSpacing: "-0.02em", color: "var(--text-primary)" }}>lumo</span>
+        {/* Left: wordmark */}
+        <button
+          onClick={() => { resetDecision(); navigate("home") }}
+          style={{ display: "flex", alignItems: "center", gap: 3, background: "none", border: "none", cursor: "pointer", padding: 0 }}
+        >
+          <span style={{ fontSize: 22, fontWeight: 600, letterSpacing: "-0.02em", color: "var(--text-primary)" }}>lumo</span>
           <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: "var(--accent-primary)", marginBottom: 8 }} />
         </button>
+
+        {/* Right: demo badge + user identity + about */}
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: "var(--positive)" }} />
-            <span className="text-mono" style={{ color: "var(--text-tertiary)", fontSize: 12 }}>ai connected</span>
-          </div>
-          <div style={{ width: 32, height: 32, borderRadius: "50%", backgroundColor: "var(--bg-muted)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-secondary)" }}>JD</span>
+          {/* Demo badge */}
+          <span style={{
+            fontSize: 11, fontWeight: 600, letterSpacing: "0.06em",
+            color: "var(--accent-primary)", backgroundColor: "var(--accent-primary-soft)",
+            padding: "4px 10px", borderRadius: 9999, textTransform: "uppercase",
+          }}>
+            Demo
+          </span>
+
+          {/* About link */}
+          <button
+            onClick={() => setShowAbout(true)}
+            style={{
+              background: "none", border: "none", cursor: "pointer", padding: "4px 0",
+              fontSize: 13, color: "var(--text-tertiary)", fontFamily: "inherit",
+              fontWeight: 500, minHeight: 44, display: "flex", alignItems: "center",
+            }}
+          >
+            What is this?
+          </button>
+
+          {/* User avatar */}
+          <div style={{
+            width: 32, height: 32, borderRadius: "50%",
+            backgroundColor: "var(--accent-primary)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            flexShrink: 0,
+          }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: "var(--bg-canvas)", letterSpacing: "0.04em" }}>
+              {MOCK_USER.initials}
+            </span>
           </div>
         </div>
       </header>
 
       {/* === CONTENT === */}
-      <main style={{ maxWidth: 720, margin: "0 auto", padding: "96px 32px 160px", minHeight: "100vh" }}>
-        <div className="step-enter" key={view}>
+      <main style={{ maxWidth: 720, margin: "0 auto", padding: "96px 24px 160px", minHeight: "100vh" }}>
+        <div className="step-enter">
 
           {/* ─── HOME ─── */}
           {view === "home" && (
             <>
-              <p className="text-eyebrow" style={{ color: "var(--text-tertiary)", marginBottom: 16 }}>GOOD MORNING, JORDAN</p>
-              <h1 style={{ fontSize: "clamp(2.5rem, 4vw, 3.5rem)", fontWeight: 700, letterSpacing: "-0.035em", lineHeight: 1.08, color: "var(--text-primary)", marginBottom: 12 }}>
+              {/* User greeting */}
+              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 40 }}>
+                <div style={{
+                  width: 44, height: 44, borderRadius: "50%",
+                  backgroundColor: "var(--accent-primary)",
+                  display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                }}>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: "var(--bg-canvas)", letterSpacing: "0.04em" }}>
+                    {MOCK_USER.initials}
+                  </span>
+                </div>
+                <div>
+                  <p style={{ fontSize: 15, fontWeight: 600, color: "var(--text-primary)", marginBottom: 2 }}>{MOCK_USER.name}</p>
+                  <p className="text-mono" style={{ color: "var(--text-tertiary)", fontSize: 12 }}>{allDecisions.length} decisions</p>
+                </div>
+              </div>
+
+              <h1 style={{ fontSize: "clamp(2.25rem, 4vw, 3.25rem)", fontWeight: 700, letterSpacing: "-0.035em", lineHeight: 1.08, color: "var(--text-primary)", marginBottom: 10 }}>
                 {"What\u2019s the call?"}
               </h1>
-              <p className="text-body-lg" style={{ marginBottom: 40 }}>Think it through. Get the words right. Move on.</p>
+              <p className="text-body-lg" style={{ marginBottom: 36 }}>Think it through. Get the words right. Move on.</p>
 
-              <button className="btn-primary" onClick={() => navigate("step1")} style={{ fontSize: "1.0625rem", padding: "1rem 2rem", marginBottom: 96 }}>
-                {"Start a decision \u2192"}
-              </button>
+              <div style={{ display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap", marginBottom: 64 }}>
+                <button className="btn-primary" onClick={() => navigate("step1")} style={{ fontSize: "1rem", padding: "0.875rem 1.75rem" }}>
+                  Start a decision
+                  <ArrowRight style={{ width: 16, height: 16 }} />
+                </button>
+                <button
+                  onClick={showExample}
+                  style={{
+                    background: "none", border: "none", cursor: "pointer", padding: 0,
+                    fontSize: 13, color: "var(--text-tertiary)", textDecoration: "underline",
+                    fontFamily: "inherit", minHeight: 44, display: "flex", alignItems: "center",
+                  }}
+                >
+                  see example output
+                </button>
+              </div>
 
-              {/* In Motion */}
-              {PAST_DECISIONS.filter(d => d.status === "Pending").length > 0 && (
-                <div style={{ marginBottom: 64 }}>
-                  <p className="text-eyebrow" style={{ color: "var(--text-tertiary)", marginBottom: 16 }}>IN MOTION</p>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                    {PAST_DECISIONS.filter(d => d.status === "Pending").map(d => (
+              {/* In motion (only if there are pending session decisions) */}
+              {inMotion.length > 0 && (
+                <div style={{ marginBottom: 40 }}>
+                  <p className="text-eyebrow" style={{ color: "var(--text-tertiary)", marginBottom: 14 }}>IN MOTION</p>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    {inMotion.map(d => (
                       <button
                         key={d.id}
                         className="lumo-card"
                         onClick={() => navigate(`step${d.step}` as View)}
                         style={{
-                          display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 24px",
-                          cursor: "pointer", border: "1px solid var(--border-default)", textAlign: "left", width: "100%",
+                          display: "flex", justifyContent: "space-between", alignItems: "center",
+                          padding: "18px 20px", cursor: "pointer", border: "1px solid var(--border-default)",
+                          textAlign: "left", width: "100%",
                         }}
                       >
-                        <div>
-                          <p style={{ fontWeight: 600, fontSize: 16, color: "var(--text-primary)", letterSpacing: "-0.01em" }}>{d.question}</p>
-                          <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p style={{ fontWeight: 600, fontSize: 15, color: "var(--text-primary)", letterSpacing: "-0.01em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.question}</p>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 5 }}>
                             <span className="text-mono" style={{ fontSize: 12, color: "var(--text-tertiary)" }}>Step {d.step} of 6</span>
-                            <div style={{ width: 48, height: 4, borderRadius: 2, backgroundColor: "var(--bg-muted)", overflow: "hidden" }}>
+                            <div style={{ width: 40, height: 3, borderRadius: 2, backgroundColor: "var(--bg-muted)", overflow: "hidden" }}>
                               <div style={{ width: `${(d.step / 6) * 100}%`, height: "100%", backgroundColor: "var(--accent-primary)", borderRadius: 2 }} />
                             </div>
                           </div>
                         </div>
-                        <ChevronRight style={{ width: 16, height: 16, color: "var(--text-tertiary)" }} />
+                        <ChevronRight style={{ width: 15, height: 15, color: "var(--text-tertiary)", flexShrink: 0, marginLeft: 12 }} />
                       </button>
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* Recent Decisions */}
-              <p className="text-eyebrow" style={{ color: "var(--text-tertiary)", marginBottom: 16 }}>RECENT DECISIONS</p>
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {PAST_DECISIONS.map(d => (
-                  <button
-                    key={d.id}
-                    className="lumo-card"
-                    onClick={() => navigate(d.step === 6 ? "done" : `step${d.step}` as View)}
-                    style={{
-                      padding: "24px", cursor: "pointer", border: "1px solid var(--border-default)",
-                      textAlign: "left", width: "100%",
-                    }}
-                  >
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                      <div style={{ flex: 1 }}>
-                        <p style={{ fontWeight: 600, fontSize: 16, color: "var(--text-primary)", letterSpacing: "-0.01em", marginBottom: 4 }}>{d.question}</p>
-                        <p className="text-body" style={{ fontSize: 14, marginBottom: 0 }}>{d.choice}</p>
-                        {d.closure && (
-                          <p className="signature-italic" style={{ marginTop: 14 }}>{d.closure}</p>
-                        )}
-                        <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 14 }}>
-                          <span className="text-mono" style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{d.date}</span>
-                          <span className={`pill ${d.status === "Worked out" ? "pill-positive" : d.status === "Pending" ? "pill-caution" : "pill-risk"}`} style={{ fontSize: 12, padding: "2px 10px" }}>
-                            {d.status}
-                          </span>
-                        </div>
+              {/* Recent decisions */}
+              <div>
+                <p className="text-eyebrow" style={{ color: "var(--text-tertiary)", marginBottom: 14 }}>RECENT DECISIONS</p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {recentDone.map(d => (
+                    <div
+                      key={d.id}
+                      className="lumo-card"
+                      style={{ padding: "18px 20px" }}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
+                        <p style={{ fontWeight: 500, fontSize: 15, color: "var(--text-primary)", lineHeight: 1.4 }}>{d.question}</p>
+                        <span className="text-mono" style={{ color: "var(--text-tertiary)", fontSize: 13, flexShrink: 0, marginTop: 2 }}>
+                          {"\u2116"}{d.decisionNum}
+                        </span>
                       </div>
-                      <span className="text-mono" style={{ color: "var(--text-tertiary)", fontSize: 14, flexShrink: 0, marginLeft: 16 }}>{"\u2116"}{d.id}</span>
+                      <p className="text-mono" style={{ fontSize: 12, color: "var(--positive)", marginTop: 6 }}>Done</p>
                     </div>
-                  </button>
-                ))}
+                  ))}
+                </div>
               </div>
             </>
           )}
@@ -231,39 +562,23 @@ export default function ProductApp() {
           {/* ─── STEP 1: What's happening ─── */}
           {view === "step1" && (
             <>
-              <div style={{ marginBottom: 64 }}>
+              <div style={{ marginBottom: 56 }}>
                 <PathIndicator current={0} />
               </div>
-              <h1 className="text-heading-lg" style={{ marginBottom: 16 }}>{"What\u2019s happening?"}</h1>
-              <p className="text-body-lg" style={{ marginBottom: 40 }}>Tell me the situation. Paste anything relevant.</p>
+              <h1 className="text-heading-lg" style={{ marginBottom: 14 }}>{"What\u2019s happening?"}</h1>
+              <p className="text-body-lg" style={{ marginBottom: 36 }}>Tell me the situation. Paste anything relevant.</p>
 
               <textarea
                 ref={textareaRef}
                 className="lumo-textarea"
-                style={{ minHeight: 200, maxHeight: 240 }}
+                style={{ minHeight: 200, maxHeight: 400 }}
                 placeholder="What's the situation? Paste context here..."
                 value={situation}
                 onChange={e => setSituation(e.target.value)}
               />
-              <button
-                className="btn-text"
-                style={{
-                  marginTop: 12,
-                  color: "var(--accent-primary)",
-                  opacity: 0.8,
-                  fontWeight: 400,
-                  fontSize: "0.875rem",
-                  textDecoration: "none",
-                  transition: "opacity 150ms ease-out, text-decoration 150ms ease-out",
-                }}
-                onMouseEnter={e => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.textDecoration = "underline" }}
-                onMouseLeave={e => { e.currentTarget.style.opacity = "0.8"; e.currentTarget.style.textDecoration = "none" }}
-              >
-                + Add context (Slack thread, ticket, doc snippet, anything)
-              </button>
 
-              <div style={{ marginTop: 48 }}>
-                <p className="text-eyebrow" style={{ color: "var(--text-tertiary)", marginBottom: 16 }}>WHEN DOES THIS NEED TO BE DECIDED?</p>
+              <div style={{ marginTop: 44 }}>
+                <p className="text-eyebrow" style={{ color: "var(--text-tertiary)", marginBottom: 14 }}>WHEN DOES THIS NEED TO BE DECIDED?</p>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                   {URGENCY_OPTIONS.map(opt => (
                     <button
@@ -275,24 +590,9 @@ export default function ProductApp() {
                         borderRadius: 9999,
                         backgroundColor: urgency === opt ? "var(--accent-primary)" : "transparent",
                         color: urgency === opt ? "var(--text-on-dark)" : "var(--text-primary)",
-                        fontWeight: 500,
-                        fontSize: 14,
-                        fontFamily: "inherit",
-                        padding: "8px 16px",
+                        fontWeight: 500, fontSize: 14, fontFamily: "inherit",
+                        padding: "10px 18px", minHeight: 44,
                         transition: "all 150ms ease-out",
-                        lineHeight: 1.4,
-                      }}
-                      onMouseEnter={e => {
-                        if (urgency !== opt) {
-                          e.currentTarget.style.backgroundColor = "var(--bg-muted)"
-                          e.currentTarget.style.borderColor = "var(--text-tertiary)"
-                        }
-                      }}
-                      onMouseLeave={e => {
-                        if (urgency !== opt) {
-                          e.currentTarget.style.backgroundColor = "transparent"
-                          e.currentTarget.style.borderColor = "var(--border-default)"
-                        }
                       }}
                     >
                       {opt}
@@ -300,87 +600,150 @@ export default function ProductApp() {
                   ))}
                 </div>
               </div>
+
+              {/* Error display for analyze API failures */}
+              {aiError && aiErrorCode === "QUOTA_EXCEEDED" && (
+                <div style={{ marginTop: 32, padding: 28, borderRadius: 16, backgroundColor: "var(--surface)", border: "1px solid var(--border-default)" }}>
+                  <h3 style={{ fontSize: 18, fontWeight: 900, color: "var(--text-primary)", marginBottom: 8, letterSpacing: "-0.02em" }}>
+                    Lumo is busier than usual right now.
+                  </h3>
+                  <p style={{ fontSize: 15, color: "var(--text-secondary)", lineHeight: 1.55, marginBottom: 24 }}>
+                    Try again in a few minutes, or see what Lumo produces when you bring it a real decision.
+                  </p>
+                  <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+                    <button
+                      onClick={() => { setAiError(null); setAiErrorCode(null); showExample() }}
+                      className="btn-primary"
+                      style={{ fontSize: 14, padding: "10px 20px", minHeight: 44 }}
+                    >
+                      See an example
+                      <ArrowRight style={{ width: 14, height: 14 }} />
+                    </button>
+                    <button
+                      onClick={() => { setAiError(null); setAiErrorCode(null); handleAnalyze() }}
+                      style={{
+                        background: "none", border: "none", cursor: "pointer", padding: "10px 0",
+                        fontSize: 14, color: "var(--text-secondary)", fontFamily: "inherit",
+                        minHeight: 44,
+                      }}
+                    >
+                      Try again
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {aiError && aiErrorCode !== "QUOTA_EXCEEDED" && (
+                <div style={{ marginTop: 24, padding: 16, borderRadius: 12, backgroundColor: "var(--risk-soft, rgba(255,90,90,0.1))", border: "1px solid var(--risk, #E74C3C)" }}>
+                  <p style={{ color: "var(--risk, #E74C3C)", fontSize: 14, fontWeight: 500, marginBottom: 4 }}>Something went wrong</p>
+                  <p style={{ color: "var(--text-secondary)", fontSize: 13 }}>{aiError}</p>
+                </div>
+              )}
             </>
+          )}
+
+          {/* ─── ANALYZING: Loading between step 1 and step 2 ─── */}
+          {view === "analyzing" && (
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: 400, textAlign: "center" }}>
+              {/* Persimmon dots animation */}
+              <div style={{ display: "flex", gap: 8, marginBottom: 32 }}>
+                {[0, 1, 2].map(i => (
+                  <div
+                    key={i}
+                    style={{
+                      width: 10,
+                      height: 10,
+                      borderRadius: "50%",
+                      background: "var(--accent-primary)",
+                      animation: `pulse 1.4s ease-in-out ${i * 0.2}s infinite`,
+                    }}
+                  />
+                ))}
+              </div>
+              <style>{`
+                @keyframes pulse {
+                  0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+                  40% { opacity: 1; transform: scale(1); }
+                }
+              `}</style>
+              <p className="text-body-lg" style={{ color: "var(--text-secondary)" }}>
+                {["reading your situation...", "identifying the tradeoffs...", "mapping the options..."][analyzingText]}
+              </p>
+            </div>
           )}
 
           {/* ─── STEP 2: AI Reading ─── */}
-          {view === "step2" && (
+          {view === "step2" && analysis && (
             <>
               <PathIndicator current={1} />
               <h1 className="text-heading-lg" style={{ marginBottom: 8 }}>{"Here\u2019s what I\u2019m reading."}</h1>
-              <p className="text-body-lg" style={{ marginBottom: 32 }}>I read it back this way. Tweak anything that{"'"}s off.</p>
+              <p className="text-body-lg" style={{ marginBottom: 32 }}>Does this look right?</p>
 
-              <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-                {AI_CARDS.map(card => (
-                  <div
-                    key={card.label}
-                    className="lumo-card group"
-                    style={{ padding: 24, position: "relative" }}
-                    onMouseEnter={e => {
-                      const pencil = e.currentTarget.querySelector("[data-pencil]") as HTMLElement
-                      if (pencil) pencil.style.opacity = "1"
-                    }}
-                    onMouseLeave={e => {
-                      const pencil = e.currentTarget.querySelector("[data-pencil]") as HTMLElement
-                      if (pencil) pencil.style.opacity = "0.3"
-                    }}
-                  >
-                    <p className="text-eyebrow" style={{ color: "var(--accent-primary)", marginBottom: 10 }}>{card.label}</p>
-                    <p style={{ fontWeight: 600, fontSize: 18, color: "var(--text-primary)", lineHeight: 1.35, letterSpacing: "-0.01em", marginBottom: 8 }}>{card.text}</p>
-                    <p className="signature-italic" style={{ marginTop: 0 }}>{card.note}</p>
-                    <button
-                      data-pencil
-                      style={{
-                        position: "absolute", top: 20, right: 20,
-                        background: "none", border: "none", cursor: "pointer",
-                        opacity: 0.3, padding: 4,
-                        transition: "opacity 150ms ease-out",
-                      }}
-                      aria-label="Edit"
-                    >
-                      <Pencil style={{ width: 14, height: 14, color: "var(--text-tertiary)" }} />
-                    </button>
+              <style>{`
+                .analysis-section {
+                  opacity: 0;
+                  transform: translateY(12px);
+                  transition: opacity 0.4s ease, transform 0.4s ease;
+                }
+                .analysis-section.visible {
+                  opacity: 1;
+                  transform: translateY(0);
+                }
+              `}</style>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+                {/* THE REAL QUESTION */}
+                <div className={`lumo-card analysis-section${sectionsVisible.includes(0) ? " visible" : ""}`} style={{ padding: 24 }}>
+                  <p className="text-eyebrow" style={{ color: "var(--accent-primary)", marginBottom: 10 }}>THE REAL QUESTION</p>
+                  <p style={{ fontWeight: 600, fontSize: 17, color: "var(--text-primary)", lineHeight: 1.35, letterSpacing: "-0.01em" }}>{analysis.realQuestion}</p>
+                </div>
+
+                {/* WHAT MATTERS HERE */}
+                <div className={`lumo-card analysis-section${sectionsVisible.includes(1) ? " visible" : ""}`} style={{ padding: 24 }}>
+                  <p className="text-eyebrow" style={{ color: "var(--accent-primary)", marginBottom: 10 }}>WHAT MATTERS HERE</p>
+                  <p style={{ fontWeight: 600, fontSize: 17, color: "var(--text-primary)", lineHeight: 1.35, letterSpacing: "-0.01em" }}>{analysis.whatMatters}</p>
+                </div>
+
+                {/* WHO'S AFFECTED */}
+                <div className={`lumo-card analysis-section${sectionsVisible.includes(2) ? " visible" : ""}`} style={{ padding: 24 }}>
+                  <p className="text-eyebrow" style={{ color: "var(--accent-primary)", marginBottom: 10 }}>{"WHO\u2019S AFFECTED"}</p>
+                  <p style={{ fontWeight: 600, fontSize: 17, color: "var(--text-primary)", lineHeight: 1.35, letterSpacing: "-0.01em" }}>{analysis.whoIsAffected}</p>
+                </div>
+
+                {/* HOW PRESSING */}
+                <div className={`lumo-card analysis-section${sectionsVisible.includes(3) ? " visible" : ""}`} style={{ padding: 24 }}>
+                  <p className="text-eyebrow" style={{ color: "var(--accent-primary)", marginBottom: 10 }}>HOW PRESSING</p>
+                  <p style={{ fontWeight: 600, fontSize: 17, color: "var(--text-primary)", lineHeight: 1.35, letterSpacing: "-0.01em" }}>{analysis.howPressing}</p>
+                </div>
+
+                {/* OBSERVATIONS */}
+                {analysis.observations && analysis.observations.length > 0 && (
+                  <div className={`lumo-card analysis-section${sectionsVisible.includes(4) ? " visible" : ""}`} style={{ padding: 24, background: "var(--accent-primary-soft)" }}>
+                    <p className="text-eyebrow" style={{ color: "var(--accent-primary)", marginBottom: 10 }}>OBSERVATIONS</p>
+                    {analysis.observations.map((obs, i) => (
+                      <p key={i} className="signature-italic" style={{ marginBottom: i < analysis.observations.length - 1 ? 8 : 0 }}>{obs}</p>
+                    ))}
                   </div>
-                ))}
-              </div>
-
-              <div style={{ display: "flex", justifyContent: "center", marginTop: 32 }}>
-                <button
-                  className="btn-text"
-                  style={{
-                    color: "var(--accent-primary)",
-                    fontWeight: 500,
-                    fontSize: "0.875rem",
-                    textDecoration: "none",
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.textDecoration = "underline" }}
-                  onMouseLeave={e => { e.currentTarget.style.textDecoration = "none" }}
-                >
-                  See what I originally said
-                </button>
+                )}
               </div>
             </>
           )}
 
-          {/* ─── STEP 3: Your options ─── */}
-          {view === "step3" && (
+          {/* ──��� STEP 3: Your options ─── */}
+          {view === "step3" && analysis && (
             <>
               <PathIndicator current={2} />
               <h1 className="text-heading-lg" style={{ marginBottom: 8 }}>Your options.</h1>
               <p className="text-body-lg" style={{ marginBottom: 32 }}>{"Here are the paths I see. There\u2019s at least one you didn\u2019t write down."}</p>
 
               <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                {OPTIONS.map((opt, i) => (
-                  <div key={i} className="lumo-card" style={{ padding: 24 }}>
-                    <span className="text-mono" style={{ color: "var(--accent-primary)", fontSize: 16, fontWeight: 700 }}>
+                {analysis.options.map((opt, i) => (
+                  <div key={i} className="lumo-card" style={{ padding: "20px 20px 24px" }}>
+                    <span className="text-mono" style={{ color: "var(--accent-primary)", fontSize: 13, fontWeight: 600 }}>
                       {String(i + 1).padStart(2, "0")}
                     </span>
-                    <h3 style={{ fontWeight: 600, fontSize: 18, color: "var(--text-primary)", margin: "10px 0 6px", letterSpacing: "-0.01em" }}>{opt.name}</h3>
-                    <p className="text-body" style={{ marginBottom: 12 }}>{opt.desc}</p>
-                    <div style={{ padding: "12px 16px", borderRadius: 8, backgroundColor: "var(--accent-primary-soft)" }}>
-                      <span style={{ fontSize: 13, fontWeight: 600, color: "var(--accent-primary)" }}>The key move: </span>
-                      <span style={{ fontSize: 13, color: "var(--accent-primary)" }}>{opt.keyMove}</span>
-                    </div>
+                    <h3 style={{ fontWeight: 600, fontSize: "clamp(18px, 4vw, 20px)", color: "var(--text-primary)", margin: "8px 0 8px", letterSpacing: "-0.01em", lineHeight: 1.3 }}>{opt.name}</h3>
+                    <p style={{ fontWeight: 400, fontSize: "clamp(15px, 3.5vw, 16px)", color: "#4A4D52", lineHeight: 1.55, marginBottom: 0 }}>{opt.description}</p>
                   </div>
                 ))}
               </div>
@@ -388,59 +751,31 @@ export default function ProductApp() {
           )}
 
           {/* ─── STEP 4: Side by side ─── */}
-          {view === "step4" && (
+          {view === "step4" && analysis && (
             <>
               <PathIndicator current={3} />
               <h1 className="text-heading-lg" style={{ marginBottom: 8 }}>Side by side.</h1>
               <p className="text-body-lg" style={{ marginBottom: 32 }}>{"Each path costs something. Here\u2019s what each one costs."}</p>
 
               <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-                {OPTIONS.map((opt, i) => {
-                  const pros = [
-                    ["Clean technical foundation for 2025", "No more patching legacy systems", "Engineering morale improves"],
-                    ["Hit Q4 revenue targets", "No disruption to sales pipeline", "Marketing keeps their launch date"],
-                    ["Partial migration progress by Q1", "Revenue window preserved (thinner)", "Contractor absorbs architecture work"],
-                  ][i]
-                  const cons = [
-                    ["Miss Q4 revenue window", "Three enterprise prospects may churn", "Marketing team loses launch momentum"],
-                    ["Technical debt compounds through Q1", "Platform migration slips to Q2 or later", "Senior engineers may leave"],
-                    ["Neither track gets full resources", "Contractor onboarding takes 2 weeks", "Thinner Q4 feature set"],
-                  ][i]
-                  const affected = [
-                    ["Marcus (VP Eng) \u2014 must defend the delay", "Sales team \u2014 pipeline at risk", "Marketing \u2014 lose launch date"],
-                    ["Platform team \u2014 morale risk", "CTO \u2014 technical vision delayed", "Future hires \u2014 legacy stack repels talent"],
-                    ["Contractor \u2014 needs fast onboarding", "Product Marketing \u2014 thinner story", "Engineering \u2014 context switching cost"],
-                  ][i]
-
-                  return (
-                    <div key={i} className="lumo-card" style={{ padding: 24 }}>
-                      <h3 style={{ fontWeight: 600, fontSize: 17, color: "var(--text-primary)", marginBottom: 20, letterSpacing: "-0.01em" }}>{opt.name}</h3>
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 20 }}>
-                        <div>
-                          <p className="text-eyebrow" style={{ color: "var(--positive)", marginBottom: 10 }}>WHAT GETS BETTER</p>
-                          {pros.map((p, j) => <p key={j} style={{ fontSize: 14, color: "var(--text-secondary)", lineHeight: 1.5, marginBottom: 6 }}>{p}</p>)}
-                        </div>
-                        <div>
-                          <p className="text-eyebrow" style={{ color: "var(--risk)", marginBottom: 10 }}>WHAT GETS WORSE</p>
-                          {cons.map((c, j) => <p key={j} style={{ fontSize: 14, color: "var(--text-secondary)", lineHeight: 1.5, marginBottom: 6 }}>{c}</p>)}
-                        </div>
-                        <div>
-                          <p className="text-eyebrow" style={{ color: "var(--text-tertiary)", marginBottom: 10 }}>{"WHO\u2019S AFFECTED"}</p>
-                          {affected.map((a, j) => <p key={j} style={{ fontSize: 14, color: "var(--text-secondary)", lineHeight: 1.5, marginBottom: 6 }}>{a}</p>)}
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => { setSelectedOption(i); navigate("step5") }}
-                        className="btn-primary"
-                        style={{ marginTop: 20, fontSize: 14, padding: "10px 20px" }}
-                      >
-                        {"I\u2019m going with this one"}
-                      </button>
+                {analysis.options.map((opt, i) => (
+                  <div key={i} className="lumo-card" style={{ padding: "20px 20px 24px" }}>
+                    <h3 style={{ fontWeight: 600, fontSize: "clamp(18px, 4vw, 20px)", color: "var(--text-primary)", marginBottom: 10, letterSpacing: "-0.01em", lineHeight: 1.3 }}>{opt.name}</h3>
+                    <p style={{ fontWeight: 400, fontSize: "clamp(15px, 3.5vw, 16px)", color: "#4A4D52", lineHeight: 1.55, marginBottom: 16 }}>{opt.description}</p>
+                    <div style={{ padding: "12px 16px", borderRadius: 8, backgroundColor: "var(--risk-soft, rgba(255,90,90,0.1))" }}>
+                      <p className="text-eyebrow" style={{ color: "var(--risk)", marginBottom: 6 }}>THE COST</p>
+                      <p style={{ fontWeight: 400, fontSize: 14, color: "#4A4D52", lineHeight: 1.5 }}>{opt.cost}</p>
                     </div>
-                  )
-                })}
+                    <button
+                      onClick={() => { setSelectedOption(i); setChosenDirection(opt.name); navigate("step5") }}
+                      className="btn-primary"
+                      style={{ marginTop: 20, fontSize: 14, padding: "10px 20px", minHeight: 48, width: "100%" }}
+                    >
+                      {"I\u2019m going with this one"}
+                    </button>
+                  </div>
+                ))}
               </div>
-              <button className="btn-text" style={{ marginTop: 16, color: "var(--text-tertiary)" }}>{"Wait, this isn\u2019t the right question"}</button>
             </>
           )}
 
@@ -449,29 +784,33 @@ export default function ProductApp() {
             <>
               <PathIndicator current={4} />
               <h1 className="text-heading-lg" style={{ marginBottom: 8 }}>Your choice.</h1>
-              {selectedOption !== null && (
-                <p className="text-body-lg" style={{ marginBottom: 32 }}>
-                  You chose: <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>{OPTIONS[selectedOption].name}</span>
-                </p>
-              )}
+              <p className="text-body-lg" style={{ marginBottom: 36 }}>What are you going with? Write it in your own words.</p>
 
-              <p className="text-eyebrow" style={{ color: "var(--text-tertiary)", marginBottom: 12 }}>WHY THIS ONE</p>
+              <p className="text-eyebrow" style={{ color: "var(--text-tertiary)", marginBottom: 12 }}>THE DIRECTION YOU&apos;RE CHOOSING</p>
               <textarea
                 className="lumo-textarea"
-                style={{ minHeight: 120 }}
-                placeholder="Why does this feel right? What tipped it?"
-                value={reasoning}
-                onChange={e => setReasoning(e.target.value)}
+                style={{ minHeight: 80 }}
+                placeholder="e.g. Deprecate the legacy digest and move to personalized push notifications"
+                value={chosenDirection}
+                onChange={e => setChosenDirection(e.target.value)}
               />
+
+              <div style={{ marginTop: 32 }}>
+                <p className="text-eyebrow" style={{ color: "var(--text-tertiary)", marginBottom: 12 }}>WHY THIS ONE</p>
+                <textarea
+                  className="lumo-textarea"
+                  style={{ minHeight: 120 }}
+                  placeholder="Why does this feel right? What tipped it? Include any specific numbers or constraints."
+                  value={reasoning}
+                  onChange={e => setReasoning(e.target.value)}
+                />
+              </div>
 
               <div style={{ marginTop: 40 }}>
                 <p className="text-eyebrow" style={{ color: "var(--text-tertiary)", marginBottom: 16 }}>HOW CONFIDENT?</p>
-                <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
                   <input
-                    type="range"
-                    min={1}
-                    max={10}
-                    value={confidence}
+                    type="range" min={1} max={10} value={confidence}
                     onChange={e => setConfidence(Number(e.target.value))}
                     style={{
                       flex: 1, height: 2, appearance: "none", WebkitAppearance: "none",
@@ -479,147 +818,252 @@ export default function ProductApp() {
                       accentColor: "var(--accent-primary)",
                     }}
                   />
-                  <span className="text-mono" style={{ fontSize: 28, color: "var(--accent-primary)", fontWeight: 400, minWidth: 80, textAlign: "right" }}>
+                  <span className="text-mono" style={{ fontSize: 26, color: "var(--accent-primary)", fontWeight: 400, minWidth: 72, textAlign: "right" }}>
                     {confidence} / 10
                   </span>
                 </div>
               </div>
+
+              {/* Error state */}
+              {aiError && (
+                <div className="lumo-card" style={{ marginTop: 32, padding: 20, borderColor: "var(--risk)", backgroundColor: "rgba(160, 74, 56, 0.05)" }}>
+                  <p style={{ color: "var(--text-primary)", fontSize: 15, marginBottom: 16 }}>{aiError}</p>
+                  <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+                    {aiErrorCode !== "RATE_LIMITED" && (
+                      <button onClick={handleGenerate} className="btn-secondary" style={{ fontSize: 14, padding: "8px 18px", minHeight: 44 }}>
+                        Try again
+                      </button>
+                    )}
+                    <button
+                      onClick={showExample}
+                      style={{
+                        background: "none", border: "none", cursor: "pointer", padding: 0,
+                        fontSize: 14, color: "var(--accent-primary)", textDecoration: "underline",
+                        fontFamily: "inherit", minHeight: 44, display: "flex", alignItems: "center",
+                      }}
+                    >
+                      see an example of Lumo&apos;s output instead
+                    </button>
+                  </div>
+                </div>
+              )}
             </>
           )}
 
-          {/* ─── STEP 6: Tell people ─── */}
-          {view === "step6" && (
-            <>
-              <PathIndicator current={5} />
-              <h1 className="text-heading-lg" style={{ marginBottom: 8 }}>Tell people.</h1>
-              <p className="text-body-lg" style={{ marginBottom: 32 }}>Who needs to know? Select your audiences and get tailored drafts.</p>
+          {/* ─── LOADING ─── */}
+          {view === "loading" && (
+            <div style={{ textAlign: "center", paddingTop: 120 }}>
+              <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 40 }}>
+                {[0, 1, 2].map(i => (
+                  <div key={i} style={{
+                    width: 10, height: 10, borderRadius: "50%",
+                    backgroundColor: "var(--accent-primary)",
+                    animation: "pulseDot 1.5s ease-in-out infinite",
+                    animationDelay: `${i * 0.2}s`,
+                  }} />
+                ))}
+              </div>
+              <p style={{ fontSize: 20, color: "var(--text-secondary)", fontStyle: "italic", fontFamily: "var(--font-serif-italic, Georgia, serif)" }}>
+                {LOADING_TEXTS[loadingText]}
+              </p>
+              {loadingSlowWarning && (
+                <p style={{ fontSize: 14, color: "var(--text-tertiary)", marginTop: 20 }}>
+                  Still thinking. Real decisions take a minute sometimes.
+                </p>
+              )}
+              <style>{`
+                @keyframes pulseDot {
+                  0%, 100% { opacity: 0.3; transform: scale(0.8); }
+                  50% { opacity: 1; transform: scale(1); }
+                }
+              `}</style>
+            </div>
+          )}
 
-              {/* Audience picker */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 40 }}>
-                {AUDIENCES.map(a => (
+          {/* ─── STEP 6: AI Output ─── */}
+          {view === "step6" && aiOutput && (
+            <>
+              {/* Example mode banner */}
+              {isExampleMode && (
+                <div style={{
+                  display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12,
+                  padding: "12px 20px", marginBottom: 32,
+                  backgroundColor: "var(--accent-primary-soft)",
+                  borderRadius: "var(--radius)",
+                  border: "1px solid rgba(226, 104, 71, 0.2)",
+                }}>
+                  <span style={{ fontSize: 14, color: "var(--accent-primary)", fontWeight: 500 }}>
+                    This is an example.
+                  </span>
                   <button
-                    key={a.key}
-                    onClick={() => toggleAudience(a.key)}
+                    onClick={() => { resetDecision(); navigate("step1") }}
                     style={{
-                      display: "flex", alignItems: "center", gap: 12,
-                      padding: "14px 18px", borderRadius: "var(--radius)",
-                      border: "1.5px solid",
-                      borderColor: selectedAudiences.includes(a.key) ? "var(--accent-primary)" : "var(--border-default)",
-                      backgroundColor: selectedAudiences.includes(a.key) ? "var(--accent-primary-soft)" : "var(--bg-surface)",
-                      cursor: "pointer", transition: "all 150ms ease-out",
-                      textAlign: "left", width: "100%",
+                      background: "none", border: "none", cursor: "pointer", padding: 0,
+                      fontSize: 14, color: "var(--accent-primary)", fontWeight: 600,
+                      fontFamily: "inherit", display: "flex", alignItems: "center", gap: 6,
+                      minHeight: 44,
                     }}
                   >
-                    <div style={{
-                      width: 20, height: 20, borderRadius: 4,
-                      border: "2px solid",
-                      borderColor: selectedAudiences.includes(a.key) ? "var(--accent-primary)" : "var(--border-default)",
-                      backgroundColor: selectedAudiences.includes(a.key) ? "var(--accent-primary)" : "transparent",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      flexShrink: 0, transition: "all 150ms ease-out",
-                    }}>
-                      {selectedAudiences.includes(a.key) && <Check style={{ width: 12, height: 12, color: "white" }} />}
-                    </div>
-                    <span style={{ fontWeight: 500, fontSize: 15, color: "var(--text-primary)" }}>{a.label}</span>
+                    Start your own decision <ArrowRight style={{ width: 14, height: 14 }} />
+                  </button>
+                </div>
+              )}
+
+              {!isExampleMode && <PathIndicator current={5} />}
+
+              {/* Clarity Summary */}
+              <div className="signature-italic" style={{ fontSize: 18, lineHeight: 1.65, marginBottom: 44, maxWidth: 580 }}>
+                {aiOutput.claritySummary}
+              </div>
+
+              {/* Tab navigation */}
+              <div style={{ display: "flex", borderBottom: "1px solid var(--border-default)", marginBottom: 24, overflowX: "auto" }}>
+                {(["engineering", "design", "leadership"] as const).map(tab => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    style={{
+                      padding: "12px 20px", minHeight: 44, fontSize: 14, fontWeight: 500,
+                      color: activeTab === tab ? "var(--accent-primary)" : "var(--text-secondary)",
+                      background: "none", border: "none",
+                      borderBottom: activeTab === tab ? "2px solid var(--accent-primary)" : "2px solid transparent",
+                      cursor: "pointer", transition: "all 150ms ease-out",
+                      textTransform: "capitalize", marginBottom: -1, fontFamily: "inherit",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {tab}
                   </button>
                 ))}
               </div>
 
-              {/* Draft messages */}
-              {selectedAudiences.length > 0 && (
-                <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-                  {selectedAudiences.map(key => {
-                    const audience = AUDIENCES.find(a => a.key === key)
-                    const msg = DRAFT_MESSAGES[key] || ""
-                    return (
-                      <div key={key} className="lumo-card" style={{ padding: 24, position: "relative" }}>
-                        <p className="text-eyebrow" style={{ color: "var(--accent-primary)", marginBottom: 12 }}>
-                          FOR {audience?.label.toUpperCase()}
-                        </p>
-                        <div style={{ padding: "16px 0 16px 20px", borderLeft: "2px solid var(--border-default)", fontSize: 15, lineHeight: 1.65, color: "var(--text-primary)" }}>
-                          {msg}
-                        </div>
-                        <button
-                          onClick={() => handleCopy(key, msg)}
-                          style={{ position: "absolute", top: 20, right: 20, background: "none", border: "none", cursor: "pointer", padding: 4 }}
-                          aria-label="Copy message"
-                        >
-                          {copiedKey === key
-                            ? <Check style={{ width: 16, height: 16, color: "var(--positive)" }} />
-                            : <Copy style={{ width: 16, height: 16, color: "var(--text-tertiary)" }} />
-                          }
-                        </button>
-                      </div>
-                    )
-                  })}
+              {/* Message card */}
+              <div className="lumo-card" style={{ padding: "24px 24px 20px" }}>
+                <p className="text-eyebrow" style={{ color: "var(--accent-primary)", marginBottom: 12 }}>
+                  FOR {activeTab.toUpperCase()} PARTNERS
+                </p>
+                <div style={{
+                  padding: "14px 0 14px 18px",
+                  borderLeft: "2px solid var(--border-default)",
+                  fontSize: 15, lineHeight: 1.65, color: "var(--text-primary)",
+                  whiteSpace: "pre-wrap",
+                }}>
+                  {aiOutput.messages[activeTab]}
                 </div>
-              )}
+                <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 16 }}>
+                  <button
+                    onClick={() => handleCopy(activeTab, aiOutput.messages[activeTab])}
+                    style={{
+                      background: "none", border: "none", cursor: "pointer", padding: "6px 10px",
+                      display: "flex", alignItems: "center", gap: 6, minHeight: 44,
+                      borderRadius: "var(--radius)",
+                    }}
+                    aria-label="Copy message"
+                  >
+                    {copiedKey === activeTab ? (
+                      <>
+                        <Check style={{ width: 15, height: 15, color: "var(--positive)" }} />
+                        <span style={{ fontSize: 13, color: "var(--positive)", fontWeight: 500 }}>Copied</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy style={{ width: 15, height: 15, color: "var(--text-tertiary)" }} />
+                        <span style={{ fontSize: 13, color: "var(--text-tertiary)", fontWeight: 500 }}>Copy message</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
 
-              {/* Closure line */}
-              {selectedAudiences.length > 0 && (
-                <div style={{ marginTop: 48 }}>
-                  <p className="text-eyebrow" style={{ color: "var(--text-tertiary)", marginBottom: 8 }}>{"WHAT YOU\u2019RE GIVING UP"}</p>
-                  <p className="text-caption" style={{ marginBottom: 12 }}>One sentence on what you are giving up by choosing this. One sentence, or skip.</p>
-                  <input
-                    type="text"
-                    className="lumo-input"
-                    placeholder="The version where..."
-                    value={closureLine}
-                    onChange={e => setClosureLine(e.target.value)}
-                  />
-                </div>
-              )}
+              {/* Copy entire decision */}
+              <div style={{ marginTop: 16 }}>
+                <button
+                  onClick={handleCopyAll}
+                  className="btn-secondary"
+                  style={{ width: "100%", fontSize: 14, padding: "12px 20px", minHeight: 44, justifyContent: "center" }}
+                >
+                  {copiedKey === "all" ? (
+                    <>
+                      <Check style={{ width: 15, height: 15 }} />
+                      Copied all three messages
+                    </>
+                  ) : (
+                    <>
+                      <ClipboardCopy style={{ width: 15, height: 15 }} />
+                      Copy entire decision
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {/* CTAs */}
+              <div style={{ textAlign: "center", marginTop: 52 }}>
+                <button
+                  className="btn-secondary"
+                  onClick={() => { resetDecision(); navigate("step1") }}
+                  style={{ fontSize: 14, padding: "12px 24px", minHeight: 44 }}
+                >
+                  Start a new decision
+                </button>
+                <p style={{ marginTop: 16, fontSize: 13, color: "var(--text-tertiary)" }}>
+                  <button
+                    onClick={() => setShowAbout(true)}
+                    style={{
+                      background: "none", border: "none", cursor: "pointer", padding: 0,
+                      fontSize: 13, color: "var(--text-tertiary)", textDecoration: "underline",
+                      fontFamily: "inherit",
+                    }}
+                  >
+                    see how this was built
+                  </button>
+                  {" \u2192"}
+                </p>
+              </div>
+
+              <div style={{ textAlign: "center", marginTop: 40 }}>
+                <span className="text-mono" style={{ fontSize: 13, color: "var(--text-tertiary)" }}>
+                  Decision {"\u2116"}{decisionNum}
+                </span>
+              </div>
+
+              <p style={{
+                textAlign: "center",
+                marginTop: 40,
+                fontFamily: "'Source Serif 4', Georgia, serif",
+                fontStyle: "italic",
+                fontSize: 16,
+                color: "#8B8B8E",
+              }}>
+                the decision was always yours. lumo just helped you say it.
+              </p>
             </>
           )}
 
-          {/* ─── DONE ─── */}
-          {view === "done" && (
-            <div style={{ textAlign: "center", paddingTop: 80 }}>
-              <span className="text-mono" style={{ fontSize: 48, color: "var(--text-tertiary)", display: "block", marginBottom: 24 }}>{"\u2116"}{decisionNum}</span>
-              <h1 style={{ fontSize: 48, fontWeight: 700, letterSpacing: "-0.03em", color: "var(--text-primary)", marginBottom: 16 }}>Saved.</h1>
-              <p className="signature-italic" style={{ maxWidth: 400, margin: "0 auto 48px", borderLeft: "none", paddingLeft: 0, textAlign: "center", fontSize: 19 }}>
-                You thought it through. The words are yours now.
-              </p>
-              <div style={{ display: "flex", justifyContent: "center", gap: 24 }}>
-                <button className="btn-text" onClick={() => navigate("home")} style={{ color: "var(--accent-primary)" }}>
-                  {"Back to your decisions \u2192"}
-                </button>
-                <button className="btn-text" onClick={() => {
-                  setSituation(""); setUrgency(""); setSelectedOption(null); setReasoning("")
-                  setConfidence(7); setSelectedAudiences([]); setClosureLine("")
-                  navigate("step1")
-                }} style={{ color: "var(--text-tertiary)" }}>
-                  Start another decision
-                </button>
-              </div>
-            </div>
-          )}
         </div>
       </main>
 
       {/* === ACTION ZONE === */}
-      {view !== "home" && view !== "done" && (
+      {view !== "home" && view !== "loading" && view !== "step6" && (
         <div className="action-zone">
           <div style={{ maxWidth: 720, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <button
               className="btn-secondary"
-              style={{ fontSize: 14, padding: "10px 20px" }}
+              style={{ fontSize: 14, padding: "10px 18px", minHeight: 44 }}
               onClick={() => {
-                const idx = currentStepIndex
-                if (idx <= 0) navigate("home")
-                else navigate(STEP_NAMES[idx - 1].key)
+                if (currentStepIndex <= 0) navigate("home")
+                else navigate(STEP_NAMES[currentStepIndex - 1].key)
               }}
             >
               <ArrowLeft style={{ width: 14, height: 14 }} />
-              {currentStepIndex <= 0 ? "Take me back" : "Take me back"}
+              Back
             </button>
             <button
               className="btn-primary"
-              style={{ fontSize: 14, padding: "10px 24px" }}
+              style={{ fontSize: 14, padding: "10px 22px", minHeight: 44 }}
               onClick={() => {
-                const idx = currentStepIndex
-                if (idx < STEP_NAMES.length - 1) navigate(STEP_NAMES[idx + 1].key)
-                else navigate("done")
+                if (view === "step1") { handleAnalyze(); return }
+                if (view === "step5") { handleGenerate(); return }
+                if (currentStepIndex < STEP_NAMES.length - 1) navigate(STEP_NAMES[currentStepIndex + 1].key)
               }}
             >
               {view === "step1" && "Show me what you got"}
@@ -627,12 +1071,41 @@ export default function ProductApp() {
               {view === "step3" && "Compare what each costs"}
               {view === "step4" && "Choose one above"}
               {view === "step5" && "Now help me tell people"}
-              {view === "step6" && "Done, save it"}
               <ArrowRight style={{ width: 14, height: 14 }} />
             </button>
+            {view === "step2" && (
+              <button
+                onClick={() => { resetDecision(); navigate("step1") }}
+                style={{
+                  background: "none", border: "none", cursor: "pointer",
+                  fontSize: 14, color: "var(--text-tertiary)", fontFamily: "inherit",
+                  padding: "8px 0", marginTop: 8,
+                }}
+              >
+                Not quite — start over
+              </button>
+            )}
           </div>
         </div>
       )}
+
+      {/* === FOOTER === */}
+      <footer style={{
+        borderTop: "1px solid var(--border-default)",
+        padding: "20px 24px",
+        display: "flex", alignItems: "center", justifyContent: "center", gap: 4,
+      }}>
+        <span style={{ fontSize: 13, color: "var(--text-tertiary)" }}>built by</span>
+        <a
+          href="https://linkedin.com/in/terrancerange"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ fontSize: 13, color: "var(--text-secondary)", fontWeight: 500, textDecoration: "underline" }}
+        >
+          Terrance Range
+        </a>
+      </footer>
+
     </div>
   )
 }
@@ -640,14 +1113,14 @@ export default function ProductApp() {
 /* ─── PATH INDICATOR ─── */
 function PathIndicator({ current }: { current: number }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 0, marginBottom: 40, flexWrap: "wrap" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 0, marginBottom: 36, flexWrap: "wrap", rowGap: 8 }}>
       {STEP_NAMES.map((step, i) => (
         <div key={step.key} style={{ display: "flex", alignItems: "center" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
             <span style={{
-              width: 8, height: 8, borderRadius: "50%",
+              width: 7, height: 7, borderRadius: "50%",
               backgroundColor: i < current ? "var(--text-primary)" : i === current ? "var(--accent-primary)" : "var(--border-default)",
-              transition: "background-color 150ms ease-out",
+              transition: "background-color 150ms ease-out", flexShrink: 0,
             }} />
             <span style={{
               fontSize: 13, fontWeight: i === current ? 600 : 400,
@@ -658,7 +1131,7 @@ function PathIndicator({ current }: { current: number }) {
             </span>
           </div>
           {i < STEP_NAMES.length - 1 && (
-            <span style={{ width: 16, height: 1, backgroundColor: "var(--border-default)", margin: "0 4px", flexShrink: 0 }} />
+            <span style={{ margin: "0 7px", color: "var(--border-default)", fontSize: 11 }}>/</span>
           )}
         </div>
       ))}
