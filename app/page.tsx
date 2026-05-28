@@ -3,8 +3,6 @@
 import Link from "next/link"
 import { ArrowRight, Check, X } from "lucide-react"
 
-const LOGOS = ["Linear", "Stripe", "Notion", "Figma", "Vercel"]
-
 const PROBLEMS = [
   {
     num: "01",
@@ -46,27 +44,6 @@ const COMPARE_RIGHT = [
   "Knows what to ask. Built for the shape of a PM decision.",
 ]
 
-const TESTIMONIALS = [
-  {
-    quote: "I used to spend Sunday nights drafting Monday\u2019s announcements three different ways. Now I open Lumo, do the thinking once, and walk into the week with everything I need to send.",
-    name: "Maya Chen",
-    role: "Senior PM",
-    company: "Linear",
-  },
-  {
-    quote: "The thing nobody talks about is how much time you spend translating one decision into seven artifacts. Lumo just does it. My VP gets the executive version, my team gets the real one.",
-    name: "James Okafor",
-    role: "Staff PM",
-    company: "Stripe",
-  },
-  {
-    quote: "I\u2019ve tried pasting decisions into ChatGPT a dozen times. It never works because it doesn\u2019t know the structure. Lumo knows exactly what a hard call looks like.",
-    name: "Priya Sharma",
-    role: "Senior PM",
-    company: "Notion",
-  },
-]
-
 export default function MarketingPage() {
   return (
     <div style={{ minHeight: "100vh" }}>
@@ -84,19 +61,30 @@ export default function MarketingPage() {
         }}
       >
         <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 32px", height: "100%", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <Link href="/" style={{ display: "flex", alignItems: "center", gap: 3 }}>
-            <span style={{ fontSize: 26, fontWeight: 600, letterSpacing: "-0.02em", color: "var(--text-primary)" }}>lumo</span>
-            <span style={{ width: 7, height: 7, borderRadius: "50%", backgroundColor: "var(--accent-primary)", display: "inline-block", marginBottom: 10 }} />
+          <Link href="/" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ display: "flex", alignItems: "center", gap: 3 }}>
+              <span style={{ fontSize: 26, fontWeight: 600, letterSpacing: "-0.02em", color: "var(--text-primary)" }}>lumo</span>
+              <span style={{ width: 7, height: 7, borderRadius: "50%", backgroundColor: "var(--accent-primary)", display: "inline-block", marginBottom: 10 }} />
+            </span>
+            <span style={{
+              fontSize: 11,
+              fontWeight: 600,
+              letterSpacing: "0.04em",
+              textTransform: "uppercase",
+              backgroundColor: "var(--accent-primary)",
+              color: "var(--text-on-accent)",
+              padding: "3px 8px",
+              borderRadius: 4,
+            }}>demo</span>
           </Link>
 
           <div style={{ display: "flex", alignItems: "center", gap: 32 }}>
-            {["Product", "How it works", "Why Lumo", "Pricing"].map((item) => (
-              <a key={item} href={`#${item.toLowerCase().replace(/ /g, "-")}`} className="nav-link" style={{ display: "none" }} className="nav-link hidden md:inline-block">{item}</a>
+            {["Product", "How it works", "Why Lumo"].map((item) => (
+              <a key={item} href={`#${item.toLowerCase().replace(/ /g, "-")}`} className="nav-link hidden md:inline-block">{item}</a>
             ))}
           </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <Link href="/app" style={{ fontSize: 14, fontWeight: 500, color: "var(--text-secondary)" }}>Sign in</Link>
             <Link href="/app" className="btn-primary" style={{ padding: "0.625rem 1.25rem", fontSize: 14 }}>Try Lumo</Link>
           </div>
         </div>
@@ -163,14 +151,6 @@ export default function MarketingPage() {
               ))}
             </div>
           </div>
-        </div>
-
-        {/* Logo row */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 40, marginTop: 48, flexWrap: "wrap" }}>
-          <span className="text-mono" style={{ color: "var(--text-tertiary)" }}>Used by PMs at:</span>
-          {LOGOS.map((logo) => (
-            <span key={logo} style={{ fontSize: 15, fontWeight: 600, color: "var(--text-tertiary)", letterSpacing: "-0.01em", opacity: 0.5 }}>{logo}</span>
-          ))}
         </div>
       </section>
 
@@ -254,26 +234,6 @@ export default function MarketingPage() {
         </div>
       </section>
 
-      {/* === TESTIMONIALS === */}
-      <section style={{ backgroundColor: "var(--bg-muted)", padding: "96px 0" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 32px" }}>
-          <p className="text-eyebrow" style={{ color: "var(--accent-primary)", marginBottom: 32 }}>TRUSTED BY PMS</p>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 24 }}>
-            {TESTIMONIALS.map((t) => (
-              <div key={t.name} className="lumo-card" style={{ padding: 32, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-                <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--text-primary)", fontWeight: 400, marginBottom: 24 }}>
-                  {"\u201C"}{t.quote}{"\u201D"}
-                </p>
-                <div>
-                  <p style={{ fontWeight: 600, fontSize: 14, color: "var(--text-primary)" }}>{t.name}</p>
-                  <p style={{ fontSize: 13, color: "var(--text-tertiary)" }}>{t.role}, {t.company}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* === CLOSING CTA === */}
       <section style={{ backgroundColor: "var(--bg-dark)", padding: "96px 32px", textAlign: "center" }}>
         <div style={{ maxWidth: 640, margin: "0 auto" }}>
@@ -281,10 +241,10 @@ export default function MarketingPage() {
             Stop drafting the same thing seven ways.
           </h2>
           <p style={{ fontSize: 18, color: "rgba(250, 247, 240, 0.65)", marginBottom: 40, lineHeight: 1.55 }}>
-            {"Lumo is free while we\u2019re in private beta. PMs at top tech companies are using it now."}
+            Lumo is a working demo. Walk through a real decision and see what it produces.
           </p>
           <Link href="/app" className="btn-primary" style={{ fontSize: "1.125rem", padding: "1rem 2.5rem" }}>
-            Get access
+            Try it now
             <ArrowRight style={{ width: 18, height: 18 }} />
           </Link>
           <div style={{ marginTop: 24 }}>
@@ -295,34 +255,31 @@ export default function MarketingPage() {
 
       {/* === FOOTER === */}
       <footer style={{ backgroundColor: "var(--bg-dark)", borderTop: "1px solid rgba(250, 247, 240, 0.08)", padding: "48px 32px 32px" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto", display: "flex", flexWrap: "wrap", gap: 48 }}>
-          <div style={{ flex: "1 1 280px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 3, marginBottom: 12 }}>
-              <span style={{ fontSize: 22, fontWeight: 600, color: "var(--text-on-dark)", letterSpacing: "-0.02em" }}>lumo</span>
-              <span style={{ width: 5, height: 5, borderRadius: "50%", backgroundColor: "var(--accent-primary)", marginBottom: 8 }} />
-            </div>
-            <p style={{ fontSize: 14, color: "rgba(250, 247, 240, 0.4)", lineHeight: 1.5, maxWidth: 280 }}>
-              {"The IC PM\u2019s external brain for judgment, context, and communication."}
-            </p>
+        <div style={{ maxWidth: 1200, margin: "0 auto", display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 24 }}>
+          {/* Left: Logo */}
+          <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
+            <span style={{ fontSize: 22, fontWeight: 600, color: "var(--text-on-dark)", letterSpacing: "-0.02em" }}>lumo</span>
+            <span style={{ width: 5, height: 5, borderRadius: "50%", backgroundColor: "var(--accent-primary)", marginBottom: 8 }} />
           </div>
-          {[
-            { title: "Product", links: ["Features", "How it works", "Pricing", "Changelog"] },
-            { title: "Company", links: ["About", "Blog", "Careers", "Press"] },
-            { title: "Resources", links: ["Documentation", "Community", "Support", "Status"] },
-            { title: "Contact", links: ["hello@lumo.pm", "Twitter", "LinkedIn"] },
-          ].map((col) => (
-            <div key={col.title} style={{ flex: "0 0 auto", minWidth: 120 }}>
-              <p style={{ fontSize: 13, fontWeight: 600, color: "rgba(250, 247, 240, 0.3)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 16 }}>{col.title}</p>
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {col.links.map((link) => (
-                  <span key={link} style={{ fontSize: 14, color: "rgba(250, 247, 240, 0.5)", cursor: "pointer" }}>{link}</span>
-                ))}
-              </div>
-            </div>
-          ))}
+
+          {/* Center: Tagline */}
+          <p style={{ fontSize: 14, color: "rgba(250, 247, 240, 0.5)", textAlign: "center" }}>
+            AI gives you speed. lumo gives you clarity.
+          </p>
+
+          {/* Right: Builder credit */}
+          <a
+            href="https://linkedin.com/in/terrancerange"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ fontSize: 14, color: "rgba(250, 247, 240, 0.5)" }}
+          >
+            built by Terrance Range
+          </a>
         </div>
-        <div style={{ maxWidth: 1200, margin: "0 auto", paddingTop: 32, marginTop: 32, borderTop: "1px solid rgba(250, 247, 240, 0.06)" }}>
-          <p style={{ fontSize: 13, color: "rgba(250, 247, 240, 0.25)" }}>{"\u00A9 2026 Lumo. Made for PMs who think for a living."}</p>
+
+        <div style={{ maxWidth: 1200, margin: "0 auto", paddingTop: 24, marginTop: 24, textAlign: "center" }}>
+          <p style={{ fontSize: 13, color: "rgba(250, 247, 240, 0.25)" }}>{"\u00A9 2026 Terrance Range"}</p>
         </div>
       </footer>
     </div>

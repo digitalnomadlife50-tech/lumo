@@ -383,3 +383,34 @@ a.lumo-card:hover {
 /* === GLOBAL LINK RESET === */
 a { color: inherit; text-decoration: none; transition: color 150ms ease-out; }
 a:hover { text-decoration: none; }
+
+/* === RESPONSIVE === */
+
+/* Step 4 comparison grid: 3-col on desktop, stacked on mobile */
+.step4-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 20px;
+}
+
+@media (max-width: 640px) {
+  .step4-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  /* Tighten horizontal padding on small screens */
+  main {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+
+  .action-zone {
+    padding: 12px 16px;
+  }
+
+  /* Header avatar hide on very small screens to avoid overflow */
+  .header-avatar-name {
+    display: none;
+  }
+}
