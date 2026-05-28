@@ -23,12 +23,12 @@ const sourceSerif = Source_Serif_4({
 })
 
 export const metadata: Metadata = {
-  title: 'Lumo, an external brain for PM decisions',
-  description: "The work AI doesn't do for product managers. Lumo helps you think through decisions and produces tailored messages for your team.",
+  title: 'Lumo — AI gives you speed. Lumo gives you clarity.',
+  description: "AI gives you speed. Lumo gives you clarity. A decision-making tool for product managers.",
   metadataBase: new URL('https://www.trylumo.co'),
   openGraph: {
-    title: 'Lumo, an external brain for PM decisions',
-    description: "The work AI doesn't do for product managers. Lumo helps you think through decisions and produces tailored messages for your team.",
+    title: 'Lumo — AI gives you speed. Lumo gives you clarity.',
+    description: "AI gives you speed. Lumo gives you clarity. A decision-making tool for product managers.",
     url: 'https://www.trylumo.co',
     siteName: 'Lumo',
     images: [
@@ -36,7 +36,7 @@ export const metadata: Metadata = {
         url: '/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'Lumo - an external brain for PM decisions',
+        alt: 'Lumo — AI gives you speed. Lumo gives you clarity.',
       },
     ],
     locale: 'en_US',
@@ -44,8 +44,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Lumo, an external brain for PM decisions',
-    description: "The work AI doesn't do for product managers. Lumo helps you think through decisions and produces tailored messages for your team.",
+    title: 'Lumo — AI gives you speed. Lumo gives you clarity.',
+    description: "AI gives you speed. Lumo gives you clarity. A decision-making tool for product managers.",
     images: ['/og-image.png'],
   },
   icons: {
