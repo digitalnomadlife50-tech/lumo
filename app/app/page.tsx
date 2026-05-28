@@ -15,7 +15,7 @@ interface AIOutput {
   }
 }
 
-type ErrorCode = "RATE_LIMITED" | "ANTHROPIC_RATE_LIMITED" | "SERVER_ERROR" | "TIMEOUT" | "PARSE_ERROR" | "INVALID_RESPONSE" | null
+type ErrorCode = "RATE_LIMITED" | "ANTHROPIC_RATE_LIMITED" | "QUOTA_EXCEEDED" | "SERVER_ERROR" | "TIMEOUT" | "PARSE_ERROR" | "INVALID_RESPONSE" | null
 
 interface AnalysisResult {
   realQuestion: string
@@ -602,7 +602,38 @@ export default function ProductApp() {
               </div>
 
               {/* Error display for analyze API failures */}
-              {aiError && (
+              {aiError && aiErrorCode === "QUOTA_EXCEEDED" && (
+                <div style={{ marginTop: 32, padding: 28, borderRadius: 16, backgroundColor: "var(--surface)", border: "1px solid var(--border-default)" }}>
+                  <h3 style={{ fontSize: 18, fontWeight: 900, color: "var(--text-primary)", marginBottom: 8, letterSpacing: "-0.02em" }}>
+                    Lumo is busier than usual right now.
+                  </h3>
+                  <p style={{ fontSize: 15, color: "var(--text-secondary)", lineHeight: 1.55, marginBottom: 24 }}>
+                    Try again in a few minutes, or see what Lumo produces when you bring it a real decision.
+                  </p>
+                  <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+                    <button
+                      onClick={() => { setAiError(null); setAiErrorCode(null); showExample() }}
+                      className="btn-primary"
+                      style={{ fontSize: 14, padding: "10px 20px", minHeight: 44 }}
+                    >
+                      See an example
+                      <ArrowRight style={{ width: 14, height: 14 }} />
+                    </button>
+                    <button
+                      onClick={() => { setAiError(null); setAiErrorCode(null); handleAnalyze() }}
+                      style={{
+                        background: "none", border: "none", cursor: "pointer", padding: "10px 0",
+                        fontSize: 14, color: "var(--text-secondary)", fontFamily: "inherit",
+                        minHeight: 44,
+                      }}
+                    >
+                      Try again
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {aiError && aiErrorCode !== "QUOTA_EXCEEDED" && (
                 <div style={{ marginTop: 24, padding: 16, borderRadius: 12, backgroundColor: "var(--risk-soft, rgba(255,90,90,0.1))", border: "1px solid var(--risk, #E74C3C)" }}>
                   <p style={{ color: "var(--risk, #E74C3C)", fontSize: 14, fontWeight: 500, marginBottom: 4 }}>Something went wrong</p>
                   <p style={{ color: "var(--text-secondary)", fontSize: 13 }}>{aiError}</p>
@@ -698,7 +729,7 @@ export default function ProductApp() {
             </>
           )}
 
-          {/* ─── STEP 3: Your options ─── */}
+          {/* ──��� STEP 3: Your options ─── */}
           {view === "step3" && analysis && (
             <>
               <PathIndicator current={2} />

@@ -147,6 +147,14 @@ Analyze this situation and return the structured JSON.`
     console.error("[lumo/analyze] Error:", err)
     const message = err instanceof Error ? err.message : "Unknown error"
     
+    // Check for quota exceeded errors
+    if (message.toLowerCase().includes("quota") || message.toLowerCase().includes("billing") || message.toLowerCase().includes("credit")) {
+      return Response.json(
+        { success: false, error: "Lumo is busier than usual right now.", errorCode: "QUOTA_EXCEEDED" },
+        { status: 429 }
+      )
+    }
+    
     // Check for Anthropic rate limit errors
     if (message.includes("429") || message.toLowerCase().includes("rate limit")) {
       return Response.json(

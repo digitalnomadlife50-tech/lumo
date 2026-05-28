@@ -146,8 +146,21 @@ If any of these four elements is missing from your output, you have failed the t
   } catch (error: unknown) {
     console.error("[lumo] API Error:", error)
 
-    // Surface rate limit errors from Anthropic
+    // Surface rate limit and quota errors from Anthropic
     const errMsg = error instanceof Error ? error.message : String(error)
+    
+    // Check for quota exceeded errors
+    if (errMsg.toLowerCase().includes("quota") || errMsg.toLowerCase().includes("billing") || errMsg.toLowerCase().includes("credit")) {
+      return Response.json(
+        {
+          success: false,
+          errorCode: "QUOTA_EXCEEDED",
+          error: "Lumo is busier than usual right now.",
+        },
+        { status: 429 }
+      )
+    }
+    
     if (errMsg.includes("429") || errMsg.toLowerCase().includes("rate limit")) {
       return Response.json(
         {
