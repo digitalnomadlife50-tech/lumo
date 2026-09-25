@@ -127,12 +127,24 @@ If any of these four elements is missing from your output, you have failed the t
       messages: [{ role: "user", content: userPrompt }],
     })
 
-    const text = response.content[0].type === "text" ? response.content[0].text : ""
+    const text = response.content
+      .filter((block): block is Anthropic.TextBlock => block.type === "text")
+      .map((block) => block.text)
+      .join("\n")
+      .trim()
 
-    // Parse JSON from response
+    // Parse JSON from all text blocks in the response.
     const jsonMatch = text.match(/\{[\s\S]*\}/)
     if (!jsonMatch) {
-      throw new Error("Failed to parse AI response")
+      console.error("[lumo/decide] No JSON found in response:", {
+        textLength: text.length,
+        contentBlockTypes: response.content.map((block) => block.type),
+        stopReason: response.stop_reason,
+      })
+      return Response.json(
+        { success: false, error: "Failed to parse AI response. Please try again.", errorCode: "PARSE_ERROR" },
+        { status: 500 }
+      )
     }
 
     const result = JSON.parse(jsonMatch[0])

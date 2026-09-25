@@ -117,12 +117,20 @@ Analyze this situation and return the structured JSON.`
       messages: [{ role: "user", content: userPrompt }],
     })
 
-    const text = response.content[0].type === "text" ? response.content[0].text : ""
+    const text = response.content
+      .filter((block): block is Anthropic.TextBlock => block.type === "text")
+      .map((block) => block.text)
+      .join("\n")
+      .trim()
 
-    // Parse the JSON from the response
+    // Parse the JSON from all text blocks in the response.
     const jsonMatch = text.match(/\{[\s\S]*\}/)
     if (!jsonMatch) {
-      console.error("[lumo/analyze] No JSON found in response:", text.slice(0, 500))
+      console.error("[lumo/analyze] No JSON found in response:", {
+        textLength: text.length,
+        contentBlockTypes: response.content.map((block) => block.type),
+        stopReason: response.stop_reason,
+      })
       return Response.json(
         { success: false, error: "Failed to parse AI response. Please try again.", errorCode: "PARSE_ERROR" },
         { status: 500 }
