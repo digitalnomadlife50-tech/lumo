@@ -2,22 +2,9 @@ import Anthropic from "@anthropic-ai/sdk"
 import { ANTHROPIC_MODEL } from "@/lib/anthropic-model"
 import { cleanAIValue, getAnthropicErrorMetadata, HUMAN_WRITING_RULES, safeAIErrorMessage, safeRawModelOutput } from "@/lib/ai-output-utils"
 import type { AIAttemptDiagnostic, AIDiagnostics } from "@/lib/ai-debug-config"
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit"
 
 export const maxDuration = 60
-
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
-
-function checkRateLimit(ip: string) {
-  const now = Date.now()
-  const entry = rateLimitMap.get(ip)
-  if (!entry || now > entry.resetAt) {
-    rateLimitMap.set(ip, { count: 1, resetAt: now + 60 * 60 * 1000 })
-    return { allowed: true }
-  }
-  if (entry.count >= 20) return { allowed: false, retryAfter: Math.ceil((entry.resetAt - now) / 1000) }
-  entry.count++
-  return { allowed: true }
-}
 
 type Channel = "email" | "slack" | "dm"
 type Instruction = "shorter" | "more-direct" | "add-audience"
@@ -100,8 +87,8 @@ export async function POST(req: Request) {
     return Response.json({ success: false, error: "API not configured. Please set ANTHROPIC_API_KEY.", errorCode: "SERVER_ERROR", diagnostics }, { status: 500 })
   }
 
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? req.headers.get("x-real-ip") ?? "unknown"
-  const rateLimit = checkRateLimit(ip)
+  const ip = getClientIp(req)
+  const rateLimit = await checkRateLimit("rewrite", ip)
   if (!rateLimit.allowed) return Response.json({ success: false, errorCode: "RATE_LIMITED", error: "Too many draft requests. Try again later.", retryAfter: rateLimit.retryAfter }, { status: 429 })
 
   try {

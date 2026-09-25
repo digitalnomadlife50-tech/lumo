@@ -2,24 +2,9 @@ import Anthropic from "@anthropic-ai/sdk"
 import { ANTHROPIC_MODEL } from "@/lib/anthropic-model"
 import { cleanAIValue, getAnthropicErrorMetadata, HUMAN_WRITING_RULES, safeAIErrorMessage, safeRawModelOutput } from "@/lib/ai-output-utils"
 import type { AIAttemptDiagnostic, AIDiagnostics } from "@/lib/ai-debug-config"
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit"
 
 export const maxDuration = 60
-
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
-
-function checkRateLimit(ip: string): { allowed: boolean; retryAfter?: number } {
-  const now = Date.now()
-  const windowMs = 60 * 60 * 1000
-  const limit = 10
-  const entry = rateLimitMap.get(ip)
-  if (!entry || now > entry.resetAt) {
-    rateLimitMap.set(ip, { count: 1, resetAt: now + windowMs })
-    return { allowed: true }
-  }
-  if (entry.count >= limit) return { allowed: false, retryAfter: Math.ceil((entry.resetAt - now) / 1000) }
-  entry.count++
-  return { allowed: true }
-}
 
 interface DecisionContext {
   situation: string
@@ -150,8 +135,8 @@ export async function POST(req: Request) {
     return Response.json({ success: false, error: "API not configured. Please set ANTHROPIC_API_KEY.", errorCode: "SERVER_ERROR", diagnostics }, { status: 500 })
   }
 
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? req.headers.get("x-real-ip") ?? "unknown"
-  const rateLimit = checkRateLimit(ip)
+  const ip = getClientIp(req)
+  const rateLimit = await checkRateLimit("decide", ip)
   if (!rateLimit.allowed) {
     return Response.json({ success: false, errorCode: "RATE_LIMITED", error: "You've used Lumo a lot today. Try again in an hour.", retryAfter: rateLimit.retryAfter }, { status: 429 })
   }
