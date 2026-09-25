@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk"
+import { ANTHROPIC_MODEL } from "@/lib/anthropic-model"
 
 export const maxDuration = 60
 
@@ -110,7 +111,7 @@ Analyze this situation and return the structured JSON.`
     })
 
     const response = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
+      model: ANTHROPIC_MODEL,
       max_tokens: 1500,
       system: systemPrompt,
       messages: [{ role: "user", content: userPrompt }],
