@@ -15,7 +15,7 @@ const limiters = {
   }),
   decide: new Ratelimit({
     redis,
-    limiter: Ratelimit.slidingWindow(10, "1 h"),
+    limiter: Ratelimit.slidingWindow(20, "1 h"),
     prefix: "lumo:ratelimit:decide",
   }),
   rewrite: new Ratelimit({
@@ -35,11 +35,20 @@ export function getClientIp(req: Request): string {
   )
 }
 
+export const RATE_LIMIT_MESSAGE = "You've hit the demo limit. Try again in an hour."
+
 export async function checkRateLimit(
   route: RateLimitedRoute,
   ip: string,
 ): Promise<{ allowed: boolean; retryAfter?: number }> {
-  const { success, reset } = await limiters[route].limit(ip)
-  if (success) return { allowed: true }
-  return { allowed: false, retryAfter: Math.max(0, Math.ceil((reset - Date.now()) / 1000)) }
+  try {
+    const { success, reset } = await limiters[route].limit(ip)
+    if (success) return { allowed: true }
+    return { allowed: false, retryAfter: Math.max(0, Math.ceil((reset - Date.now()) / 1000)) }
+  } catch (error) {
+    // If Redis is unreachable or errors, fail open: never let a rate limiter
+    // outage block the AI routes. Log for visibility and let the request through.
+    console.error(`[rate-limit] Redis check failed for "${route}", allowing request through:`, error)
+    return { allowed: true }
+  }
 }

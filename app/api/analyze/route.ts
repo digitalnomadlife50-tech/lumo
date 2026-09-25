@@ -2,7 +2,7 @@ import Anthropic from "@anthropic-ai/sdk"
 import { ANTHROPIC_MODEL } from "@/lib/anthropic-model"
 import { cleanAIValue, getAnthropicErrorMetadata, HUMAN_WRITING_RULES, safeAIErrorMessage, safeRawModelOutput } from "@/lib/ai-output-utils"
 import type { AIAttemptDiagnostic, AIDiagnostics } from "@/lib/ai-debug-config"
-import { checkRateLimit, getClientIp } from "@/lib/rate-limit"
+import { checkRateLimit, getClientIp, RATE_LIMIT_MESSAGE } from "@/lib/rate-limit"
 
 export const maxDuration = 60
 
@@ -111,7 +111,7 @@ export async function POST(req: Request) {
   const rl = await checkRateLimit("analyze", ip)
   if (!rl.allowed) {
     return Response.json(
-      { success: false, error: `Rate limit exceeded. Try again in ${rl.retryAfter} seconds.`, errorCode: "RATE_LIMIT" },
+      { success: false, error: RATE_LIMIT_MESSAGE, errorCode: "RATE_LIMITED", retryAfter: rl.retryAfter },
       { status: 429 }
     )
   }

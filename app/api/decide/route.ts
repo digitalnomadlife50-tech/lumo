@@ -2,7 +2,7 @@ import Anthropic from "@anthropic-ai/sdk"
 import { ANTHROPIC_MODEL } from "@/lib/anthropic-model"
 import { cleanAIValue, getAnthropicErrorMetadata, HUMAN_WRITING_RULES, safeAIErrorMessage, safeRawModelOutput } from "@/lib/ai-output-utils"
 import type { AIAttemptDiagnostic, AIDiagnostics } from "@/lib/ai-debug-config"
-import { checkRateLimit, getClientIp } from "@/lib/rate-limit"
+import { checkRateLimit, getClientIp, RATE_LIMIT_MESSAGE } from "@/lib/rate-limit"
 
 export const maxDuration = 60
 
@@ -138,7 +138,7 @@ export async function POST(req: Request) {
   const ip = getClientIp(req)
   const rateLimit = await checkRateLimit("decide", ip)
   if (!rateLimit.allowed) {
-    return Response.json({ success: false, errorCode: "RATE_LIMITED", error: "You've used Lumo a lot today. Try again in an hour.", retryAfter: rateLimit.retryAfter }, { status: 429 })
+    return Response.json({ success: false, errorCode: "RATE_LIMITED", error: RATE_LIMIT_MESSAGE, retryAfter: rateLimit.retryAfter }, { status: 429 })
   }
 
   try {
