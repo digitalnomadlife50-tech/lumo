@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk"
+import { ANTHROPIC_MODEL } from "@/lib/anthropic-model"
 
 export const maxDuration = 60
 
@@ -120,7 +121,7 @@ If any of these four elements is missing from your output, you have failed the t
     })
 
     const response = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
+      model: ANTHROPIC_MODEL,
       max_tokens: 2000,
       system: systemPrompt,
       messages: [{ role: "user", content: userPrompt }],
