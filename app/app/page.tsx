@@ -1,20 +1,26 @@
 "use client"
 
 import { useState, useRef, useEffect, useCallback } from "react"
-import { ArrowRight, ArrowLeft, Copy, Check, ChevronRight, X, ClipboardCopy } from "lucide-react"
+import { ArrowRight, ArrowLeft, Copy, Check, ChevronRight, X } from "lucide-react"
 import { AIDebugPanel } from "@/components/ai-debug-panel"
 import { SHOW_DEBUG_PANEL, isAIDiagnostics, type AIDiagnostics } from "@/lib/ai-debug-config"
 
 /* ─── TYPES ─── */
 type View = "home" | "step1" | "analyzing" | "step2" | "step3" | "step4" | "step5" | "loading" | "step6" | "done"
 
+type DraftChannel = "email" | "slack" | "dm"
+
+interface AudienceDraft {
+  audience: string
+  channel: DraftChannel
+  subject: string
+  body: string
+}
+
 interface AIOutput {
   claritySummary: string
-  messages: {
-    engineering: string
-    design: string
-    leadership: string
-  }
+  executionTeam: string
+  drafts: AudienceDraft[]
 }
 
 type ErrorCode = "RATE_LIMITED" | "ANTHROPIC_RATE_LIMITED" | "QUOTA_EXCEEDED" | "SERVER_ERROR" | "TIMEOUT" | "PARSE_ERROR" | "INVALID_RESPONSE" | null
@@ -33,12 +39,25 @@ interface AnalysisResult {
 }
 
 interface SessionDecision {
-  id: number
+  id: string
   question: string
   step: number
   status: "Pending" | "Done"
   decisionNum: number
+  situation: string
+  urgency: string
+  chosenDirection: string
+  reasoning: string
+  confidence: number
+  whatGivingUp: string
+  claritySummary: string
+  executionTeam: string
+  drafts: AudienceDraft[]
+  copiedAudiences: string[]
+  analysis?: AnalysisResult | null
 }
+
+const DECISIONS_STORAGE_KEY = "lumo-decisions-v1"
 
 /* ─── STATIC DATA ─── */
 const STEP_NAMES = [
@@ -52,23 +71,15 @@ const STEP_NAMES = [
 
 const URGENCY_OPTIONS = ["Next hour", "Today", "This week", "Next 2 weeks", "Longer"]
 
-/* ─── MOCK HARDCODED HISTORY (same for every visitor) ─── */
-const MOCK_RECENT: SessionDecision[] = [
-  { id: 1, question: "Choosing between Mixpanel and Amplitude for product analytics", step: 6, status: "Done", decisionNum: 42 },
-  { id: 2, question: "Whether to deprecate the legacy notification system", step: 6, status: "Done", decisionNum: 38 },
-  { id: 3, question: "Should we delay launch to fix the onboarding bug", step: 6, status: "Done", decisionNum: 35 },
-]
-
-const MOCK_USER = { name: "Sam K.", initials: "SK" }
-
-/* ─── EXAMPLE OUTPUT (static, no API call) ─── */
 const EXAMPLE_OUTPUT: AIOutput = {
-  claritySummary: "The real decision isn\u2019t \u2018ship vs delay.\u2019 It\u2019s whether the half-feature creates more support burden than a delayed launch. Given the support team\u2019s current load and the deadline\u2019s softness, the two-week delay is the higher-leverage choice.",
-  messages: {
-    engineering: "Heads up, leaning toward pushing the launch two weeks instead of the cut-down version we discussed. The half-feature path would mean rebuilding the navigation logic twice and supporting two notification states. Two weeks of cleaner scope is worth more than hitting Tuesday with debt we\u2019d carry for a quarter. Want to walk through what slips and what doesn\u2019t?",
-    design: "Want your read on something. The cut-down version we sketched would ship users into a state where the second action is hidden behind a settings drawer. I\u2019m worried that creates the exact discovery problem we just fixed in onboarding. Could we look at the cut-down flow together before we commit? Thinking we may push two weeks instead.",
-    leadership: "Recommendation: push the launch two weeks for the full scope rather than ship the cut-down version Tuesday. The half-feature path creates support load that would cost us 2\u20133 quarter points across the next two cycles. Two weeks gets us a cleaner launch and avoids the debt. Need your sign-off to move the date and notify stakeholders. Can we sync on this Thursday?",
-  },
+  claritySummary: "The example decision is to ship the core release on schedule and give enterprise SSO its own committed date.",
+  executionTeam: "Engineering",
+  drafts: [
+    { audience: "Engineering", channel: "slack", subject: "", body: "Ship v2 on schedule. SSO moves to its own release with a committed date. Please confirm the scope and owner for the SSO work." },
+    { audience: "Your VP", channel: "email", subject: "Decision: ship v2 on schedule", body: "The call is to ship v2 on time and give enterprise SSO its own release date. This keeps the fix moving for 40 waiting customers. I am watching whether the three prospects read the date as a no. Dana will speak with them this week. Confidence is 4 of 5." },
+    { audience: "Sales", channel: "slack", subject: "", body: "V2 ships on schedule. For the three prospects waiting on SSO, share the written release date once it is confirmed. Please send me any customer concerns this week." },
+    { audience: "Support", channel: "slack", subject: "", body: "V2 ships on schedule. SSO will have a separate release date. If customers ask, explain that the fix is shipping now and the SSO date will be shared in writing." },
+  ],
 }
 
 /* ─── MAIN COMPONENT ─── */
@@ -79,23 +90,35 @@ export default function ProductApp() {
   const [selectedOption, setSelectedOption] = useState<number | null>(null)
   const [chosenDirection, setChosenDirection] = useState("")
   const [reasoning, setReasoning] = useState("")
-  const [confidence, setConfidence] = useState(7)
+  const [whatGivingUp, setWhatGivingUp] = useState("")
+  const [confidence, setConfidence] = useState(3)
   const [copiedKey, setCopiedKey] = useState<string | null>(null)
-  const [decisionNum] = useState(() => Math.floor(Math.random() * 900) + 100)
+  const [copiedAudiences, setCopiedAudiences] = useState<string[]>([])
+  const [decisionNum, setDecisionNum] = useState(1)
+  const [currentDecisionId, setCurrentDecisionId] = useState<string | null>(null)
   const [aiOutput, setAiOutput] = useState<AIOutput | null>(null)
+  const [rewritingAudience, setRewritingAudience] = useState<string | null>(null)
+  const [rewriteError, setRewriteError] = useState<string | null>(null)
+  const [rewriteDiagnostics, setRewriteDiagnostics] = useState<AIDiagnostics | null>(null)
+  const [audienceInput, setAudienceInput] = useState("")
+  const [showAddAudience, setShowAddAudience] = useState(false)
+  const [previousDrafts, setPreviousDrafts] = useState<Record<string, AudienceDraft>>({})
+  const [aiStatus, setAiStatus] = useState<"ready" | "connected" | "unavailable">("ready")
   const [aiError, setAiError] = useState<string | null>(null)
   const [aiErrorCode, setAiErrorCode] = useState<ErrorCode>(null)
   const [aiErrorDetails, setAiErrorDetails] = useState<AIDiagnostics | null>(null)
   const [loadingText, setLoadingText] = useState(0)
   const [loadingSlowWarning, setLoadingSlowWarning] = useState(false)
-  const [activeTab, setActiveTab] = useState<"engineering" | "design" | "leadership">("engineering")
+  const [activeTab, setActiveTab] = useState("")
   const [isExampleMode, setIsExampleMode] = useState(false)
   const [showAbout, setShowAbout] = useState(false)
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null)
   const [analyzingText, setAnalyzingText] = useState(0)
   const [sectionsVisible, setSectionsVisible] = useState<number[]>([])
-  // Session-level decisions (resets on page refresh, NOT persisted)
+  const [isHoldingCommit, setIsHoldingCommit] = useState(false)
   const [sessionDecisions, setSessionDecisions] = useState<SessionDecision[]>([])
+  const decisionsLoadedRef = useRef(false)
+  const holdCommitTimerRef = useRef<number | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const abortRef = useRef<AbortController | null>(null)
 
@@ -104,41 +127,39 @@ export default function ProductApp() {
     window.scrollTo({ top: 0 })
   }, [])
 
-  const handleCopy = useCallback((key: string, text: string) => {
-    navigator.clipboard.writeText(text).catch(() => {
-      const el = document.createElement("textarea")
-      el.value = text
-      document.body.appendChild(el)
-      el.select()
-      document.execCommand("copy")
-      document.body.removeChild(el)
-    })
-    setCopiedKey(key)
-    setTimeout(() => setCopiedKey(null), 1500)
-  }, [])
+  const updateSavedDecision = useCallback((updates: Partial<SessionDecision>) => {
+    if (!currentDecisionId) return
+    setSessionDecisions((previous) => previous.map((decision) =>
+      decision.id === currentDecisionId ? { ...decision, ...updates } : decision,
+    ))
+  }, [currentDecisionId])
 
-  // Copy entire decision (all three messages + clarity summary)
-  const handleCopyAll = useCallback(() => {
-    if (!aiOutput) return
-    const formatted = [
-      `DECISION CLARITY`,
-      `───────────────`,
-      aiOutput.claritySummary,
-      ``,
-      `FOR ENGINEERING`,
-      `──────────────���`,
-      aiOutput.messages.engineering,
-      ``,
-      `FOR DESIGN`,
-      `───────────────`,
-      aiOutput.messages.design,
-      ``,
-      `FOR LEADERSHIP`,
-      `───────────────`,
-      aiOutput.messages.leadership,
-    ].join("\n")
-    handleCopy("all", formatted)
-  }, [aiOutput, handleCopy])
+  const handleCopy = useCallback(async (key: string, text: string) => {
+    try {
+      await navigator.clipboard.writeText(text)
+    } catch {
+      const element = document.createElement("textarea")
+      element.value = text
+      element.setAttribute("readonly", "")
+      element.style.position = "fixed"
+      element.style.opacity = "0"
+      document.body.appendChild(element)
+      element.select()
+      const copied = document.execCommand("copy")
+      document.body.removeChild(element)
+      if (!copied) {
+        setRewriteError("Clipboard access was blocked. Select and copy the draft text instead.")
+        return
+      }
+    }
+    const audience = key === "all" ? null : key
+    if (audience) {
+      setCopiedAudiences((previous) => previous.includes(audience) ? previous : [...previous, audience])
+      updateSavedDecision({ copiedAudiences: [...copiedAudiences.filter((item) => item !== audience), audience] })
+    }
+    setCopiedKey(key)
+    window.setTimeout(() => setCopiedKey(null), 1500)
+  }, [copiedAudiences, updateSavedDecision])
 
   const resetDecision = useCallback(() => {
     setSituation("")
@@ -146,15 +167,24 @@ export default function ProductApp() {
     setSelectedOption(null)
     setChosenDirection("")
     setReasoning("")
-    setConfidence(7)
+    setWhatGivingUp("")
+    setConfidence(3)
     setCopiedKey(null)
+    setCopiedAudiences([])
     setAiOutput(null)
+    setCurrentDecisionId(null)
+    setRewriteError(null)
+    setRewriteDiagnostics(null)
+    setRewritingAudience(null)
+    setAudienceInput("")
+    setShowAddAudience(false)
+    setPreviousDrafts({})
     setAiError(null)
     setAiErrorCode(null)
     setAiErrorDetails(null)
     setLoadingSlowWarning(false)
     setIsExampleMode(false)
-    setActiveTab("engineering")
+    setActiveTab("")
     setAnalysis(null)
     setAnalyzingText(0)
   }, [])
@@ -185,6 +215,7 @@ export default function ProductApp() {
       clearInterval(textInterval)
 
       if (!data.success) {
+        setAiStatus("unavailable")
         setAiError(data.error)
         setAiErrorCode(data.errorCode ?? "SERVER_ERROR")
         setAiErrorDetails(isAIDiagnostics(data.diagnostics) ? data.diagnostics : null)
@@ -192,15 +223,42 @@ export default function ProductApp() {
         return
       }
 
+      setAiStatus("connected")
       setAnalysis(data.analysis)
       navigate("step2")
     } catch (err) {
       clearInterval(textInterval)
+      setAiStatus("unavailable")
       const msg = err instanceof Error ? err.message : "Analysis failed"
       setAiError(msg)
       navigate("step1")
     }
   }
+
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem(DECISIONS_STORAGE_KEY)
+      const parsed: unknown = stored ? JSON.parse(stored) : []
+      if (Array.isArray(parsed)) {
+        setSessionDecisions(parsed.filter((decision): decision is SessionDecision =>
+          Boolean(decision && typeof decision.id === "string" && typeof decision.question === "string" && typeof decision.decisionNum === "number" && (decision.status === "Pending" || decision.status === "Done") && Array.isArray(decision.drafts)),
+        ))
+      }
+    } catch {
+      setSessionDecisions([])
+    } finally {
+      decisionsLoadedRef.current = true
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!decisionsLoadedRef.current) return
+    try {
+      window.localStorage.setItem(DECISIONS_STORAGE_KEY, JSON.stringify(sessionDecisions))
+    } catch {
+      setRewriteError("This browser could not save the latest decision changes.")
+    }
+  }, [sessionDecisions])
 
   // Auto-resize textarea
   useEffect(() => {
@@ -258,25 +316,22 @@ export default function ProductApp() {
   const showExample = useCallback(() => {
     setIsExampleMode(true)
     setAiOutput(EXAMPLE_OUTPUT)
-    setActiveTab("engineering")
+    setActiveTab(EXAMPLE_OUTPUT.drafts[0].audience)
+    setCopiedAudiences([])
     navigate("step6")
   }, [navigate])
 
   const handleGenerate = async () => {
-    // Validate nothing is empty
-    if (!situation || !urgency || !chosenDirection || !reasoning || !confidence) {
-      console.warn("MISSING FIELDS:", {
-        situation: !!situation,
-        urgency: !!urgency,
-        chosenDirection: !!chosenDirection,
-        reasoning: !!reasoning,
-        confidence: !!confidence,
-      })
+    if (!situation.trim() || !urgency || !chosenDirection.trim() || !reasoning.trim() || !whatGivingUp.trim()) {
+      setAiError("Complete the situation, timing, choice, reasoning, and what you are giving up before drafting messages.")
+      return
     }
 
     setAiError(null)
     setAiErrorCode(null)
     setAiErrorDetails(null)
+    setRewriteError(null)
+    setRewriteDiagnostics(null)
     setLoadingText(0)
     setLoadingSlowWarning(false)
 
@@ -284,13 +339,7 @@ export default function ProductApp() {
     abortRef.current = controller
     navigate("loading")
 
-    const requestBody = {
-      situation,
-      urgency,
-      chosenDirection,
-      reasoning,
-      confidence,
-    }
+    const requestBody = { situation, urgency, chosenDirection, reasoning, confidence, whatGivingUp, analysis }
     let failureDetails: AIDiagnostics | null = null
 
     try {
@@ -300,38 +349,173 @@ export default function ProductApp() {
         signal: controller.signal,
         body: JSON.stringify(requestBody),
       })
-
       const data = await response.json()
-
       if (!data.success) {
+        setAiStatus("unavailable")
         setAiErrorCode(data.errorCode ?? "SERVER_ERROR")
         failureDetails = isAIDiagnostics(data.diagnostics) ? data.diagnostics : null
         throw new Error(data.error)
       }
 
-      setAiOutput(data)
-      setIsExampleMode(false)
-      setSessionDecisions(prev => [{
-        id: Date.now(),
-        question: situation.slice(0, 80) || chosenDirection,
+      const generated = data as AIOutput
+      const nextDecisionNum = Math.max(0, ...sessionDecisions.map((decision) => decision.decisionNum)) + 1
+      const id = crypto.randomUUID()
+      const savedDecision: SessionDecision = {
+        id,
+        question: chosenDirection.trim(),
         step: 6,
-        status: "Done",
-        decisionNum,
-      }, ...prev])
+        status: "Pending",
+        decisionNum: nextDecisionNum,
+        situation,
+        urgency,
+        chosenDirection,
+        reasoning,
+        confidence,
+        whatGivingUp,
+        claritySummary: generated.claritySummary,
+        executionTeam: generated.executionTeam,
+        drafts: generated.drafts,
+        copiedAudiences: [],
+        analysis,
+      }
+      setDecisionNum(nextDecisionNum)
+      setCurrentDecisionId(id)
+      setSessionDecisions((previous) => [savedDecision, ...previous])
+      setAiOutput(generated)
+      setActiveTab(generated.drafts[0]?.audience ?? "")
+      setCopiedAudiences([])
+      setPreviousDrafts({})
+      setAiStatus("connected")
+      setIsExampleMode(false)
       navigate("step6")
     } catch (err) {
       if ((err as Error).name === "AbortError") return
-      const msg = err instanceof Error ? err.message : "Something went wrong on our end. Try again, or see an example of Lumo\u2019s output instead."
+      setAiStatus("unavailable")
+      const msg = err instanceof Error ? err.message : "Something went wrong on our end. Try again."
       setAiError(msg)
       setAiErrorDetails(failureDetails)
       navigate("step5")
     }
   }
 
-  // All decisions shown on home = session decisions first, then hardcoded mock
-  const allDecisions = [...sessionDecisions, ...MOCK_RECENT]
-  const inMotion = allDecisions.filter(d => d.status === "Pending")
-  const recentDone = allDecisions.filter(d => d.status === "Done").slice(0, 5)
+  const rewriteDraft = async (instruction: "shorter" | "more-direct" | "add-audience", requestedAudience?: string) => {
+    if (!aiOutput) return
+    const isAddAudience = instruction === "add-audience"
+    const sourceDraft = isAddAudience
+      ? { audience: requestedAudience?.trim() ?? "", channel: "slack" as const, subject: "", body: "" }
+      : aiOutput.drafts.find((draft) => draft.audience === activeTab)
+    if (!sourceDraft) return
+
+    const targetAudience = isAddAudience ? sourceDraft.audience : sourceDraft.audience
+    setRewriteError(null)
+    setRewriteDiagnostics(null)
+    setRewritingAudience(targetAudience)
+    try {
+      const response = await fetch("/api/rewrite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          draft: sourceDraft,
+          context: {
+            situation, urgency, chosenDirection, reasoning, confidence, whatGivingUp,
+            claritySummary: aiOutput.claritySummary,
+            affectedAudiences: analysis?.whoIsAffected ?? "",
+          },
+          instruction,
+          audience: requestedAudience,
+        }),
+      })
+      const data = await response.json()
+      if (!data.success) {
+        setAiStatus("unavailable")
+        setRewriteDiagnostics(isAIDiagnostics(data.diagnostics) ? data.diagnostics : null)
+        throw new Error(data.error ?? "The draft could not be rewritten.")
+      }
+
+      const rewritten = data.draft as AudienceDraft
+      let updatedDrafts: AudienceDraft[]
+      if (isAddAudience) {
+        updatedDrafts = [...aiOutput.drafts, rewritten]
+        setActiveTab(rewritten.audience)
+        setAudienceInput("")
+        setShowAddAudience(false)
+      } else {
+        setPreviousDrafts((previous) => ({ ...previous, [sourceDraft.audience]: sourceDraft }))
+        updatedDrafts = aiOutput.drafts.map((draft) => draft.audience === sourceDraft.audience ? rewritten : draft)
+      }
+      setAiOutput({ ...aiOutput, drafts: updatedDrafts })
+      updateSavedDecision({ drafts: updatedDrafts })
+      setAiStatus("connected")
+    } catch (error) {
+      setRewriteError(error instanceof Error ? error.message : "The draft could not be rewritten. Try again.")
+    } finally {
+      setRewritingAudience(null)
+    }
+  }
+
+  const updateDraft = (audience: string, updates: Partial<AudienceDraft>) => {
+    if (!aiOutput) return
+    const updatedDrafts = aiOutput.drafts.map((draft) => draft.audience === audience ? { ...draft, ...updates } : draft)
+    setAiOutput({ ...aiOutput, drafts: updatedDrafts })
+    updateSavedDecision({ drafts: updatedDrafts })
+  }
+
+  const undoDraft = () => {
+    const previous = previousDrafts[activeTab]
+    if (!previous || !aiOutput) return
+    const updatedDrafts = aiOutput.drafts.map((draft) => draft.audience === activeTab ? previous : draft)
+    setAiOutput({ ...aiOutput, drafts: updatedDrafts })
+    updateSavedDecision({ drafts: updatedDrafts })
+    setPreviousDrafts((items) => {
+      const next = { ...items }
+      delete next[activeTab]
+      return next
+    })
+  }
+
+  const startCommitHold = () => {
+    if (holdCommitTimerRef.current !== null) window.clearTimeout(holdCommitTimerRef.current)
+    setIsHoldingCommit(true)
+    holdCommitTimerRef.current = window.setTimeout(() => {
+      holdCommitTimerRef.current = null
+      setIsHoldingCommit(false)
+      void handleGenerate()
+    }, 800)
+  }
+
+  const cancelCommitHold = () => {
+    if (holdCommitTimerRef.current !== null) window.clearTimeout(holdCommitTimerRef.current)
+    holdCommitTimerRef.current = null
+    setIsHoldingCommit(false)
+  }
+
+  const fileDecision = () => {
+    if (!currentDecisionId || isExampleMode) return
+    updateSavedDecision({ status: "Done" })
+    navigate("done")
+  }
+
+  const openDecision = (decision: SessionDecision) => {
+    setSituation(decision.situation)
+    setUrgency(decision.urgency)
+    setChosenDirection(decision.chosenDirection)
+    setReasoning(decision.reasoning)
+    setWhatGivingUp(decision.whatGivingUp)
+    setConfidence(decision.confidence)
+    setDecisionNum(decision.decisionNum)
+    setCurrentDecisionId(decision.id)
+    setAiOutput({ claritySummary: decision.claritySummary, executionTeam: decision.executionTeam, drafts: decision.drafts })
+    setAnalysis(decision.analysis ?? null)
+    setCopiedAudiences(decision.copiedAudiences ?? [])
+    setActiveTab(decision.drafts[0]?.audience ?? "")
+    setIsExampleMode(false)
+    navigate("step6")
+  }
+
+  const allDecisions = [...sessionDecisions].sort((left, right) => right.decisionNum - left.decisionNum)
+  const inMotion = allDecisions.filter((decision) => decision.status === "Pending")
+  const recentDone = allDecisions.filter((decision) => decision.status === "Done").slice(0, 5)
+  const activeDraft = aiOutput?.drafts.find((draft) => draft.audience === activeTab) ?? aiOutput?.drafts[0] ?? null
 
   /* ─────────────────────────────────────────────────────────────── RENDER ─── */
   return (
@@ -432,13 +616,13 @@ export default function ProductApp() {
 
         {/* Right: demo badge + user identity + about */}
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          {/* Demo badge */}
-          <span style={{
+          <span aria-live="polite" style={{
             fontSize: 11, fontWeight: 600, letterSpacing: "0.06em",
-            color: "var(--accent-primary)", backgroundColor: "var(--accent-primary-soft)",
+            color: aiStatus === "unavailable" ? "var(--risk)" : "var(--positive)",
+            backgroundColor: aiStatus === "unavailable" ? "rgba(160, 74, 56, 0.1)" : "rgba(74, 122, 92, 0.1)",
             padding: "4px 10px", borderRadius: 9999, textTransform: "uppercase",
           }}>
-            Demo
+            {aiStatus === "unavailable" ? "AI unavailable" : aiStatus === "connected" ? "AI connected" : "AI ready"}
           </span>
 
           {/* About link */}
@@ -461,7 +645,7 @@ export default function ProductApp() {
             flexShrink: 0,
           }}>
             <span style={{ fontSize: 11, fontWeight: 700, color: "var(--bg-canvas)", letterSpacing: "0.04em" }}>
-              {MOCK_USER.initials}
+              L
             </span>
           </div>
         </div>
@@ -482,11 +666,11 @@ export default function ProductApp() {
                   display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
                 }}>
                   <span style={{ fontSize: 14, fontWeight: 700, color: "var(--bg-canvas)", letterSpacing: "0.04em" }}>
-                    {MOCK_USER.initials}
+                    L
                   </span>
                 </div>
                 <div>
-                  <p style={{ fontSize: 15, fontWeight: 600, color: "var(--text-primary)", marginBottom: 2 }}>{MOCK_USER.name}</p>
+                  <p style={{ fontSize: 15, fontWeight: 600, color: "var(--text-primary)", marginBottom: 2 }}>Your workspace</p>
                   <p className="text-mono" style={{ color: "var(--text-tertiary)", fontSize: 12 }}>{allDecisions.length} decisions</p>
                 </div>
               </div>
@@ -522,7 +706,7 @@ export default function ProductApp() {
                       <button
                         key={d.id}
                         className="lumo-card"
-                        onClick={() => navigate(`step${d.step}` as View)}
+                        onClick={() => openDecision(d)}
                         style={{
                           display: "flex", justifyContent: "space-between", alignItems: "center",
                           padding: "18px 20px", cursor: "pointer", border: "1px solid var(--border-default)",
@@ -818,11 +1002,24 @@ export default function ProductApp() {
                 />
               </div>
 
+              <div style={{ marginTop: 32 }}>
+                <label htmlFor="what-giving-up" className="text-eyebrow" style={{ color: "var(--text-tertiary)", display: "block", marginBottom: 12 }}>WHAT ARE YOU GIVING UP?</label>
+                <textarea
+                  id="what-giving-up"
+                  className="lumo-textarea"
+                  style={{ minHeight: 88 }}
+                  placeholder="Name the tradeoff you are accepting, in your own words."
+                  value={whatGivingUp}
+                  onChange={(event) => setWhatGivingUp(event.target.value)}
+                  required
+                />
+              </div>
+
               <div style={{ marginTop: 40 }}>
                 <p className="text-eyebrow" style={{ color: "var(--text-tertiary)", marginBottom: 16 }}>HOW CONFIDENT?</p>
                 <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
                   <input
-                    type="range" min={1} max={10} value={confidence}
+                    type="range" min={1} max={5} value={confidence}
                     onChange={e => setConfidence(Number(e.target.value))}
                     style={{
                       flex: 1, height: 2, appearance: "none", WebkitAppearance: "none",
@@ -831,9 +1028,25 @@ export default function ProductApp() {
                     }}
                   />
                   <span className="text-mono" style={{ fontSize: 26, color: "var(--accent-primary)", fontWeight: 400, minWidth: 72, textAlign: "right" }}>
-                    {confidence} / 10
+                    {confidence} / 5
                   </span>
                 </div>
+              </div>
+              <div style={{ marginTop: 24 }}>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  aria-label="Hold to commit this decision. You can also use Draft messages now below."
+                  onPointerDown={startCommitHold}
+                  onPointerUp={cancelCommitHold}
+                  onPointerLeave={cancelCommitHold}
+                  onPointerCancel={cancelCommitHold}
+                  onClick={(event) => { if (event.detail === 0) void handleGenerate() }}
+                  style={{ minHeight: 44, width: "100%", borderColor: isHoldingCommit ? "var(--accent-primary)" : undefined, color: isHoldingCommit ? "var(--accent-primary)" : undefined }}
+                >
+                  {isHoldingCommit ? "Keep holding to commit" : "Hold to commit"}
+                </button>
+                <p style={{ marginTop: 8, fontSize: 12, color: "var(--text-tertiary)", textAlign: "center" }}>You can also use the instant action below.</p>
               </div>
 
               {/* Error state */}
@@ -893,170 +1106,190 @@ export default function ProductApp() {
             </div>
           )}
 
-          {/* ─── STEP 6: AI Output ─── */}
-          {view === "step6" && aiOutput && (
+          {/* ─── STEP 6: Tell people ─── */}
+          {view === "step6" && aiOutput && activeDraft && (
             <>
-              {/* Example mode banner */}
               {isExampleMode && (
-                <div style={{
-                  display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12,
-                  padding: "12px 20px", marginBottom: 32,
-                  backgroundColor: "var(--accent-primary-soft)",
-                  borderRadius: "var(--radius)",
-                  border: "1px solid rgba(226, 104, 71, 0.2)",
-                }}>
-                  <span style={{ fontSize: 14, color: "var(--accent-primary)", fontWeight: 500 }}>
-                    This is an example.
-                  </span>
+                <div role="note" style={{ padding: "12px 16px", marginBottom: 28, borderRadius: "var(--radius)", backgroundColor: "var(--accent-primary-soft)", color: "var(--accent-primary)", fontSize: 14 }}>
+                  Example drafts only. Start a decision to generate messages from your own input.
+                </div>
+              )}
+              {!isExampleMode && <PathIndicator current={5} />}
+              <h1 className="text-heading-lg" style={{ marginBottom: 8 }}>Tell people.</h1>
+              <p className="text-body-lg" style={{ marginBottom: 28 }}>One decision, written for each audience. Edit, copy, send.</p>
+
+              <section className="lumo-card" aria-label="Decision summary" style={{ padding: 20, marginBottom: 32 }}>
+                <p className="text-eyebrow" style={{ color: "var(--accent-primary)", marginBottom: 8 }}>THE CALL</p>
+                <p style={{ fontSize: 16, lineHeight: 1.55, color: "var(--text-primary)" }}>{aiOutput.claritySummary}</p>
+              </section>
+
+              <div role="tablist" aria-label="Message audiences" style={{ display: "flex", overflowX: "auto", borderBottom: "1px solid var(--border-default)", marginBottom: 0 }}>
+                {aiOutput.drafts.map((draft) => {
+                  const selected = draft.audience === activeDraft.audience
+                  const copied = copiedAudiences.includes(draft.audience)
+                  return (
+                    <button
+                      key={draft.audience}
+                      id={`audience-tab-${encodeURIComponent(draft.audience)}`}
+                      type="button"
+                      role="tab"
+                      aria-selected={selected}
+                      aria-controls="audience-draft-panel"
+                      onClick={() => setActiveTab(draft.audience)}
+                      style={{
+                        padding: "12px 16px", minHeight: 48, flexShrink: 0,
+                        color: selected ? "var(--accent-primary)" : "var(--text-secondary)",
+                        background: "none", border: 0,
+                        borderBottom: selected ? "2px solid var(--accent-primary)" : "2px solid transparent",
+                        marginBottom: -1, cursor: "pointer", fontFamily: "inherit", fontSize: 14,
+                        fontWeight: selected ? 600 : 500, whiteSpace: "nowrap",
+                        transition: "color 180ms ease-out, border-color 180ms ease-out",
+                      }}
+                    >
+                      {draft.audience}{copied ? <span style={{ marginLeft: 7, color: "var(--positive)", fontSize: 11 }}>copied</span> : null}
+                    </button>
+                  )
+                })}
+              </div>
+
+              <div
+                key={activeDraft.audience}
+                id="audience-draft-panel"
+                role="tabpanel"
+                aria-labelledby={`audience-tab-${encodeURIComponent(activeDraft.audience)}`}
+                className="audience-draft-enter lumo-card"
+                style={{ padding: "20px 20px 18px", borderTopLeftRadius: 0, borderTopRightRadius: 0 }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, marginBottom: 18 }}>
+                  <p className="text-mono" style={{ fontSize: 12, color: "var(--text-tertiary)", textTransform: "uppercase" }}>
+                    {activeDraft.channel} <span aria-hidden="true">/</span> {activeDraft.body.trim() ? activeDraft.body.trim().split(/\s+/).length : 0} words
+                  </p>
+                  {rewritingAudience === activeDraft.audience && (
+                    <span className="text-mono rewriting-status" role="status" aria-live="polite">rewriting</span>
+                  )}
+                </div>
+                {activeDraft.channel === "email" && (
+                  <label style={{ display: "block", marginBottom: 14 }}>
+                    <span className="text-eyebrow" style={{ display: "block", marginBottom: 8 }}>SUBJECT</span>
+                    <input
+                      className="lumo-input"
+                      aria-label="Email subject"
+                      value={activeDraft.subject}
+                      onChange={(event) => updateDraft(activeDraft.audience, { subject: event.target.value })}
+                      disabled={isExampleMode || rewritingAudience === activeDraft.audience}
+                    />
+                  </label>
+                )}
+                <label style={{ display: "block" }}>
+                  <span className="text-eyebrow" style={{ display: "block", marginBottom: 8 }}>MESSAGE</span>
+                  <textarea
+                    className="lumo-textarea"
+                    aria-label={`${activeDraft.audience} message`}
+                    value={activeDraft.body}
+                    onChange={(event) => updateDraft(activeDraft.audience, { body: event.target.value })}
+                    style={{ minHeight: 220, fontSize: 15, lineHeight: 1.65, resize: "vertical" }}
+                    disabled={isExampleMode || rewritingAudience === activeDraft.audience}
+                  />
+                </label>
+                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, marginTop: 14 }}>
+                  <button type="button" className="btn-secondary" disabled={isExampleMode || rewritingAudience !== null} onClick={() => void rewriteDraft("shorter")} style={{ minHeight: 40, padding: "8px 13px", fontSize: 13 }}>Shorter</button>
+                  <button type="button" className="btn-secondary" disabled={isExampleMode || rewritingAudience !== null} onClick={() => void rewriteDraft("more-direct")} style={{ minHeight: 40, padding: "8px 13px", fontSize: 13 }}>More direct</button>
+                  {previousDrafts[activeDraft.audience] && <button type="button" className="btn-text" onClick={undoDraft} style={{ minHeight: 40, padding: "8px 10px", fontSize: 13 }}>Undo</button>}
                   <button
-                    onClick={() => { resetDecision(); navigate("step1") }}
-                    style={{
-                      background: "none", border: "none", cursor: "pointer", padding: 0,
-                      fontSize: 14, color: "var(--accent-primary)", fontWeight: 600,
-                      fontFamily: "inherit", display: "flex", alignItems: "center", gap: 6,
-                      minHeight: 44,
-                    }}
+                    type="button"
+                    onClick={() => void handleCopy(activeDraft.audience, activeDraft.channel === "email" && activeDraft.subject ? `Subject: ${activeDraft.subject}\n\n${activeDraft.body}` : activeDraft.body)}
+                    className="btn-secondary"
+                    style={{ minHeight: 40, padding: "8px 14px", marginLeft: "auto", color: copiedKey === activeDraft.audience ? "var(--positive)" : undefined }}
                   >
-                    Start your own decision <ArrowRight style={{ width: 14, height: 14 }} />
+                    {copiedKey === activeDraft.audience || copiedAudiences.includes(activeDraft.audience) ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />}
+                    {copiedKey === activeDraft.audience ? "Copied" : "Copy"}
                   </button>
+                </div>
+              </div>
+
+              <p className="text-mono" aria-live="polite" style={{ fontSize: 12, color: "var(--text-tertiary)", marginTop: 14 }}>
+                {copiedAudiences.filter((audience) => aiOutput.drafts.some((draft) => draft.audience === audience)).length} of {aiOutput.drafts.length} copied
+              </p>
+
+              {rewriteError && (
+                <div className="lumo-card" role="alert" style={{ marginTop: 20, padding: 18, borderColor: "var(--risk)" }}>
+                  <p style={{ color: "var(--risk)", fontSize: 14, marginBottom: rewriteDiagnostics ? 14 : 0 }}>{rewriteError}</p>
+                  {SHOW_DEBUG_PANEL && <AIDebugPanel diagnostics={rewriteDiagnostics} />}
                 </div>
               )}
 
-              {!isExampleMode && <PathIndicator current={5} />}
-
-              {/* Clarity Summary */}
-              <div className="signature-italic" style={{ fontSize: 18, lineHeight: 1.65, marginBottom: 44, maxWidth: 580 }}>
-                {aiOutput.claritySummary}
-              </div>
-
-              {/* Tab navigation */}
-              <div style={{ display: "flex", borderBottom: "1px solid var(--border-default)", marginBottom: 24, overflowX: "auto" }}>
-                {(["engineering", "design", "leadership"] as const).map(tab => (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    style={{
-                      padding: "12px 20px", minHeight: 44, fontSize: 14, fontWeight: 500,
-                      color: activeTab === tab ? "var(--accent-primary)" : "var(--text-secondary)",
-                      background: "none", border: "none",
-                      borderBottom: activeTab === tab ? "2px solid var(--accent-primary)" : "2px solid transparent",
-                      cursor: "pointer", transition: "all 150ms ease-out",
-                      textTransform: "capitalize", marginBottom: -1, fontFamily: "inherit",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {tab}
-                  </button>
-                ))}
-              </div>
-
-              {/* Message card */}
-              <div className="lumo-card" style={{ padding: "24px 24px 20px" }}>
-                <p className="text-eyebrow" style={{ color: "var(--accent-primary)", marginBottom: 12 }}>
-                  FOR {activeTab.toUpperCase()} PARTNERS
-                </p>
-                <div style={{
-                  padding: "14px 0 14px 18px",
-                  borderLeft: "2px solid var(--border-default)",
-                  fontSize: 15, lineHeight: 1.65, color: "var(--text-primary)",
-                  whiteSpace: "pre-wrap",
-                }}>
-                  {aiOutput.messages[activeTab]}
-                </div>
-                <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 16 }}>
-                  <button
-                    onClick={() => handleCopy(activeTab, aiOutput.messages[activeTab])}
-                    style={{
-                      background: "none", border: "none", cursor: "pointer", padding: "6px 10px",
-                      display: "flex", alignItems: "center", gap: 6, minHeight: 44,
-                      borderRadius: "var(--radius)",
-                    }}
-                    aria-label="Copy message"
-                  >
-                    {copiedKey === activeTab ? (
-                      <>
-                        <Check style={{ width: 15, height: 15, color: "var(--positive)" }} />
-                        <span style={{ fontSize: 13, color: "var(--positive)", fontWeight: 500 }}>Copied</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy style={{ width: 15, height: 15, color: "var(--text-tertiary)" }} />
-                        <span style={{ fontSize: 13, color: "var(--text-tertiary)", fontWeight: 500 }}>Copy message</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              {/* Copy entire decision */}
-              <div style={{ marginTop: 16 }}>
-                <button
-                  onClick={handleCopyAll}
-                  className="btn-secondary"
-                  style={{ width: "100%", fontSize: 14, padding: "12px 20px", minHeight: 44, justifyContent: "center" }}
-                >
-                  {copiedKey === "all" ? (
-                    <>
-                      <Check style={{ width: 15, height: 15 }} />
-                      Copied all three messages
-                    </>
+              {!isExampleMode && (
+                <div style={{ marginTop: 22 }}>
+                  {!showAddAudience ? (
+                    <button type="button" className="btn-text" onClick={() => setShowAddAudience(true)} style={{ minHeight: 44 }}>+ Add audience</button>
                   ) : (
-                    <>
-                      <ClipboardCopy style={{ width: 15, height: 15 }} />
-                      Copy entire decision
-                    </>
+                    <form
+                      onSubmit={(event) => {
+                        event.preventDefault()
+                        const audience = audienceInput.trim()
+                        if (audience && !aiOutput.drafts.some((draft) => draft.audience.toLowerCase() === audience.toLowerCase())) void rewriteDraft("add-audience", audience)
+                      }}
+                      style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}
+                    >
+                      <label htmlFor="new-audience" className="sr-only">Audience name</label>
+                      <input id="new-audience" className="lumo-input" placeholder="e.g. Design lead or Legal" value={audienceInput} onChange={(event) => setAudienceInput(event.target.value)} maxLength={100} style={{ flex: "1 1 220px", width: "auto" }} />
+                      <button type="submit" className="btn-primary" disabled={!audienceInput.trim() || rewritingAudience !== null} style={{ minHeight: 44, padding: "10px 16px", fontSize: 13 }}>Generate draft</button>
+                      <button type="button" className="btn-text" onClick={() => { setShowAddAudience(false); setAudienceInput("") }} style={{ minHeight: 44 }}>Cancel</button>
+                    </form>
                   )}
-                </button>
-              </div>
+                </div>
+              )}
 
-              {/* CTAs */}
-              <div style={{ textAlign: "center", marginTop: 52 }}>
-                <button
-                  className="btn-secondary"
-                  onClick={() => { resetDecision(); navigate("step1") }}
-                  style={{ fontSize: 14, padding: "12px 24px", minHeight: 44 }}
-                >
-                  Start a new decision
-                </button>
-                <p style={{ marginTop: 16, fontSize: 13, color: "var(--text-tertiary)" }}>
-                  <button
-                    onClick={() => setShowAbout(true)}
-                    style={{
-                      background: "none", border: "none", cursor: "pointer", padding: 0,
-                      fontSize: 13, color: "var(--text-tertiary)", textDecoration: "underline",
-                      fontFamily: "inherit",
-                    }}
-                  >
-                    see how this was built
-                  </button>
-                  {" \u2192"}
-                </p>
-              </div>
-
-              <div style={{ textAlign: "center", marginTop: 40 }}>
-                <span className="text-mono" style={{ fontSize: 13, color: "var(--text-tertiary)" }}>
-                  Decision {"\u2116"}{decisionNum}
-                </span>
-              </div>
-
-              <p style={{
-                textAlign: "center",
-                marginTop: 40,
-                fontFamily: "'Source Serif 4', Georgia, serif",
-                fontStyle: "italic",
-                fontSize: 16,
-                color: "#8B8B8E",
-              }}>
-                the decision was always yours. lumo just helped you say it.
-              </p>
+              {!isExampleMode && (
+                <div style={{ display: "flex", justifyContent: "center", marginTop: 40, paddingTop: 24, borderTop: "1px solid var(--border-default)" }}>
+                  <button type="button" className="btn-primary" onClick={fileDecision} style={{ minHeight: 48, padding: "12px 22px" }}>File this decision <ArrowRight aria-hidden="true" /></button>
+                </div>
+              )}
             </>
+          )}
+
+          {/* ─── COMPLETION ─── */}
+          {view === "done" && currentDecisionId && (
+            <section aria-labelledby="completion-title" style={{ maxWidth: 620, margin: "24px auto 0" }}>
+              <p
+                className="text-mono completion-number"
+                aria-label={`Decision number ${decisionNum}`}
+                style={{ fontSize: "clamp(4rem, 10vw, 6rem)", lineHeight: 1, letterSpacing: "-0.06em", color: "var(--accent-primary)" }}
+              >
+                No.{decisionNum}
+              </p>
+              <h1 id="completion-title" className="text-heading-lg" style={{ marginTop: 12, marginBottom: 24 }}>Filed.</h1>
+              <div className="lumo-card" style={{ padding: 24 }}>
+                <div style={{ display: "grid", gap: 20 }}>
+                  <div>
+                    <p className="text-eyebrow" style={{ marginBottom: 8 }}>THE CALL</p>
+                    <p style={{ fontSize: 16, lineHeight: 1.55, color: "var(--text-primary)" }}>{chosenDirection}</p>
+                  </div>
+                  <div>
+                    <p className="text-eyebrow" style={{ marginBottom: 8 }}>CONFIDENCE</p>
+                    <p className="text-mono" style={{ fontSize: 15, color: "var(--text-primary)" }}>{confidence} of 5</p>
+                  </div>
+                  <div>
+                    <p className="text-eyebrow" style={{ marginBottom: 8 }}>MESSAGES PREPARED FOR</p>
+                    <p style={{ fontSize: 15, lineHeight: 1.6, color: "var(--text-primary)" }}>{aiOutput?.drafts.map((draft) => draft.audience).join(", ")}</p>
+                  </div>
+                </div>
+              </div>
+              <p className="signature-italic" style={{ marginTop: 28 }}>
+                {`You gave up ${whatGivingUp.trim().replace(/[.!?]+$/, "")}. It's on record, so the next time someone asks why, the answer is here.`}
+              </p>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginTop: 36 }}>
+                <button type="button" className="btn-secondary" onClick={() => { resetDecision(); navigate("home") }} style={{ minHeight: 46 }}>Back to home</button>
+                <button type="button" className="btn-primary" onClick={() => navigate("step6")} style={{ minHeight: 46 }}>Review the drafts</button>
+              </div>
+            </section>
           )}
 
         </div>
       </main>
 
       {/* === ACTION ZONE === */}
-      {view !== "home" && view !== "loading" && view !== "step6" && (
+      {view !== "home" && view !== "loading" && view !== "step6" && view !== "done" && (
         <div className="action-zone">
           <div style={{ maxWidth: 720, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <button
@@ -1083,7 +1316,7 @@ export default function ProductApp() {
               {view === "step2" && "This looks right"}
               {view === "step3" && "Compare what each costs"}
               {view === "step4" && "Choose one above"}
-              {view === "step5" && "Now help me tell people"}
+              {view === "step5" && "Draft messages now"}
               <ArrowRight style={{ width: 14, height: 14 }} />
             </button>
             {view === "step2" && (
