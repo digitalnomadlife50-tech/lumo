@@ -2,24 +2,25 @@ import type { Metadata } from 'next'
 import { Inter, JetBrains_Mono, Source_Serif_4 } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
+import './lumo.css'
 
 const inter = Inter({
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '800'],
-  variable: '--font-sans',
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-inter',
 })
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ['latin'],
-  weight: ['400'],
-  variable: '--font-mono',
+  weight: ['400', '500'],
+  variable: '--font-jetbrains',
 })
 
 const sourceSerif = Source_Serif_4({
   subsets: ['latin'],
   weight: ['400'],
   style: ['italic'],
-  variable: '--font-serif-italic',
+  variable: '--font-serif',
 })
 
 export const metadata: Metadata = {
@@ -63,7 +64,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="bg-background">
-      <body className={`${inter.variable} ${jetbrainsMono.variable} ${sourceSerif.variable} font-sans antialiased`}>
+      <body className={`${inter.variable} ${jetbrainsMono.variable} ${sourceSerif.variable} antialiased`}>
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>

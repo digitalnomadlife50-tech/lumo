@@ -115,18 +115,6 @@
   background-color: rgba(226, 104, 71, 0.2);
 }
 
-html {
-  background-color: var(--bg-canvas);
-  color: var(--text-primary);
-}
-
-body {
-  background-color: var(--bg-canvas);
-  color: var(--text-primary);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
 /* === TYPOGRAPHY === */
 
 .text-display {
