@@ -2,28 +2,9 @@ import Anthropic from "@anthropic-ai/sdk"
 import { ANTHROPIC_MODEL } from "@/lib/anthropic-model"
 import { cleanAIValue, getAnthropicErrorMetadata, HUMAN_WRITING_RULES, safeAIErrorMessage, safeRawModelOutput } from "@/lib/ai-output-utils"
 import type { AIAttemptDiagnostic, AIDiagnostics } from "@/lib/ai-debug-config"
+import { checkRateLimit, getClientIp, RATE_LIMIT_MESSAGE } from "@/lib/rate-limit"
 
 export const maxDuration = 60
-
-// ─── Simple in-memory IP rate limiter (20 req / IP / hour for analysis) ───────
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
-
-function checkRateLimit(ip: string): { allowed: boolean; retryAfter?: number } {
-  const now = Date.now()
-  const windowMs = 60 * 60 * 1000 // 1 hour
-  const limit = 20
-
-  const entry = rateLimitMap.get(ip)
-  if (!entry || now > entry.resetAt) {
-    rateLimitMap.set(ip, { count: 1, resetAt: now + windowMs })
-    return { allowed: true }
-  }
-  if (entry.count >= limit) {
-    return { allowed: false, retryAfter: Math.ceil((entry.resetAt - now) / 1000) }
-  }
-  entry.count++
-  return { allowed: true }
-}
 
 interface AnalyzeRequest {
   situation: string
@@ -125,15 +106,12 @@ export async function POST(req: Request) {
   }
 
   // ─── Rate limit ─────────────────────────────────────────────────────────────
-  const ip =
-    req.headers.get("x-forwarded-for")?.split(",")[0].trim() ??
-    req.headers.get("x-real-ip") ??
-    "unknown"
+  const ip = getClientIp(req)
 
-  const rl = checkRateLimit(ip)
+  const rl = await checkRateLimit("analyze", ip)
   if (!rl.allowed) {
     return Response.json(
-      { success: false, error: `Rate limit exceeded. Try again in ${rl.retryAfter} seconds.`, errorCode: "RATE_LIMIT" },
+      { success: false, error: RATE_LIMIT_MESSAGE, errorCode: "RATE_LIMITED", retryAfter: rl.retryAfter },
       { status: 429 }
     )
   }
