@@ -41,6 +41,60 @@ export interface AnalysisResult {
   observations: string[]
 }
 
+const analysisTool: Anthropic.Tool = {
+  name: "provide_decision_analysis",
+  description: "Return the structured analysis for the product manager's decision.",
+  input_schema: {
+    type: "object",
+    properties: {
+      realQuestion: { type: "string" },
+      whatMatters: { type: "string" },
+      whoIsAffected: { type: "string" },
+      howPressing: { type: "string" },
+      options: {
+        type: "array",
+        minItems: 2,
+        maxItems: 3,
+        items: {
+          type: "object",
+          properties: {
+            name: { type: "string" },
+            description: { type: "string" },
+            cost: { type: "string" },
+          },
+          required: ["name", "description", "cost"],
+          additionalProperties: false,
+        },
+      },
+      observations: { type: "array", items: { type: "string" } },
+    },
+    required: ["realQuestion", "whatMatters", "whoIsAffected", "howPressing", "options", "observations"],
+    additionalProperties: false,
+  },
+}
+
+function isAnalysisResult(value: unknown): value is AnalysisResult {
+  if (!value || typeof value !== "object") return false
+  const result = value as Record<string, unknown>
+  return (
+    typeof result.realQuestion === "string" &&
+    typeof result.whatMatters === "string" &&
+    typeof result.whoIsAffected === "string" &&
+    typeof result.howPressing === "string" &&
+    Array.isArray(result.options) &&
+    result.options.length > 0 &&
+    result.options.every((option) =>
+      option &&
+      typeof option === "object" &&
+      typeof option.name === "string" &&
+      typeof option.description === "string" &&
+      typeof option.cost === "string"
+    ) &&
+    Array.isArray(result.observations) &&
+    result.observations.every((observation) => typeof observation === "string")
+  )
+}
+
 export async function POST(req: Request) {
   // ─── Check for API key ──────────────────────────────────────────────────────
   if (!process.env.ANTHROPIC_API_KEY) {
@@ -76,76 +130,55 @@ export async function POST(req: Request) {
       )
     }
 
-    const systemPrompt = `You are Lumo, a decision-structuring tool for Senior Product Managers. The user has described a situation they need to decide on. Your job is to read their situation and produce structured analysis.
-
-Return a JSON object with exactly this structure:
-{
-  "realQuestion": "One sentence reframing the core decision",
-  "whatMatters": "2-3 sentences on the key tensions and tradeoffs",
-  "whoIsAffected": "List the stakeholders likely involved and why",
-  "howPressing": "Timeline implications given the urgency level",
-  "options": [
-    {
-      "name": "Short name for this path (5-8 words)",
-      "description": "One sentence describing this option",
-      "cost": "What this option costs or risks (1-2 sentences)"
-    }
-  ],
-  "observations": [
-    "One subtle observation about the situation the user might not have considered",
-    "Another observation"
-  ]
-}
-
-Generate 2-3 realistic options. Be specific to their situation. Do not use generic options like 'do nothing' unless it genuinely applies. 
-Voice: direct, no corporate filler, no sycophancy.
-Return ONLY the JSON object, no markdown code blocks, no explanation.`
+    const systemPrompt = `You are Lumo, a decision-structuring tool for Senior Product Managers. Read the user's situation and produce specific, useful analysis. Reframe the core decision in one sentence; explain the key tensions in 2-3 sentences; identify affected stakeholders and why; explain timeline implications based on urgency; suggest 2-3 realistic options with a short name, one-sentence description, and costs or risks; and offer subtle observations the user may have missed. Avoid generic options unless they genuinely apply. Use a direct voice without corporate filler or sycophancy. Provide the result through the required structured analysis tool.`
 
     const userPrompt = `USER'S SITUATION: ${situation}
 URGENCY: ${urgency || "Not specified"}
 
-Analyze this situation and return the structured JSON.`
+Analyze this situation specifically.`
 
     const anthropic = new Anthropic({
       apiKey: process.env.ANTHROPIC_API_KEY,
     })
 
-    const response = await anthropic.messages.create({
-      model: ANTHROPIC_MODEL,
-      max_tokens: 1500,
-      system: systemPrompt,
-      messages: [{ role: "user", content: userPrompt }],
-    })
+    let result: AnalysisResult | null = null
+    let lastError: unknown
 
-    const text = response.content
-      .filter((block): block is Anthropic.TextBlock => block.type === "text")
-      .map((block) => block.text)
-      .join("\n")
-      .trim()
+    for (let attempt = 0; attempt < 2 && !result; attempt++) {
+      try {
+        const response = await anthropic.messages.create({
+          model: ANTHROPIC_MODEL,
+          max_tokens: 4096,
+          system: systemPrompt,
+          messages: [{ role: "user", content: userPrompt }],
+          tools: [analysisTool],
+          tool_choice: { type: "tool", name: analysisTool.name },
+        })
 
-    // Parse the JSON from all text blocks in the response.
-    const jsonMatch = text.match(/\{[\s\S]*\}/)
-    if (!jsonMatch) {
-      console.error("[lumo/analyze] No JSON found in response:", {
-        textLength: text.length,
-        contentBlockTypes: response.content.map((block) => block.type),
-        stopReason: response.stop_reason,
-      })
-      return Response.json(
-        { success: false, error: "Failed to parse AI response. Please try again.", errorCode: "PARSE_ERROR" },
-        { status: 500 }
-      )
+        const toolResult = response.content.find(
+          (block): block is Anthropic.ToolUseBlock =>
+            block.type === "tool_use" && block.name === analysisTool.name
+        )
+
+        if (!toolResult || !isAnalysisResult(toolResult.input)) {
+          throw new Error("AI_RESPONSE_INVALID: structured analysis was missing required fields")
+        }
+
+        result = toolResult.input
+      } catch (error) {
+        lastError = error
+      }
     }
 
-    const result: AnalysisResult = JSON.parse(jsonMatch[0])
-
-    // Validate the structure
-    if (!result.realQuestion || !result.options || result.options.length === 0) {
-      console.error("[lumo/analyze] Invalid response structure:", result)
-      return Response.json(
-        { success: false, error: "AI returned incomplete analysis. Please try again.", errorCode: "INVALID_RESPONSE" },
-        { status: 500 }
-      )
+    if (!result) {
+      const message = lastError instanceof Error ? lastError.message : String(lastError)
+      if (message.startsWith("AI_RESPONSE_INVALID:")) {
+        return Response.json(
+          { success: false, error: "We couldn't generate a complete analysis after two attempts. Please try again.", errorCode: "INVALID_RESPONSE" },
+          { status: 502 }
+        )
+      }
+      throw lastError ?? new Error("AI request failed after two attempts")
     }
 
     return Response.json({
