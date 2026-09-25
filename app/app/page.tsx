@@ -621,8 +621,18 @@ export default function ProductApp() {
             color: aiStatus === "unavailable" ? "var(--risk)" : "var(--positive)",
             backgroundColor: aiStatus === "unavailable" ? "rgba(160, 74, 56, 0.1)" : "rgba(74, 122, 92, 0.1)",
             padding: "4px 10px", borderRadius: 9999, textTransform: "uppercase",
+            display: "flex", alignItems: "center", gap: 6,
           }}>
-            {aiStatus === "unavailable" ? "AI unavailable" : aiStatus === "connected" ? "AI connected" : "AI ready"}
+            <span
+              className={aiStatus === "connected" ? "anim-pulse" : undefined}
+              style={{
+                width: 6, height: 6, borderRadius: "50%", flexShrink: 0,
+                backgroundColor: aiStatus === "unavailable" ? "var(--caution)" : "var(--positive)",
+              }}
+            />
+            <span className="hide-on-mobile">
+              {aiStatus === "unavailable" ? "AI unavailable" : aiStatus === "connected" ? "AI connected" : "AI ready"}
+            </span>
           </span>
 
           {/* About link */}
