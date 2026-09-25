@@ -2,6 +2,8 @@
 
 import { useState, useRef, useEffect, useCallback } from "react"
 import { ArrowRight, ArrowLeft, Copy, Check, ChevronRight, X, ClipboardCopy } from "lucide-react"
+import { AIDebugPanel } from "@/components/ai-debug-panel"
+import { SHOW_DEBUG_PANEL, isAIDiagnostics, type AIDiagnostics } from "@/lib/ai-debug-config"
 
 /* ─── TYPES ─── */
 type View = "home" | "step1" | "analyzing" | "step2" | "step3" | "step4" | "step5" | "loading" | "step6" | "done"
@@ -83,6 +85,7 @@ export default function ProductApp() {
   const [aiOutput, setAiOutput] = useState<AIOutput | null>(null)
   const [aiError, setAiError] = useState<string | null>(null)
   const [aiErrorCode, setAiErrorCode] = useState<ErrorCode>(null)
+  const [aiErrorDetails, setAiErrorDetails] = useState<AIDiagnostics | null>(null)
   const [loadingText, setLoadingText] = useState(0)
   const [loadingSlowWarning, setLoadingSlowWarning] = useState(false)
   const [activeTab, setActiveTab] = useState<"engineering" | "design" | "leadership">("engineering")
@@ -148,6 +151,7 @@ export default function ProductApp() {
     setAiOutput(null)
     setAiError(null)
     setAiErrorCode(null)
+    setAiErrorDetails(null)
     setLoadingSlowWarning(false)
     setIsExampleMode(false)
     setActiveTab("engineering")
@@ -162,6 +166,7 @@ export default function ProductApp() {
     setAnalyzingText(0)
     setAiError(null)
     setAiErrorCode(null)
+    setAiErrorDetails(null)
     navigate("analyzing")
 
     // Rotate analyzing text
@@ -182,6 +187,7 @@ export default function ProductApp() {
       if (!data.success) {
         setAiError(data.error)
         setAiErrorCode(data.errorCode ?? "SERVER_ERROR")
+        setAiErrorDetails(isAIDiagnostics(data.diagnostics) ? data.diagnostics : null)
         navigate("step1")
         return
       }
@@ -270,6 +276,7 @@ export default function ProductApp() {
 
     setAiError(null)
     setAiErrorCode(null)
+    setAiErrorDetails(null)
     setLoadingText(0)
     setLoadingSlowWarning(false)
 
@@ -284,6 +291,7 @@ export default function ProductApp() {
       reasoning,
       confidence,
     }
+    let failureDetails: AIDiagnostics | null = null
 
     try {
       const response = await fetch("/api/decide", {
@@ -297,6 +305,7 @@ export default function ProductApp() {
 
       if (!data.success) {
         setAiErrorCode(data.errorCode ?? "SERVER_ERROR")
+        failureDetails = isAIDiagnostics(data.diagnostics) ? data.diagnostics : null
         throw new Error(data.error)
       }
 
@@ -314,6 +323,7 @@ export default function ProductApp() {
       if ((err as Error).name === "AbortError") return
       const msg = err instanceof Error ? err.message : "Something went wrong on our end. Try again, or see an example of Lumo\u2019s output instead."
       setAiError(msg)
+      setAiErrorDetails(failureDetails)
       navigate("step5")
     }
   }
@@ -610,9 +620,10 @@ export default function ProductApp() {
                   <p style={{ fontSize: 15, color: "var(--text-secondary)", lineHeight: 1.55, marginBottom: 24 }}>
                     Try again in a few minutes, or see what Lumo produces when you bring it a real decision.
                   </p>
+                  {SHOW_DEBUG_PANEL && <AIDebugPanel diagnostics={aiErrorDetails} />}
                   <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
                     <button
-                      onClick={() => { setAiError(null); setAiErrorCode(null); showExample() }}
+                      onClick={() => { setAiError(null); setAiErrorCode(null); setAiErrorDetails(null); showExample() }}
                       className="btn-primary"
                       style={{ fontSize: 14, padding: "10px 20px", minHeight: 44 }}
                     >
@@ -620,7 +631,7 @@ export default function ProductApp() {
                       <ArrowRight style={{ width: 14, height: 14 }} />
                     </button>
                     <button
-                      onClick={() => { setAiError(null); setAiErrorCode(null); handleAnalyze() }}
+                      onClick={() => { setAiError(null); setAiErrorCode(null); setAiErrorDetails(null); handleAnalyze() }}
                       style={{
                         background: "none", border: "none", cursor: "pointer", padding: "10px 0",
                         fontSize: 14, color: "var(--text-secondary)", fontFamily: "inherit",
@@ -637,6 +648,7 @@ export default function ProductApp() {
                 <div style={{ marginTop: 24, padding: 16, borderRadius: 12, backgroundColor: "var(--risk-soft, rgba(255,90,90,0.1))", border: "1px solid var(--risk, #E74C3C)" }}>
                   <p style={{ color: "var(--risk, #E74C3C)", fontSize: 14, fontWeight: 500, marginBottom: 4 }}>Something went wrong</p>
                   <p style={{ color: "var(--text-secondary)", fontSize: 13 }}>{aiError}</p>
+                  {SHOW_DEBUG_PANEL && <AIDebugPanel diagnostics={aiErrorDetails} />}
                 </div>
               )}
             </>
@@ -828,6 +840,7 @@ export default function ProductApp() {
               {aiError && (
                 <div className="lumo-card" style={{ marginTop: 32, padding: 20, borderColor: "var(--risk)", backgroundColor: "rgba(160, 74, 56, 0.05)" }}>
                   <p style={{ color: "var(--text-primary)", fontSize: 15, marginBottom: 16 }}>{aiError}</p>
+                  {SHOW_DEBUG_PANEL && <AIDebugPanel diagnostics={aiErrorDetails} />}
                   <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
                     {aiErrorCode !== "RATE_LIMITED" && (
                       <button onClick={handleGenerate} className="btn-secondary" style={{ fontSize: 14, padding: "8px 18px", minHeight: 44 }}>

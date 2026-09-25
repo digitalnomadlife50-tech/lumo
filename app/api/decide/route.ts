@@ -1,5 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk"
 import { ANTHROPIC_MODEL } from "@/lib/anthropic-model"
+import { cleanAIValue, getAnthropicErrorMetadata, HUMAN_WRITING_RULES, safeAIErrorMessage, safeRawModelOutput } from "@/lib/ai-output-utils"
+import type { AIAttemptDiagnostic, AIDiagnostics } from "@/lib/ai-debug-config"
 
 export const maxDuration = 60
 
@@ -31,15 +33,77 @@ interface DecideRequest {
   confidence: number
 }
 
+interface DecideResult {
+  claritySummary: string
+  messages: {
+    engineering: string
+    design: string
+    leadership: string
+  }
+}
+
+const decisionMessagesTool: Anthropic.Tool = {
+  name: "provide_decision_messages",
+  description: "Return a decision clarity summary and three audience-specific messages.",
+  input_schema: {
+    type: "object",
+    properties: {
+      claritySummary: { type: "string" },
+      messages: {
+        type: "object",
+        properties: {
+          engineering: { type: "string" },
+          design: { type: "string" },
+          leadership: { type: "string" },
+        },
+        required: ["engineering", "design", "leadership"],
+        additionalProperties: false,
+      },
+    },
+    required: ["claritySummary", "messages"],
+    additionalProperties: false,
+  },
+}
+
+function isDecideResult(value: unknown): value is DecideResult {
+  if (!value || typeof value !== "object") return false
+  const result = value as Record<string, unknown>
+  if (!result.messages || typeof result.messages !== "object") return false
+  const messages = result.messages as Record<string, unknown>
+  return (
+    typeof result.claritySummary === "string" &&
+    typeof messages.engineering === "string" &&
+    typeof messages.design === "string" &&
+    typeof messages.leadership === "string"
+  )
+}
+
 export async function POST(req: Request) {
+  const requestStartedAt = Date.now()
+
   // ─── Check for API key ──────────────────────────────────────────────────────
   if (!process.env.ANTHROPIC_API_KEY) {
-    console.error("[lumo/decide] ANTHROPIC_API_KEY not configured")
+    const error = "ANTHROPIC_API_KEY is not configured."
+    const diagnostics: AIDiagnostics = {
+      step: "Draft decision messages",
+      route: "/api/decide",
+      httpStatus: 500,
+      stage: "request to Anthropic",
+      exactErrorMessage: error,
+      model: ANTHROPIC_MODEL,
+      anthropicRequestId: null,
+      retryRan: false,
+      retryResult: "Retry not run because the API key is not configured",
+      timeTakenMs: Date.now() - requestStartedAt,
+      rawModelOutput: null,
+      attempts: [],
+    }
     return Response.json(
       {
         success: false,
         errorCode: "SERVER_ERROR",
         error: "API not configured. Please set ANTHROPIC_API_KEY.",
+        diagnostics,
       },
       { status: 500 }
     )
@@ -69,37 +133,7 @@ export async function POST(req: Request) {
     const body: DecideRequest = await req.json()
     const { situation, urgency, chosenDirection, reasoning, confidence } = body
 
-    console.log("[lumo] Request received:", JSON.stringify({ situation, urgency, chosenDirection, reasoning, confidence }))
-
-    // ─── Exact system prompt from spec ──────────────────────────────────────
-    const systemPrompt = `You are Lumo, a tool for thoughtful Senior Product Managers. The user is working through a specific decision and needs three tailored communication messages.
-
-Your job is to produce:
-1. A clarity summary (2-3 sentences in first-person) that names this specific decision, the specific tradeoff the user identified, and why the chosen direction makes sense given their reasoning.
-2. Three messages that are each fully specific to this decision. Generic phrasing is forbidden.
-
-Audience adaptations:
-- Engineering message: emphasize scope, technical tradeoffs, and the specific implementation implication of this decision. Reference the user's actual situation.
-- Design message: emphasize user impact, the specific UX implication, and invite input on the design surface that this decision affects. Reference the user's actual situation.
-- Leadership message: emphasize the outcome, the risk the user identified in their reasoning, and the specific ask they need from leadership to move forward. Reference the user's actual situation.
-
-Voice: Confident Senior PM. No corporate filler ('circle back', 'synergy', 'leverage', 'unpack'). No sycophancy. No 'I hope this helps' closers. Each message under 80 words.
-
-IMPORTANT: Your output MUST specifically reference ALL FOUR of these elements or you have failed the task:
-1. THE TIMELINE — name when this needs to happen and why that timing matters
-2. THE SPECIFIC DIRECTION they chose — name it explicitly, do not generalize or substitute a different direction
-3. THE REASONING — reference their specific numbers, tradeoffs, or concerns
-4. Tailor each message differently for each audience
-
-Return as structured JSON in exactly this format:
-{
-  "claritySummary": "string",
-  "messages": {
-    "engineering": "string",
-    "design": "string",
-    "leadership": "string"
-  }
-}`
+    const systemPrompt = `You are Lumo, a tool for thoughtful Senior Product Managers. Create a first-person clarity summary in 2-3 sentences that names the decision, tradeoff, and why the chosen direction fits the user's reasoning. Then draft three specific messages, each under 80 words: engineering (scope, technical tradeoffs, implementation implications), design (user impact, UX implications, invite input), and leadership (outcome, identified risk, and a concrete ask). Every message should name the timeline and why it matters, the specific chosen direction, and the user's reasoning. Provide the result through the required structured communication tool.\n\n${HUMAN_WRITING_RULES}`
 
     const userPrompt = `USER'S DECISION CONTEXT:
 What's happening: ${situation || "Not provided"}
@@ -108,41 +142,115 @@ The direction they chose: ${chosenDirection || "Not provided"}
 Why they chose it: ${reasoning || "Not provided"}
 How confident they feel: ${confidence}/10
 
-IMPORTANT: Your output MUST specifically reference:
-1. The TIMELINE ("${urgency || "Not specified"}") — when this needs to happen and why that timing matters
-2. The SPECIFIC DIRECTION ("${chosenDirection || "Not provided"}") — name it explicitly, don't generalize
-3. The REASONING — reference their specific numbers, tradeoffs, or concerns
-4. Tailor each message differently for each audience
+Tailor each message to its audience and reference the user's actual context.`
 
-If any of these four elements is missing from your output, you have failed the task.`
+    const attempts: AIAttemptDiagnostic[] = []
+    let result: DecideResult | null = null
+    let lastFailure: Omit<AIAttemptDiagnostic, "attempt" | "result"> & { result: string } | null = null
 
-    const anthropic = new Anthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY,
-    })
+    for (let attempt = 1; attempt <= 2 && !result; attempt++) {
+      try {
+        const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+        const response = await anthropic.messages.create({
+          model: ANTHROPIC_MODEL,
+          max_tokens: 4096,
+          system: systemPrompt,
+          messages: [{ role: "user", content: userPrompt }],
+          tools: [decisionMessagesTool],
+          tool_choice: { type: "tool", name: decisionMessagesTool.name },
+        })
+        const requestId = response._request_id ?? null
+        const toolResult = response.content.find(
+          (block): block is Anthropic.ToolUseBlock =>
+            block.type === "tool_use" && block.name === decisionMessagesTool.name
+        )
 
-    const response = await anthropic.messages.create({
-      model: ANTHROPIC_MODEL,
-      max_tokens: 2000,
-      system: systemPrompt,
-      messages: [{ role: "user", content: userPrompt }],
-    })
+        if (!toolResult) {
+          const rawModelOutput = safeRawModelOutput(response.content
+            .filter((block): block is Anthropic.TextBlock => block.type === "text")
+            .map((block) => block.text)
+            .join("\n"))
+          lastFailure = {
+            stage: "model returned no tool output",
+            httpStatus: 200,
+            requestId,
+            errorMessage: "Anthropic returned a response without the required structured decision message tool output.",
+            rawModelOutput,
+            result: "No required tool output returned",
+          }
+          attempts.push({ attempt, ...lastFailure })
+          continue
+        }
 
-    const text = response.content[0].type === "text" ? response.content[0].text : ""
+        if (!isDecideResult(toolResult.input)) {
+          lastFailure = {
+            stage: "output didn't match the expected shape",
+            httpStatus: 200,
+            requestId,
+            errorMessage: "The structured decision message tool output was missing required fields or had incorrect field types.",
+            rawModelOutput: safeRawModelOutput(toolResult.input),
+            result: "Tool output did not match expected shape",
+          }
+          attempts.push({ attempt, ...lastFailure })
+          continue
+        }
 
-    // Parse JSON from response
-    const jsonMatch = text.match(/\{[\s\S]*\}/)
-    if (!jsonMatch) {
-      throw new Error("Failed to parse AI response")
+        result = toolResult.input
+      } catch (error) {
+        const metadata = getAnthropicErrorMetadata(error)
+        lastFailure = {
+          stage: metadata.status === null ? "request to Anthropic" : "Anthropic returned an error",
+          httpStatus: metadata.status,
+          requestId: metadata.requestId,
+          errorMessage: metadata.message,
+          rawModelOutput: null,
+          result: metadata.status === null ? "Request to Anthropic failed" : `Anthropic returned HTTP ${metadata.status}`,
+        }
+        attempts.push({ attempt, ...lastFailure })
+      }
     }
 
-    const result = JSON.parse(jsonMatch[0])
+    if (!result && lastFailure) {
+      const routeStatus = lastFailure.stage === "Anthropic returned an error" && lastFailure.httpStatus !== null && lastFailure.httpStatus >= 400 && lastFailure.httpStatus <= 599
+        ? lastFailure.httpStatus
+        : 502
+      const diagnostics: AIDiagnostics = {
+        step: "Draft decision messages",
+        route: "/api/decide",
+        httpStatus: routeStatus,
+        stage: lastFailure.stage,
+        exactErrorMessage: safeAIErrorMessage(lastFailure.errorMessage),
+        model: ANTHROPIC_MODEL,
+        anthropicRequestId: lastFailure.requestId,
+        retryRan: attempts.length > 1,
+        retryResult: attempts[1]?.result ?? "Retry not run",
+        timeTakenMs: Date.now() - requestStartedAt,
+        rawModelOutput: lastFailure.rawModelOutput,
+        attempts,
+      }
+      const lowerError = diagnostics.exactErrorMessage.toLowerCase()
+      const errorCode = lastFailure.stage === "output didn't match the expected shape" || lastFailure.stage === "model returned no tool output"
+        ? "INVALID_RESPONSE"
+        : lowerError.includes("quota") || lowerError.includes("billing") || lowerError.includes("credit")
+          ? "QUOTA_EXCEEDED"
+          : routeStatus === 429
+            ? "ANTHROPIC_RATE_LIMITED"
+            : "SERVER_ERROR"
+      const error = errorCode === "QUOTA_EXCEEDED"
+        ? "Lumo is busier than usual right now."
+        : errorCode === "ANTHROPIC_RATE_LIMITED"
+          ? "Lumo is at capacity for a moment. Try again in 30 seconds."
+          : errorCode === "INVALID_RESPONSE"
+            ? "We couldn't generate complete decision messages after two attempts. Please try again."
+            : "Something went wrong on our end. Try again, or see an example of Lumo's output instead."
+      return Response.json({ success: false, error, errorCode, diagnostics }, { status: routeStatus })
+    }
 
-    console.log("[lumo] Response parsed OK, claritySummary length:", result.claritySummary?.length)
-
+    const cleanedResult = cleanAIValue(result!)
     return Response.json({
       success: true,
-      claritySummary: result.claritySummary,
-      messages: result.messages,
+      claritySummary: cleanedResult.claritySummary,
+      messages: cleanedResult.messages,
     })
   } catch (error: unknown) {
     console.error("[lumo] API Error:", error)
