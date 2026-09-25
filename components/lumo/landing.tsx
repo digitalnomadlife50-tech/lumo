@@ -101,10 +101,10 @@ export default function Landing() {
             </div>
 
             <div className={`lm-panel-layer ${layer === 0 ? "is-on" : ""}`} aria-hidden={layer !== 0}>
-              <div className="lm-label">01 What's happening</div>
+              <div className="lm-label">01 What&apos;s happening</div>
               <div className="lm-raw">
                 <div><b>#launch-v2</b> dana: sales needs v2 live for re:Invent, three enterprise deals riding on it</div>
-                <div><b>#eng</b> marco: SSO is two sprints minimum, can't parallelize</div>
+                <div><b>#eng</b> marco: SSO is two sprints minimum, can&apos;t parallelize</div>
                 <div><b>LUM-812</b> blocker: enterprise SSO not scoped</div>
                 <div><b>dm / vp</b> need a call on this by friday</div>
                 <div><b>#support</b> onboarding fix is in v2, 40 tickets waiting on it</div>
@@ -112,7 +112,7 @@ export default function Landing() {
             </div>
 
             <div className={`lm-panel-layer ${layer === 1 ? "is-on" : ""}`} aria-hidden={layer !== 1} style={{ gap: 18 }}>
-              <div className="lm-label">02 Here's what I'm reading</div>
+              <div className="lm-label">02 Here&apos;s what I&apos;m reading</div>
               <div>
                 <div className="lm-caption">The real question</div>
                 <div style={{ fontSize: 20, fontWeight: 500, letterSpacing: "-0.01em", marginTop: 4 }}>Ship v2 this quarter, or hold it for the enterprise launch</div>
@@ -122,10 +122,10 @@ export default function Landing() {
                 <div style={{ fontSize: 15, marginTop: 4 }}>Revenue timing against a release current customers are waiting on</div>
               </div>
               <div>
-                <div className="lm-caption">Who's affected</div>
+                <div className="lm-caption">Who&apos;s affected</div>
                 <div style={{ fontSize: 15, marginTop: 4 }}>Engineering, sales, support, three enterprise prospects</div>
               </div>
-              <p className="lm-sig" style={{ margin: 0 }}>I noticed the onboarding fix is riding on v2 too. Delaying doesn't only affect sales.</p>
+              <p className="lm-sig" style={{ margin: 0 }}>I noticed the onboarding fix is riding on v2 too. Delaying doesn&apos;t only affect sales.</p>
             </div>
 
             <div className={`lm-panel-layer ${layer === 2 ? "is-on" : ""}`} aria-hidden={layer !== 2}>
@@ -138,7 +138,7 @@ export default function Landing() {
               </div>
               <div style={{ background: "var(--lm-canvas)", border: "1px solid var(--lm-border)", borderRadius: 10, padding: 20, fontSize: 15, lineHeight: 1.6 }}>
                 <div className="lm-mono lm-caption" style={{ fontSize: 12, marginBottom: 10 }}>Subject: v2 ships on time. SSO gets its own date.</div>
-                Short version: v2 goes out on schedule to existing customers. Enterprise SSO moves to its own release with a committed date, so three deals don't hold up a fix 40 customers are waiting on.
+                Short version: v2 goes out on schedule to existing customers. Enterprise SSO moves to its own release with a committed date, so three deals don&apos;t hold up a fix 40 customers are waiting on.
               </div>
               <div className="lm-mono lm-caption" style={{ fontSize: 12 }}>4 drafts ready. Copy and send.</div>
             </div>
@@ -159,8 +159,8 @@ export default function Landing() {
 
       <section className="lm-wrap lm-section">
         <div className="lm-sec-head">
-          <h2 className="lm-h2" style={{ maxWidth: 640 }}>The job changed. Your tools didn't.</h2>
-          <p className="lm-body-lg" style={{ maxWidth: 420 }}>AI took the grunt work. What's left is the work that needs you, and nothing is built for it.</p>
+          <h2 className="lm-h2" style={{ maxWidth: 640 }}>The job changed. Your tools didn&apos;t.</h2>
+          <p className="lm-body-lg" style={{ maxWidth: 420 }}>AI took the grunt work. What&apos;s left is the work that needs you, and nothing is built for it.</p>
         </div>
         <div className="lm-grid3">
           {[
@@ -184,7 +184,7 @@ export default function Landing() {
           <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
             <div className="lm-label">The artifact factory</div>
             <h2 className="lm-h2">Make the call once. Send it seven ways.</h2>
-            <p className="lm-body-lg">Each audience needs a different message. Lumo drafts them from the same decision, so they don't contradict each other.</p>
+            <p className="lm-body-lg">Each audience needs a different message. Lumo drafts them from the same decision, so they don&apos;t contradict each other.</p>
           </div>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 28 }}>
             <Reveal>
@@ -283,7 +283,7 @@ export default function Landing() {
           </div>
           <div className="lm-msg">
             <p>Decision on v2: it ships on the current date to existing customers. SSO comes out of v2 scope and gets its own release.</p>
-            <p>Monday's sprint planning covers v2 hardening and the onboarding fix only. Nothing else changes in v2.</p>
+            <p>Monday&apos;s sprint planning covers v2 hardening and the onboarding fix only. Nothing else changes in v2.</p>
             <p>Marco, can you size SSO as a standalone track by Wednesday? I need a date I trust before I give one to sales.</p>
           </div>
         </Reveal>
@@ -292,7 +292,7 @@ export default function Landing() {
       <div className="lm-wrap">
         <Reveal className="lm-ctaband">
           <h2 className="lm-h2">Stop drafting the same thing seven ways.</h2>
-          <p style={{ margin: 0, fontSize: 19, opacity: 0.92 }}>Bring the call you're sitting on. Leave with the words.</p>
+          <p style={{ margin: 0, fontSize: 19, opacity: 0.92 }}>Bring the call you&apos;re sitting on. Leave with the words.</p>
           <a className="lm-btn-dark" href="/app">Start a decision</a>
         </Reveal>
       </div>

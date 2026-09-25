@@ -95,8 +95,8 @@
 .lm-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
 .lm-panel { position: relative; height: 520px; background: var(--lm-surface); border: 1px solid var(--lm-border); border-radius: 14px; overflow: hidden; }
 .lm-panel-bar { height: 44px; border-bottom: 1px solid var(--lm-border); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; font-family: var(--lm-mono); font-size: 12px; color: var(--lm-text-3); }
-.lm-panel-layer { position: absolute; top: 44px; left: 0; right: 0; bottom: 0; padding: 28px; display: flex; flex-direction: column; gap: 16px; opacity: 0; transform: translateY(8px); transition: opacity .6s ease, transform .6s ease; pointer-events: none; }
-.lm-panel-layer.is-on { opacity: 1; transform: none; pointer-events: auto; }
+.lm-panel-layer { position: absolute; top: 44px; left: 0; right: 0; bottom: 0; padding: 28px; display: flex; flex-direction: column; gap: 16px; opacity: 0; transform: translateY(8px); pointer-events: none; visibility: hidden; transition-property: opacity, transform, visibility; transition-duration: .3s, .3s, 0s; transition-timing-function: ease; transition-delay: 0s, 0s, .3s; }
+.lm-panel-layer.is-on { opacity: 1; transform: none; pointer-events: auto; visibility: visible; transition-delay: .35s, .35s, 0s; }
 .lm-raw { font-family: var(--lm-mono); font-size: 13px; line-height: 1.8; color: var(--lm-text-2); display: flex; flex-direction: column; gap: 6px; }
 .lm-raw b { color: var(--lm-text); font-weight: 400; }
 .lm-tab { font-size: 13px; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--lm-border); color: var(--lm-text-2); }
@@ -251,6 +251,59 @@
 .lm-summary > div:last-child { border-bottom: none; }
 .lm-bignum { font-family: var(--lm-mono); font-size: 96px; font-weight: 500; letter-spacing: -0.03em; color: var(--lm-accent); line-height: 1; }
 .lm-error { margin-top: 16px; font-size: 14px; color: var(--lm-risk); }
+
+/* ================= NAVIGATION ================= */
+.lm-path-step.is-jump { cursor: pointer; background: none; border: none; font: inherit; padding: 0; -webkit-appearance: none; }
+.lm-path-step.is-jump:hover { color: var(--lm-text) !important; text-decoration: underline; }
+.lm-path-dash { display: inline-flex; }
+.lm-path-dash i { display: block; width: 28px; height: 1px; background: var(--lm-border); transform: scaleX(0); transform-origin: left; }
+.lm-path-dash.is-done i { background: var(--lm-accent); transform: scaleX(1); transition: none; animation: lmGrowX .4s ease both; }
+.lm-path-jumplist { position: absolute; top: 100%; left: 20px; z-index: 20; margin-top: 6px; background: var(--lm-surface); border: 1px solid var(--lm-border); border-radius: 10px; padding: 6px; display: flex; flex-direction: column; gap: 2px; box-shadow: 0 8px 24px rgba(0,0,0,.1); min-width: 220px; }
+.lm-path-jumplist button { text-align: left; background: none; border: none; padding: 10px 12px; border-radius: 6px; font-size: 14px; color: var(--lm-text-2); cursor: pointer; min-height: 40px; }
+.lm-path-jumplist button:disabled { color: var(--lm-text-3); cursor: default; opacity: .55; }
+.lm-path-jumplist button:not(:disabled):hover { background: var(--lm-muted); color: var(--lm-text); }
+
+.lm-resume { border-color: var(--lm-accent); margin-bottom: 16px; }
+
+.lm-keyhint { font-family: var(--lm-mono); font-size: 12px; color: var(--lm-text-3); }
+@media (pointer: coarse) { .lm-keyhint { display: none; } }
+
+/* ================= ENHANCEMENTS ================= */
+.lm-source { margin-top: 10px; font-family: var(--lm-mono); font-size: 13px; line-height: 1.6; color: var(--lm-text-2); background: var(--lm-canvas); border: 1px solid var(--lm-border); border-radius: 8px; padding: 10px 12px; }
+.lm-source u { text-decoration-color: var(--lm-accent-soft); text-decoration-thickness: 3px; text-underline-offset: 2px; text-decoration-line: underline; color: var(--lm-text); }
+.lm-source-toggle { display: none; background: none; border: none; padding: 0; color: var(--lm-accent); font-size: 13px; cursor: pointer; min-height: 32px; }
+@media (max-width: 767px) { .lm-source-toggle { display: inline-flex; align-items: center; } }
+
+.lm-consist { font-family: var(--lm-mono); font-size: 13px; margin: 24px 0 0; }
+.lm-consist.is-ok { color: var(--lm-positive); }
+.lm-consist.is-warn { color: var(--lm-caution); }
+.lm-tabs button .lm-caution-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--lm-caution); margin-left: 4px; }
+
+.lm-revisit-due { color: var(--lm-caution) !important; }
+
+.lm-panel-wrap { display: flex; flex-direction: column; gap: 12px; }
+.lm-panel-segs { display: flex; gap: 8px; }
+.lm-panel-seg { width: 24px; height: 2px; border-radius: 1px; background: var(--lm-border); border: none; padding: 0; cursor: pointer; position: relative; overflow: hidden; min-width: 24px; }
+.lm-panel-seg i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--lm-accent); }
+.lm-panel-seg.is-on i { animation: lmSegFill 4s linear both; }
+.lm-panel-wrap.is-paused .lm-panel-seg i { animation-play-state: paused; }
+@keyframes lmSegFill { from { width: 0 } to { width: 100% } }
+
+.lm-copy-check { width: 13px; height: 13px; margin-right: 6px; vertical-align: -2px; }
+.lm-copy-check path { stroke-dasharray: 20; stroke-dashoffset: 20; animation: lmDash .3s ease forwards; }
+@keyframes lmDash { to { stroke-dashoffset: 0 } }
+
+/* ================= MOTION ================= */
+@keyframes lmStepFwd { from { opacity: 0; transform: translateX(12px) } to { opacity: 1; transform: none } }
+@keyframes lmStepBack { from { opacity: 0; transform: translateX(-12px) } to { opacity: 1; transform: none } }
+.lm-main.is-fwd { animation: lmStepFwd .25s ease-out both; }
+.lm-main.is-back { animation: lmStepBack .25s ease-out both; }
+
+.lm-conf button { transition: background .15s ease, border-color .15s ease; }
+
+.lm-tabs.is-fan button { opacity: 0; animation: lmFadeUp .3s ease-out both; animation-delay: var(--d, 0ms); }
+
+.lm-flip-enter { animation: lmFadeUp .3s ease-out both; }
 
 /* ================= RESPONSIVE ================= */
 @media (max-width: 1023px) {

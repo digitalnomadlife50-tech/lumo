@@ -90,36 +90,81 @@ export function AppHeader({ aiStatus, initials = "" }: { aiStatus: AiStatus; ini
   );
 }
 
-export function PathBar({ current }: { current: number }) {
+export function PathBar({ current, onJump }: { current: number; onJump?: (step: number) => void }) {
+  const [listOpen, setListOpen] = useState(false);
   return (
     <>
       <nav className="lm-path" aria-label="Progress">
         {STEP_NAMES.map((name, i) => {
           const color = i < current ? "var(--lm-text)" : i === current ? "var(--lm-accent)" : "var(--lm-text-3)";
+          const canJump = i < current && !!onJump;
+          const Tag = canJump ? "button" : "span";
           return (
             <span key={name} style={{ display: "contents" }}>
-              <span
-                className="lm-path-step"
+              <Tag
+                type={canJump ? "button" : undefined}
+                className={`lm-path-step ${canJump ? "is-jump" : ""}`}
                 style={{ color, fontWeight: i === current ? 500 : 400 }}
                 aria-current={i === current ? "step" : undefined}
+                onClick={canJump ? () => onJump!(i) : undefined}
               >
                 <i aria-hidden="true" />
                 {name}
-              </span>
-              {i < STEP_NAMES.length - 1 ? <span className="lm-path-dash" aria-hidden="true" /> : null}
+              </Tag>
+              {i < STEP_NAMES.length - 1 ? <span className={`lm-path-dash ${i < current ? "is-done" : ""}`} aria-hidden="true"><i /></span> : null}
             </span>
           );
         })}
       </nav>
-      <div className="lm-path-mobile" aria-label="Progress">
-        <div className="lm-path-mobile-text">
+      <div className="lm-path-mobile" aria-label="Progress" style={{ position: "relative" }}>
+        <button
+          type="button"
+          className="lm-path-mobile-text is-jump"
+          onClick={() => setListOpen((o) => !o)}
+          aria-expanded={listOpen}
+          style={{ background: "none", border: "none", padding: 0, font: "inherit", color: "var(--lm-text-2)", cursor: "pointer" }}
+        >
           Step {current + 1} of 6. {STEP_NAMES[current]}
-        </div>
+        </button>
         <div className="lm-path-mobile-bar">
           <i style={{ width: `${((current + 1) / 6) * 100}%` }} />
         </div>
+        {listOpen ? (
+          <div className="lm-path-jumplist" role="menu">
+            {STEP_NAMES.map((name, i) => {
+              const canJump = i < current && !!onJump;
+              return (
+                <button
+                  key={name}
+                  type="button"
+                  disabled={!canJump}
+                  onClick={() => {
+                    if (canJump) {
+                      onJump!(i);
+                      setListOpen(false);
+                    }
+                  }}
+                >
+                  Step {i + 1}. {name}
+                </button>
+              );
+            })}
+          </div>
+        ) : null}
       </div>
     </>
+  );
+}
+
+export function KeyHint({ label = "Enter" }: { label?: string }) {
+  const [mac, setMac] = useState(true);
+  useEffect(() => {
+    setMac(/Mac|iPhone|iPad/.test(window.navigator.userAgent));
+  }, []);
+  return (
+    <span className="lm-keyhint" aria-hidden="true">
+      {mac ? `\u2318 ${label}` : `Ctrl ${label}`}
+    </span>
   );
 }
 

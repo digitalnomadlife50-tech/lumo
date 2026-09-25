@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
-import { AppHeader, Kicker, PathBar, Signature, delay, usePrefersReducedMotion, type AiStatus } from "./ui";
+import { AppHeader, KeyHint, Kicker, PathBar, Signature, delay, usePrefersReducedMotion, type AiStatus } from "./ui";
 
 /* ============ TYPES: wire existing app state and API results into these ============ */
 
@@ -12,6 +12,14 @@ export type PastDecision = {
   choice: string;
   confidence: number;
   gaveUp?: string;
+  revisitDate?: string;
+};
+
+export type DraftInProgress = {
+  id: string;
+  number: number;
+  title: string;
+  step: number;
 };
 
 export type ReadBack = {
@@ -48,12 +56,21 @@ export type Draft = {
 
 type Shell = { aiStatus: AiStatus; initials?: string };
 
-function AppShell({ aiStatus, initials, step, children }: Shell & { step?: number; children: ReactNode }) {
+function AppShell({
+  aiStatus,
+  initials,
+  step,
+  onJump,
+  direction,
+  children,
+}: Shell & { step?: number; onJump?: (step: number) => void; direction?: "fwd" | "back"; children: ReactNode }) {
   return (
     <div className="lm-page">
       <AppHeader aiStatus={aiStatus} initials={initials} />
-      {typeof step === "number" ? <PathBar current={step} /> : null}
-      <main className="lm-main">{children}</main>
+      {typeof step === "number" ? <PathBar current={step} onJump={onJump} /> : null}
+      <main key={step} className={`lm-main ${direction === "back" ? "is-back" : direction === "fwd" ? "is-fwd" : ""}`}>
+        {children}
+      </main>
     </div>
   );
 }
@@ -81,12 +98,18 @@ export function HomeScreen({
   onStart,
   decisions,
   onOpenDecision,
+  draft,
+  onResume,
+  onDiscardDraft,
 }: Shell & {
   value: string;
   onChange: (v: string) => void;
   onStart: () => void;
   decisions: PastDecision[];
   onOpenDecision?: (id: string) => void;
+  draft?: DraftInProgress | null;
+  onResume?: () => void;
+  onDiscardDraft?: () => void;
 }) {
   const reduced = usePrefersReducedMotion();
   const [ph, setPh] = useState(0);
@@ -101,7 +124,7 @@ export function HomeScreen({
 
   return (
     <AppShell aiStatus={aiStatus} initials={initials}>
-      <h1 className="lm-anim lm-display">What's the call?</h1>
+      <h1 className="lm-anim lm-display">What&apos;s the call?</h1>
       <p className="lm-anim lm-sub" style={delay(80)}>Think it through. Get the words right. Move on.</p>
 
       <div className="lm-anim lm-callbox" style={delay(160)}>
@@ -142,8 +165,19 @@ export function HomeScreen({
       </div>
 
       <div style={{ marginTop: 96 }}>
+        {draft ? (
+          <div className="lm-card lm-resume" style={{ marginBottom: 32 }}>
+            <div className="lm-label">In progress</div>
+            <div style={{ fontSize: 17, fontWeight: 500, marginTop: 8 }}>{draft.title}</div>
+            <div className="lm-mono lm-caption" style={{ marginTop: 6 }}>No.{draft.number}, step {draft.step} of 6</div>
+            <div style={{ display: "flex", gap: 20, marginTop: 16 }}>
+              <button className="lm-btn" onClick={onResume}>Resume</button>
+              <button className="lm-link" style={{ color: "var(--lm-text-3)" }} onClick={onDiscardDraft}>Discard</button>
+            </div>
+          </div>
+        ) : null}
         {sorted.length === 0 ? (
-          <Signature delayMs={300}>Every hard call you make here gets a number, a reason, and what it cost you. Start with the one you're sitting on.</Signature>
+          <Signature delayMs={300}>Every hard call you make here gets a number, a reason, and what it cost you. Start with the one you&apos;re sitting on.</Signature>
         ) : (
           <>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
@@ -151,28 +185,31 @@ export function HomeScreen({
               <div className="lm-mono lm-caption" style={{ fontSize: 12 }}>{sorted.length} filed</div>
             </div>
             <div className="lm-stack" style={{ marginTop: 20, gap: 16 }}>
-              {sorted.map((d, i) => (
-                <div key={d.id} className="lm-anim lm-past" style={delay(300 + i * 80)}>
-                  <div className="lm-past-num">No.{d.number}</div>
-                  <div
-                    className="lm-card lm-card-hover"
-                    style={{ cursor: onOpenDecision ? "pointer" : "default" }}
-                    onClick={onOpenDecision ? () => onOpenDecision(d.id) : undefined}
-                  >
-                    <div className="lm-past-num-inline">No.{d.number}</div>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 24 }}>
-                      <div style={{ fontSize: 17, fontWeight: 500 }}>{d.title}</div>
-                      <span className="lm-done">done</span>
+              {sorted.map((d, i) => {
+                const revisitDue = !!d.revisitDate && new Date(d.revisitDate).getTime() < Date.now();
+                return (
+                  <div key={d.id} className="lm-anim lm-past" style={delay(300 + i * 80)}>
+                    <div className="lm-past-num">No.{d.number}</div>
+                    <div
+                      className="lm-card lm-card-hover"
+                      style={{ cursor: onOpenDecision ? "pointer" : "default" }}
+                      onClick={onOpenDecision ? () => onOpenDecision(d.id) : undefined}
+                    >
+                      <div className="lm-past-num-inline">No.{d.number}</div>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 24 }}>
+                        <div style={{ fontSize: 17, fontWeight: 500 }}>{d.title}</div>
+                        <span className={revisitDue ? "lm-done lm-revisit-due" : "lm-done"}>{revisitDue ? "revisit due" : "done"}</span>
+                      </div>
+                      <div className="lm-caption" style={{ marginTop: 6 }}>
+                        Chose {d.choice}. Confidence {d.confidence} of 5.
+                      </div>
+                      {i === 0 && d.gaveUp ? (
+                        <Signature draw={false} style={{ marginTop: 18 }}>I gave up {lowerFirst(d.gaveUp)}.</Signature>
+                      ) : null}
                     </div>
-                    <div className="lm-caption" style={{ marginTop: 6 }}>
-                      Chose {d.choice}. Confidence {d.confidence} of 5.
-                    </div>
-                    {i === 0 && d.gaveUp ? (
-                      <Signature draw={false} style={{ marginTop: 18 }}>I gave up {lowerFirst(d.gaveUp)}.</Signature>
-                    ) : null}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </>
         )}
@@ -235,6 +272,7 @@ export function Step1Screen({
   onSaveForLater,
   loading,
   error,
+  direction,
 }: Shell & {
   decisionNumber: number;
   text: string;
@@ -243,6 +281,7 @@ export function Step1Screen({
   onSaveForLater?: () => void;
   loading?: boolean;
   error?: string;
+  direction?: "fwd" | "back";
 }) {
   const layerRef = useRef<HTMLDivElement>(null);
   const { ranges, counts } = useMemo(() => detectEntities(text), [text]);
@@ -257,10 +296,10 @@ export function Step1Screen({
   pieces.push(text.slice(pos) + "\n");
 
   return (
-    <AppShell aiStatus={aiStatus} initials={initials} step={0}>
+    <AppShell aiStatus={aiStatus} initials={initials} step={0} direction={direction}>
       <Kicker number={decisionNumber} step={1} />
-      <h1 className="lm-anim lm-heading">What's happening?</h1>
-      <p className="lm-anim lm-sub" style={delay(60)}>Paste the situation as it is. Threads, tickets, notes. It doesn't need to be tidy.</p>
+      <h1 className="lm-anim lm-heading">What&apos;s happening?</h1>
+      <p className="lm-anim lm-sub" style={delay(60)}>Paste the situation as it is. Threads, tickets, notes. It doesn&apos;t need to be tidy.</p>
 
       <div className="lm-anim lm-paste" style={delay(120)}>
         <div ref={layerRef} className="lm-paste-layer" aria-hidden="true">{pieces}</div>
@@ -317,7 +356,11 @@ export function Step2Screen({
   onNext,
   onBack,
   error,
-}: Shell & {
+  direction,
+  onJump,
+  entities = [],
+  sources,
+  }: Shell & {
   decisionNumber: number;
   loading: boolean;
   readBack: ReadBack | null;
@@ -326,11 +369,32 @@ export function Step2Screen({
   onNext: () => void;
   onBack: () => void;
   error?: string;
+  direction?: "fwd" | "back";
+  onJump?: (step: number) => void;
+  entities?: string[];
+  sources?: Partial<Record<keyof ReadBack, string[]>>;
 }) {
   const reduced = usePrefersReducedMotion();
   const [shown, setShown] = useState(0);
   const [editing, setEditing] = useState<keyof ReadBack | null>(null);
   const [draft, setDraft] = useState("");
+  const [entityCount, setEntityCount] = useState(0);
+  const [sourceVisible, setSourceVisible] = useState<keyof ReadBack | null>(null);
+
+  useEffect(() => {
+    if (!loading) {
+      setEntityCount(0);
+      return;
+    }
+    setEntityCount(0);
+    let n = 0;
+    const t = setInterval(() => {
+      n += 1;
+      setEntityCount(n);
+      if (n >= Math.min(entities.length, 6)) clearInterval(t);
+    }, 300);
+    return () => clearInterval(t);
+  }, [loading]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!readBack) {
@@ -354,21 +418,28 @@ export function Step2Screen({
   const done = !!readBack && shown > FIELDS.length;
 
   return (
-    <AppShell aiStatus={aiStatus} initials={initials} step={1}>
+    <AppShell aiStatus={aiStatus} initials={initials} step={1} direction={direction} onJump={onJump}>
       <Kicker number={decisionNumber} step={2} right={done ? <span style={{ color: "var(--lm-positive)" }}>read</span> : null} />
-      <h1 className="lm-anim lm-heading">Here's what I'm reading</h1>
-      <p className="lm-anim lm-sub" style={delay(60)}>Fix anything that's off. Everything after this builds on it.</p>
+      <h1 className="lm-anim lm-heading">Here&apos;s what I&apos;m reading</h1>
+      <p className="lm-anim lm-sub" style={delay(60)}>Fix anything that&apos;s off. Everything after this builds on it.</p>
 
       {loading || !readBack ? (
         <div className="lm-reading" role="status">
           <i className="lm-pulse" aria-hidden="true" />
-          reading
+          <span className="lm-mono">{entities.length === 0 ? "reading" : `reading ${entities.slice(0, entityCount).join(", ")}`}</span>
         </div>
       ) : (
         <div className="lm-stack" style={{ marginTop: 32 }}>
           {FIELDS.map((f, i) =>
             i < shown ? (
-              <div key={f.key} className="lm-anim lm-field">
+              <div
+                key={f.key}
+                className="lm-anim lm-field"
+                onMouseEnter={() => setSourceVisible(f.key)}
+                onMouseLeave={() => setSourceVisible((v) => (v === f.key ? null : v))}
+                onFocus={() => setSourceVisible(f.key)}
+                onBlur={() => setSourceVisible((v) => (v === f.key ? null : v))}
+              >
                 <div className="lm-field-top">
                   <div className="lm-label">{f.label}</div>
                   {editing !== f.key ? (
@@ -402,6 +473,22 @@ export function Step2Screen({
                 ) : (
                   <div className={`lm-field-val ${f.lead ? "is-lead" : ""}`}>{readBack[f.key]}</div>
                 )}
+                {sources?.[f.key]?.length ? (
+                  <button
+                    type="button"
+                    className="lm-source-toggle"
+                    onClick={() => setSourceVisible((v) => (v === f.key ? null : f.key))}
+                  >
+                    {sourceVisible === f.key ? "Hide source" : "Show source"}
+                  </button>
+                ) : null}
+                {sourceVisible === f.key && sources?.[f.key]?.length ? (
+                  <div className="lm-source">
+                    {sources[f.key]!.map((line, li) => (
+                      <div key={li}>&ldquo;{line}&rdquo;</div>
+                    ))}
+                  </div>
+                ) : null}
               </div>
             ) : null
           )}
@@ -412,7 +499,7 @@ export function Step2Screen({
       {error ? <div className="lm-error" role="alert">{error}</div> : null}
 
       <div className="lm-actions">
-        <button className="lm-btn" onClick={onNext} disabled={!done}>That's right</button>
+        <button className="lm-btn" onClick={onNext} disabled={!done}>That&apos;s right</button>
         <button className="lm-link" onClick={onBack}>Back to the details</button>
       </div>
     </AppShell>
@@ -430,23 +517,27 @@ export function Step3Screen({
   onNext,
   onBack,
   loading,
-}: Shell & {
+  direction,
+  onJump,
+  }: Shell & {
   decisionNumber: number;
   options: Option[];
   onAddOption: (label: string) => void;
   onNext: () => void;
   onBack: () => void;
   loading?: boolean;
-}) {
+  direction?: "fwd" | "back";
+  onJump?: (step: number) => void;
+  }) {
   const [adding, setAdding] = useState(false);
   const [label, setLabel] = useState("");
   const ordered = [...options.filter((o) => o.source === "user"), ...options.filter((o) => o.source === "lumo")];
-
+  
   return (
-    <AppShell aiStatus={aiStatus} initials={initials} step={2}>
+  <AppShell aiStatus={aiStatus} initials={initials} step={2} direction={direction} onJump={onJump}>
       <Kicker number={decisionNumber} step={3} />
       <h1 className="lm-anim lm-heading">Your options</h1>
-      <p className="lm-anim lm-sub" style={delay(60)}>The paths you came in with, and at least one you didn't write down.</p>
+      <p className="lm-anim lm-sub" style={delay(60)}>The paths you came in with, and at least one you didn&apos;t write down.</p>
 
       {loading ? (
         <div className="lm-reading" role="status"><i className="lm-pulse" aria-hidden="true" />thinking through options</div>
@@ -531,19 +622,23 @@ export function Step4Screen({
   onNext,
   onBack,
   loading,
-}: Shell & {
+  direction,
+  onJump,
+  }: Shell & {
   decisionNumber: number;
   comparisons: Comparison[];
   onNext: () => void;
   onBack: () => void;
   loading?: boolean;
-}) {
+  direction?: "fwd" | "back";
+  onJump?: (step: number) => void;
+  }) {
   const cols = { ["--cols" as string]: comparisons.length } as CSSProperties;
   return (
-    <AppShell aiStatus={aiStatus} initials={initials} step={3}>
+  <AppShell aiStatus={aiStatus} initials={initials} step={3} direction={direction} onJump={onJump}>
       <Kicker number={decisionNumber} step={4} />
       <h1 className="lm-anim lm-heading">Side by side</h1>
-      <p className="lm-anim lm-sub" style={delay(60)}>Every path costs something. Here's what each one costs.</p>
+      <p className="lm-anim lm-sub" style={delay(60)}>Every path costs something. Here&apos;s what each one costs.</p>
 
       {loading ? (
         <div className="lm-reading" role="status"><i className="lm-pulse" aria-hidden="true" />weighing the costs</div>
@@ -632,6 +727,8 @@ export function Step5Screen({
   onConfidence,
   onCommit,
   onBack,
+  direction,
+  onJump,
 }: Shell & {
   decisionNumber: number;
   options: Option[];
@@ -645,6 +742,8 @@ export function Step5Screen({
   onConfidence: (n: number) => void;
   onCommit: () => void;
   onBack: () => void;
+  direction?: "fwd" | "back";
+  onJump?: (step: number) => void;
 }) {
   const [holding, setHolding] = useState(false);
   const [committed, setCommitted] = useState(false);
@@ -719,7 +818,7 @@ export function Step5Screen({
       </div>
 
       <div className="lm-anim" style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 8, ...delay(280) }}>
-        <label htmlFor="lm-gave" className="lm-label">What you're giving up</label>
+          <label htmlFor="lm-gave" className="lm-label">What you&apos;re giving up</label>
         <input id="lm-gave" className="lm-input" value={gaveUp} onChange={(e) => onGaveUp(e.target.value)} />
       </div>
 
@@ -974,7 +1073,7 @@ export function CompleteScreen({
 
         {gaveUp.trim() ? (
           <Signature delayMs={1400} style={{ marginTop: 36 }}>
-            You gave up {lowerFirst(gaveUp)}. It's on record, so the next time someone asks why, the answer is here.
+            You gave up {lowerFirst(gaveUp)}. It&apos;s on record, so the next time someone asks why, the answer is here.
           </Signature>
         ) : null}
 

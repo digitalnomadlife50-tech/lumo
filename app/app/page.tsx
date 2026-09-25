@@ -17,11 +17,15 @@ import {
   type Option,
   type Comparison,
   type Draft,
+  type DraftInProgress,
 } from "@/components/lumo/screens"
 import type { AiStatus } from "@/components/lumo/ui"
 
 /* ─── TYPES ─── */
 type View = "home" | "step1" | "step2" | "step3" | "step4" | "step5" | "step6" | "done"
+
+const STEP_ORDER: View[] = ["step1", "step2", "step3", "step4", "step5", "step6", "done"]
+const STEP_NUMBER: Record<View, number> = { home: 0, step1: 1, step2: 2, step3: 3, step4: 4, step5: 5, step6: 6, done: 7 }
 
 type DraftChannel = "email" | "slack" | "dm"
 
@@ -76,9 +80,30 @@ interface SessionDecision {
   copiedAudiences: string[]
   analysis: AnalysisResult | null
   readBack: ReadBack | null
+  revisitDate?: string
+  decidedAtMs?: number
+  startedAtMs?: number
+}
+
+interface SavedDraft {
+  id: string
+  number: number
+  step: number
+  situation: string
+  urgency: string
+  options: Option[]
+  selectedOptionId: string | null
+  reasoning: string
+  whatGivingUp: string
+  confidence: number
+  analysis: AnalysisResult | null
+  readBack: ReadBack | null
+  noticed: string
+  startedAtMs: number
 }
 
 const DECISIONS_STORAGE_KEY = "lumo-decisions-v1"
+const DRAFT_STORAGE_KEY = "lumo-draft-v1"
 
 /* ─── MAIN COMPONENT ─── */
 export default function ProductApp() {
@@ -111,13 +136,27 @@ export default function ProductApp() {
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
   const [sessionDecisions, setSessionDecisions] = useState<SessionDecision[]>([])
+  const [direction, setDirection] = useState<"fwd" | "back" | undefined>(undefined)
+  const [draft, setDraft] = useState<SavedDraft | null>(null)
+  const [startedAtMs, setStartedAtMs] = useState<number | null>(null)
   const decisionsLoadedRef = useRef(false)
+  const draftLoadedRef = useRef(false)
   const abortRef = useRef<AbortController | null>(null)
 
   const navigate = useCallback((v: View) => {
-    setView(v)
+    setView((previous) => {
+      const from = STEP_NUMBER[previous]
+      const to = STEP_NUMBER[v]
+      setDirection(to === from ? undefined : to > from ? "fwd" : "back")
+      return v
+    })
     window.scrollTo({ top: 0 })
   }, [])
+
+  const jumpTo = useCallback((step: number) => {
+    const target = STEP_ORDER[step]
+    if (target) navigate(target)
+  }, [navigate])
 
   const updateSavedDecision = useCallback((updates: Partial<SessionDecision>) => {
     if (!currentDecisionId) return
@@ -178,7 +217,68 @@ export default function ProductApp() {
     }
   }, [sessionDecisions])
 
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem(DRAFT_STORAGE_KEY)
+      if (stored) setDraft(JSON.parse(stored) as SavedDraft)
+    } catch {
+      setDraft(null)
+    } finally {
+      draftLoadedRef.current = true
+    }
+  }, [])
+
   const nextDecisionNumber = Math.max(0, ...sessionDecisions.map((decision) => decision.decisionNum)) + 1
+
+  useEffect(() => {
+    if (!draftLoadedRef.current) return
+    if (view === "home" || view === "done" || !situation.trim()) return
+    const record: SavedDraft = {
+      id: currentDecisionId ?? "draft",
+      number: nextDecisionNumber,
+      step: STEP_NUMBER[view],
+      situation,
+      urgency,
+      options,
+      selectedOptionId,
+      reasoning,
+      whatGivingUp,
+      confidence,
+      analysis,
+      readBack,
+      noticed,
+      startedAtMs: startedAtMs ?? Date.now(),
+    }
+    try {
+      window.localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(record))
+    } catch {
+      // best effort; ignore storage failures for the draft autosave
+    }
+  }, [view, situation, urgency, options, selectedOptionId, reasoning, whatGivingUp, confidence, analysis, readBack, noticed, currentDecisionId, nextDecisionNumber, startedAtMs])
+
+  const resumeDraft = useCallback(() => {
+    if (!draft) return
+    setSituation(draft.situation)
+    setOptions(draft.options)
+    setSelectedOptionId(draft.selectedOptionId)
+    setReasoning(draft.reasoning)
+    setWhatGivingUp(draft.whatGivingUp)
+    setConfidence(draft.confidence)
+    setAnalysis(draft.analysis)
+    setReadBack(draft.readBack)
+    setNoticed(draft.noticed)
+    setStartedAtMs(draft.startedAtMs)
+    navigate(STEP_ORDER[Math.max(0, draft.step - 1)] ?? "step1")
+  }, [draft, navigate])
+
+  const discardDraft = useCallback(() => {
+    setDraft(null)
+    try {
+      window.localStorage.removeItem(DRAFT_STORAGE_KEY)
+    } catch {
+      // ignore storage failures when discarding the draft
+    }
+  }, [])
 
   /* ─── Step 1 -> Step 2: analyze the situation ─── */
   const handleAnalyze = async () => {
@@ -428,9 +528,27 @@ export default function ProductApp() {
 
   const fileDecision = () => {
     if (!currentDecisionId) return
-    updateSavedDecision({ status: "Done" })
+    const revisitDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+    updateSavedDecision({ status: "Done", revisitDate, decidedAtMs: Date.now() })
+    discardDraft()
     navigate("done")
   }
+
+  useEffect(() => {
+    const handler = (event: KeyboardEvent) => {
+      if (!(event.metaKey || event.ctrlKey) || event.key !== "Enter") return
+      if (view === "step1" && situation.trim() && !isAnalyzing) { event.preventDefault(); void handleAnalyze() }
+      else if (view === "step2" && readBack) { event.preventDefault(); navigate("step3") }
+      else if (view === "step3" && options.length >= 2) { event.preventDefault(); navigate("step4") }
+      else if (view === "step4") { event.preventDefault(); navigate("step5") }
+      else if (view === "step5" && selectedOptionId && reasoning.trim() && whatGivingUp.trim() && confidence && !isGenerating) {
+        event.preventDefault()
+        void handleGenerate()
+      } else if (view === "step6" && currentDecisionId) { event.preventDefault(); fileDecision() }
+    }
+    window.addEventListener("keydown", handler)
+    return () => window.removeEventListener("keydown", handler)
+  }) // eslint-disable-line react-hooks/exhaustive-deps
 
   const openDecision = (decision: SessionDecision) => {
     setSituation(decision.situation)
@@ -453,7 +571,11 @@ export default function ProductApp() {
 
   const pastDecisions: PastDecision[] = [...sessionDecisions]
     .sort((left, right) => right.decisionNum - left.decisionNum)
-    .map((decision) => ({ id: decision.id, number: decision.decisionNum, title: decision.question, choice: decision.chosenDirection, confidence: decision.confidence, gaveUp: decision.whatGivingUp }))
+    .map((decision) => ({ id: decision.id, number: decision.decisionNum, title: decision.question, choice: decision.chosenDirection, confidence: decision.confidence, gaveUp: decision.whatGivingUp, revisitDate: decision.revisitDate }))
+
+  const draftInProgress: DraftInProgress | null = draft
+    ? { id: draft.id, number: draft.number, title: draft.situation.slice(0, 80), step: draft.step }
+    : null
 
   const drafts: Draft[] = (aiOutput?.drafts ?? []).map((draft) => ({ id: draft.audience, audience: draft.audience, channel: draft.channel, subject: draft.subject, body: draft.body }))
 
@@ -465,8 +587,11 @@ export default function ProductApp() {
         initials="L"
         value={homeInput}
         onChange={setHomeInput}
-        onStart={() => { setSituation(homeInput); navigate("step1") }}
+        onStart={() => { setStartedAtMs(Date.now()); setSituation(homeInput); navigate("step1") }}
         decisions={pastDecisions}
+        draft={draftInProgress}
+        onResume={resumeDraft}
+        onDiscardDraft={discardDraft}
         onOpenDecision={(id) => {
           const decision = sessionDecisions.find((item) => item.id === id)
           if (decision) openDecision(decision)
@@ -487,6 +612,7 @@ export default function ProductApp() {
           onSubmit={handleAnalyze}
           loading={isAnalyzing}
           error={aiError}
+          direction={direction}
         />
         {SHOW_DEBUG_PANEL && aiError ? (
           <div style={{ maxWidth: 784, margin: "0 auto", padding: "0 32px 32px" }}>
@@ -509,6 +635,8 @@ export default function ProductApp() {
         onEditField={(key, value) => setReadBack((previous) => previous ? { ...previous, [key]: value } : previous)}
         onNext={() => navigate("step3")}
         onBack={() => navigate("step1")}
+        direction={direction}
+        onJump={jumpTo}
       />
     )
   }
@@ -523,6 +651,8 @@ export default function ProductApp() {
         onAddOption={addOption}
         onNext={() => navigate("step4")}
         onBack={() => navigate("step2")}
+        direction={direction}
+        onJump={jumpTo}
       />
     )
   }
@@ -536,6 +666,8 @@ export default function ProductApp() {
         comparisons={comparisons}
         onNext={() => navigate("step5")}
         onBack={() => navigate("step3")}
+        direction={direction}
+        onJump={jumpTo}
       />
     )
   }
@@ -558,6 +690,8 @@ export default function ProductApp() {
           onConfidence={setConfidence}
           onCommit={() => { void handleGenerate() }}
           onBack={() => navigate("step4")}
+          direction={direction}
+          onJump={jumpTo}
         />
         {aiError ? (
           <div style={{ maxWidth: 784, margin: "16px auto 0", padding: "0 32px" }}>
