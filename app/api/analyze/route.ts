@@ -16,10 +16,15 @@ export interface AnalysisResult {
   whatMatters: string
   whoIsAffected: string
   howPressing: string
+  iNoticed: string
   options: Array<{
     name: string
     description: string
     cost: string
+    costLevel: "low" | "medium" | "high"
+    whoItHurts: string
+    reversible: "yes" | "partly" | "no"
+    risk: string
   }>
   observations: string[]
 }
@@ -34,6 +39,7 @@ const analysisTool: Anthropic.Tool = {
       whatMatters: { type: "string" },
       whoIsAffected: { type: "string" },
       howPressing: { type: "string" },
+      iNoticed: { type: "string", description: "One subtle, specific observation the user may have missed, in one sentence." },
       options: {
         type: "array",
         minItems: 2,
@@ -44,14 +50,18 @@ const analysisTool: Anthropic.Tool = {
             name: { type: "string" },
             description: { type: "string" },
             cost: { type: "string" },
+            costLevel: { type: "string", enum: ["low", "medium", "high"] },
+            whoItHurts: { type: "string", description: "Who is most affected by choosing this option, in a few words." },
+            reversible: { type: "string", enum: ["yes", "partly", "no"], description: "Whether this option can be undone later." },
+            risk: { type: "string", description: "The main risk of choosing this option, in one sentence." },
           },
-          required: ["name", "description", "cost"],
+          required: ["name", "description", "cost", "costLevel", "whoItHurts", "reversible", "risk"],
           additionalProperties: false,
         },
       },
       observations: { type: "array", items: { type: "string" } },
     },
-    required: ["realQuestion", "whatMatters", "whoIsAffected", "howPressing", "options", "observations"],
+    required: ["realQuestion", "whatMatters", "whoIsAffected", "howPressing", "iNoticed", "options", "observations"],
     additionalProperties: false,
   },
 }
@@ -64,6 +74,7 @@ function isAnalysisResult(value: unknown): value is AnalysisResult {
     typeof result.whatMatters === "string" &&
     typeof result.whoIsAffected === "string" &&
     typeof result.howPressing === "string" &&
+    typeof result.iNoticed === "string" &&
     Array.isArray(result.options) &&
     result.options.length >= 2 &&
     result.options.length <= 3 &&
@@ -72,7 +83,11 @@ function isAnalysisResult(value: unknown): value is AnalysisResult {
       typeof option === "object" &&
       typeof option.name === "string" &&
       typeof option.description === "string" &&
-      typeof option.cost === "string"
+      typeof option.cost === "string" &&
+      (option.costLevel === "low" || option.costLevel === "medium" || option.costLevel === "high") &&
+      typeof option.whoItHurts === "string" &&
+      (option.reversible === "yes" || option.reversible === "partly" || option.reversible === "no") &&
+      typeof option.risk === "string"
     ) &&
     Array.isArray(result.observations) &&
     result.observations.every((observation) => typeof observation === "string")
@@ -127,7 +142,7 @@ export async function POST(req: Request) {
       )
     }
 
-    const systemPrompt = `You are Lumo, a decision-structuring tool for Senior Product Managers. Read the user's situation and produce specific, useful analysis. Reframe the core decision in one sentence; explain the key tensions in 2-3 sentences; identify affected stakeholders and why; explain timeline implications based on urgency; suggest 2-3 realistic options with a short name, one-sentence description, and costs or risks; and offer subtle observations the user may have missed. Avoid generic options unless they genuinely apply. Provide the result through the required structured analysis tool.\n\n${HUMAN_WRITING_RULES}`
+    const systemPrompt = `You are Lumo, a decision-structuring tool for Senior Product Managers. Read the user's situation and produce specific, useful analysis. Reframe the core decision in one sentence; explain the key tensions in 2-3 sentences; identify affected stakeholders and why; explain timeline implications based on urgency; name one subtle, specific thing the user may have missed (iNoticed), in one sentence; and suggest 2-3 realistic options, each with a short name, one-sentence description, a cost summary, a cost level (low, medium, or high), who is hurt most by choosing it, whether it is reversible (yes, partly, or no), and its main risk in one sentence. Avoid generic options unless they genuinely apply. Provide the result through the required structured analysis tool.\n\n${HUMAN_WRITING_RULES}`
 
     const userPrompt = `USER'S SITUATION: ${situation}
 URGENCY: ${urgency || "Not specified"}
