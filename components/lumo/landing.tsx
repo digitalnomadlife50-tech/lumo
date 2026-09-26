@@ -145,16 +145,31 @@ export default function Landing() {
 
       <div className="lm-wrap">
         <Reveal className="lm-ctaband">
+          <div className="lm-ctaband-copy">
+            <h2 className="lm-h2">Bring a decision you&apos;re stuck on.</h2>
+            <a className="lm-btn-dark" href="/app">Try the demo</a>
+          </div>
           <div className="lm-ctaband-note" aria-hidden="true">
             <span className="lm-ctaband-tape" />
-            <span className="lm-ctaband-note-rule" />
-            <span className="lm-ctaband-note-prompt">
-              your decision here
-              <span className="lm-ctaband-caret" />
-            </span>
+            <div className="lm-indexcard lm-ctaband-card">
+              <span className="lm-indexcard-rule" />
+              <div className="lm-indexcard-inner">
+                <div className="lm-label">The call</div>
+                <p className="lm-indexcard-opt">Ship SSO before the onboarding fix</p>
+                <div className="lm-indexcard-rows">
+                  <div>
+                    <span className="lm-caption">Confidence</span>
+                    <span className="lm-indexcard-val">4 of 5</span>
+                  </div>
+                  <div>
+                    <span className="lm-caption">Gave up</span>
+                    <span className="lm-indexcard-val">The onboarding fix</span>
+                  </div>
+                </div>
+              </div>
+              <div className="lm-indexcard-stamp">No. 12 &middot; Oct 2026</div>
+            </div>
           </div>
-          <h2 className="lm-h2">Bring a decision you&apos;re stuck on.</h2>
-          <a className="lm-btn-dark" href="/app">Try the demo</a>
         </Reveal>
       </div>
 
