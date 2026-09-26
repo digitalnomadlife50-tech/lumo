@@ -532,7 +532,7 @@ export default function ProductApp() {
       if (!data.success) {
         setAiStatus("error")
         setRewriteDiagnostics(isAIDiagnostics(data.diagnostics) ? data.diagnostics : null)
-        throw new Error(data.error ?? "Could not draft a message for that audience.")
+        throw new Error(data.error ?? "Could not draft an update for that person or team.")
       }
       const rewritten = data.draft as AudienceDraft
       const updatedDrafts = [...aiOutput.drafts, rewritten]
@@ -540,7 +540,7 @@ export default function ProductApp() {
       updateSavedDecision({ drafts: updatedDrafts })
       setAiStatus("ok")
     } catch (error) {
-      setRewriteError(error instanceof Error ? error.message : "Could not draft a message for that audience.")
+      setRewriteError(error instanceof Error ? error.message : "Could not draft an update for that person or team.")
     } finally {
       setAddingAudience(false)
     }

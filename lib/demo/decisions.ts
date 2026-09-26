@@ -55,7 +55,7 @@ const S: Spec[] = [
     gutOpt: "Commit the March date", gutConf: 4, worry: "Marco's estimate is soft",
     finalOpt: "Commit the March date", finalConf: 4, why: "Sales needed something to tell the pipeline",
     gaveUp: "Slack in the schedule", audiences: ["Maya Chen", "Dana Brooks"], tripwire: "If the spike runs long, move the date before sales quotes it",
-    support: true, whatHappened: "The rewrite slipped two weeks and sales had to walk back a date", sound: "partly", result: "worse", lesson: "A soft estimate is not a date.",
+    support: true, whatHappened: "The rewrite moved two weeks and sales had to walk back a date", sound: "partly", result: "worse", lesson: "A soft estimate is not a date.",
   },
   {
     n: 4, kind: "vendor", stakes: "two-way", title: "Pick the SMS provider for reminders",
@@ -95,7 +95,7 @@ const S: Spec[] = [
     gutOpt: "Agree to the partner date", gutConf: 4, worry: "We under-scoped the integration",
     finalOpt: "Agree to the partner date", finalConf: 4, why: "The partner had a marketing push booked",
     gaveUp: "A safe buffer", audiences: ["Maya Chen", "Dana Brooks"], tripwire: "If the integration spec grows, renegotiate the date",
-    support: true, whatHappened: "The date slipped and the support backlog doubled during the scramble", sound: "no", result: "worse", lesson: "Someone else's marketing date is not your engineering date.",
+    support: true, whatHappened: "The date moved and the support backlog doubled during the scramble", sound: "no", result: "worse", lesson: "Someone else's marketing date is not your engineering date.",
   },
   {
     n: 9, kind: "strategy", stakes: "two-way", title: "Chase enterprise or double down on SMB",
@@ -183,7 +183,7 @@ const S: Spec[] = [
     gutOpt: "Promise the Q3 date", gutConf: 5, worry: "Auth work is unscoped",
     finalOpt: "Promise the Q3 date", finalConf: 5, why: "A big account was waiting on it",
     gaveUp: "Room to be wrong", audiences: ["Maya Chen", "Dana Brooks"], tripwire: "If auth scoping grows, widen the date to a range",
-    support: false, whatHappened: "Auth was bigger than expected and the date slipped a month", sound: "no", result: "worse", lesson: "High confidence on unscoped auth work is a warning sign.",
+    support: false, whatHappened: "Auth was bigger than expected and the date moved a month", sound: "no", result: "worse", lesson: "High confidence on unscoped auth work is a warning sign.",
   },
   {
     n: 20, kind: "vendor", stakes: "two-way", title: "Switch email providers or stay",
@@ -198,8 +198,8 @@ const S: Spec[] = [
     options: ["Put the date in the deck", "Show a range in the deck"],
     gutOpt: "Put the date in the deck", gutConf: 5, worry: "The deck becomes a commitment",
     finalOpt: "Put the date in the deck", finalConf: 5, why: "The board wanted specifics and I felt good about the plan",
-    gaveUp: "Flexibility", audiences: ["Maya Chen"], tripwire: "If any milestone slips, update the board before the date passes",
-    support: false, whatHappened: "The date slipped three weeks and it was awkward at the next board meeting", sound: "no", result: "worse", lesson: "A date in a board deck is a promise, not a plan.",
+    gaveUp: "Flexibility", audiences: ["Maya Chen"], tripwire: "If any milestone moves, update the board before the date passes",
+    support: false, whatHappened: "The date moved three weeks and it was awkward at the next board meeting", sound: "no", result: "worse", lesson: "A date in a board deck is a promise, not a plan.",
   },
   {
     n: 22, kind: "hiring", stakes: "one-way", title: "Promote from within or hire a design manager",
@@ -223,7 +223,7 @@ const S: Spec[] = [
     gutOpt: "Wait until after renewals", gutConf: 4, worry: "We leave money on the table",
     finalOpt: "Wait until after renewals", finalConf: 4, why: "A price change mid-renewal would spook accounts",
     gaveUp: "Faster revenue", audiences: ["Maya Chen", "Dana Brooks"], tripwire: "If churn signals appear, hold longer",
-    support: true, whatHappened: "Renewals closed clean and pricing shipped after with low churn", sound: "yes", result: "better", lesson: "Timing a price change around renewals paid off.",
+    support: true, whatHappened: "Renewals closed clean and pricing shipped after with low churn", sound: "yes", result: "better", lesson: "Putting a price change around renewals paid off.",
   },
   {
     n: 25, kind: "scope", stakes: "two-way", title: "Cut the calendar sync feature from the spring release",
@@ -237,7 +237,7 @@ const S: Spec[] = [
     n: 26, kind: "people", stakes: "two-way", title: "Give hard feedback to a well-liked lead",
     options: ["Have the direct conversation", "Let it ride another cycle"],
     gutOpt: "Let it ride another cycle", gutConf: 3, worry: "It sours the relationship",
-    finalOpt: "Have the direct conversation", finalConf: 4, why: "Their planning was slipping and the team felt it",
+    finalOpt: "Have the direct conversation", finalConf: 4, why: "Their planning was off and the team felt it",
     gaveUp: "An easy few weeks", audiences: ["Maya Chen"], tripwire: "If planning does not improve in a cycle, escalate",
     support: false, whatHappened: "The conversation was hard but planning tightened up after", sound: "yes", result: "as-expected", lesson: "The liked lead still needs the honest note.",
   },
@@ -263,7 +263,7 @@ const S: Spec[] = [
     gutOpt: "Commit a firm date to Acme", gutConf: 5, worry: "The build touches payments",
     finalOpt: "Commit a firm date to Acme", finalConf: 5, why: "Acme was about to sign and wanted certainty",
     gaveUp: "A safety margin", audiences: ["Dana Brooks", "Maya Chen"], tripwire: "If the build touches payments, add buffer before quoting",
-    support: false, whatHappened: "The date slipped twice and Acme escalated to their exec sponsor", sound: "no", result: "worse", lesson: "Add Marco's worst case before giving a customer a date.",
+    support: false, whatHappened: "The date moved twice and Acme escalated to their exec sponsor", sound: "no", result: "worse", lesson: "Add Marco's worst case before giving a customer a date.",
   },
   {
     n: 30, kind: "vendor", stakes: "two-way", title: "Move logging to a managed service",

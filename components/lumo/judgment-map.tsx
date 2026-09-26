@@ -19,7 +19,7 @@ export type MapPoint = {
 }
 
 const KINDS: { id: DecisionKind; label: string; color: string }[] = [
-  { id: "timing", label: "Timing", color: "#E2683F" },
+  { id: "timing", label: "Dates and deadlines", color: "#E2683F" },
   { id: "scope", label: "Scope", color: "#E0A32E" },
   { id: "people", label: "People", color: "#3F9E6F" },
   { id: "hiring", label: "Hiring", color: "#3E86C8" },
@@ -51,7 +51,15 @@ function jitter(seed: number, spread: number) {
   return (s - Math.floor(s) - 0.5) * spread
 }
 
-export function JudgmentMap({ points, autoReplay = false }: { points: MapPoint[]; autoReplay?: boolean }) {
+export function JudgmentMap({
+  points,
+  autoReplay = false,
+  variant = "full",
+}: {
+  points: MapPoint[]
+  autoReplay?: boolean
+  variant?: "full" | "replay"
+}) {
   const reduced = usePrefersReducedMotion()
   const [activeKinds, setActiveKinds] = useState<Set<DecisionKind>>(new Set())
   const [selected, setSelected] = useState<number | null>(null)
@@ -248,21 +256,29 @@ export function JudgmentMap({ points, autoReplay = false }: { points: MapPoint[]
         <button type="button" className="lm-map-play" onClick={() => (playing ? stopReplay() : startReplay())}>
           {playing ? "Pause" : "Replay"}
         </button>
-        <input
-          type="range"
-          className="lm-map-slider"
-          min={0}
-          max={ordered.length}
-          value={visible}
-          aria-label="Decisions over time"
-          onChange={(e) => {
-            stopReplay()
-            setVisible(Number(e.target.value))
-          }}
-        />
-        <span className="lm-mono lm-caption" style={{ fontSize: 12, minWidth: 64, textAlign: "right" }}>
-          {visible} of {ordered.length}
-        </span>
+        {variant === "full" ? (
+          <>
+            <input
+              type="range"
+              className="lm-map-slider"
+              min={0}
+              max={ordered.length}
+              value={visible}
+              aria-label="Decisions over time"
+              onChange={(e) => {
+                stopReplay()
+                setVisible(Number(e.target.value))
+              }}
+            />
+            <span className="lm-mono lm-caption" style={{ fontSize: 12, minWidth: 64, textAlign: "right" }}>
+              {visible} of {ordered.length}
+            </span>
+          </>
+        ) : (
+          <span className="lm-mono lm-caption" style={{ fontSize: 12 }}>
+            All {ordered.length} decisions shown.
+          </span>
+        )}
       </div>
     </div>
   )

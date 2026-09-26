@@ -41,7 +41,7 @@ export default function DemoHome() {
             <div className="lm-label">On your mind right now</div>
             <h2 className="lm-noticed-q">{CURRENT_DECISION.question}</h2>
             <p className="lm-noticed-body">
-              Your gut says {CURRENT_DECISION.gut.option}, confidence {CURRENT_DECISION.gut.confidence}. Here&apos;s what you might not have noticed: {CURRENT_DECISION.gap}
+              Your first instinct says {CURRENT_DECISION.gut.option}, confidence {CURRENT_DECISION.gut.confidence}. Here&apos;s what you might not have noticed: {CURRENT_DECISION.gap}
             </p>
             <a className="lm-btn" href="#walkthrough" style={{ alignSelf: "flex-start" }}>Watch how it played out</a>
           </div>
@@ -51,7 +51,7 @@ export default function DemoHome() {
           <div className="lm-sec-head">
             <div style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 620 }}>
               <div className="lm-label">Your judgment, mapped</div>
-              <h2 className="lm-h2">Where your gut is sharp, and where it slips.</h2>
+              <h2 className="lm-h2">Where your instinct is strong, and where it is off.</h2>
               <p className="lm-body-lg">Each dot is a decision, placed by how sure you were and how it turned out. Filter by kind, or replay them in order.</p>
             </div>
           </div>
