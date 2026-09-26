@@ -105,6 +105,7 @@ export function HomeScreen({
   onChange,
   onStart,
   decisions,
+  newestId,
   onOpenDecision,
   draft,
   onResume,
@@ -114,6 +115,7 @@ export function HomeScreen({
   onChange: (v: string) => void;
   onStart: () => void;
   decisions: PastDecision[];
+  newestId?: string | null;
   onOpenDecision?: (id: string) => void;
   draft?: DraftInProgress | null;
   onResume?: () => void;
@@ -195,18 +197,19 @@ export function HomeScreen({
             <div className="lm-stack" style={{ marginTop: 20, gap: 16 }}>
               {sorted.map((d, i) => {
                 const revisitDue = !!d.revisitDate && new Date(d.revisitDate).getTime() < Date.now();
+                const isNewest = !!newestId && d.id === newestId;
                 return (
-                  <div key={d.id} className="lm-anim lm-past" style={delay(300 + i * 80)}>
+                  <div key={d.id} className="lm-anim lm-past lm-flip-enter" style={delay(300 + i * 80)}>
                     <div className="lm-past-num">No.{d.number}</div>
                     <div
-                      className="lm-card lm-card-hover"
+                      className={isNewest ? "lm-card lm-card-hover lm-card-new" : "lm-card lm-card-hover"}
                       style={{ cursor: onOpenDecision ? "pointer" : "default" }}
                       onClick={onOpenDecision ? () => onOpenDecision(d.id) : undefined}
                     >
                       <div className="lm-past-num-inline">No.{d.number}</div>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 24 }}>
                         <div style={{ fontSize: 17, fontWeight: 500 }}>{d.title}</div>
-                        <span className={revisitDue ? "lm-done lm-revisit-due" : "lm-done"}>{revisitDue ? "revisit due" : "done"}</span>
+                        <span className={revisitDue ? "lm-done lm-revisit-due" : "lm-done"}>{revisitDue ? "revisit due" : isNewest ? "just filed" : "done"}</span>
                       </div>
                       <div className="lm-caption" style={{ marginTop: 6 }}>
                         Chose {d.choice}. Confidence {d.confidence} of 5.
@@ -355,6 +358,7 @@ export function Step1Screen({
         <button className="lm-btn" onClick={onSubmit} disabled={!text.trim() || loading}>
           {loading ? "Reading" : "Read it back"}
         </button>
+        {text.trim() && !loading ? <KeyHint /> : null}
         {onSaveForLater ? <button className="lm-link" onClick={onSaveForLater}>Save for later</button> : null}
       </div>
     </AppShell>
@@ -525,6 +529,7 @@ export function Step2Screen({
 
       <div className="lm-actions">
         <button className="lm-btn" onClick={onNext} disabled={!done}>That&apos;s right</button>
+        {done ? <KeyHint /> : null}
         <button className="lm-link" onClick={onBack}>Back to the details</button>
       </div>
     </AppShell>
@@ -624,6 +629,7 @@ export function Step3Screen({
 
       <div className="lm-actions">
         <button className="lm-btn" onClick={onNext} disabled={loading || options.length < 2}>Compare them</button>
+        {!loading && options.length >= 2 ? <KeyHint /> : null}
         <button className="lm-link" onClick={onBack}>Back</button>
       </div>
     </AppShell>
@@ -729,6 +735,7 @@ export function Step4Screen({
 
       <div className="lm-actions">
         <button className="lm-btn" onClick={onNext} disabled={loading}>Make the call</button>
+        {!loading ? <KeyHint /> : null}
         <button className="lm-link" onClick={onBack}>Back to options</button>
       </div>
     </AppShell>
@@ -755,6 +762,8 @@ export function Step5Screen({
   direction,
   onJump,
   reversibleById,
+  revisitDate,
+  onRevisitDate,
 }: Shell & {
   decisionNumber: number;
   options: Option[];
@@ -771,6 +780,8 @@ export function Step5Screen({
   direction?: "fwd" | "back";
   onJump?: (step: number) => void;
   reversibleById?: Record<string, "yes" | "partly" | "no">;
+  revisitDate?: string;
+  onRevisitDate?: (v: string) => void;
 }) {
   const [holding, setHolding] = useState(false);
   const [committed, setCommitted] = useState(false);
@@ -787,6 +798,9 @@ export function Step5Screen({
     setError("");
     setCommitted(true);
     setHolding(false);
+    if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+      try { navigator.vibrate(15); } catch { /* ignore unsupported vibrate */ }
+    }
     setTimeout(onCommit, 500);
   };
   const start = () => {
@@ -865,12 +879,33 @@ export function Step5Screen({
         <span className="lm-label">Confidence</span>
         <div className="lm-conf" role="radiogroup" aria-label="Confidence">
           {[1, 2, 3, 4, 5].map((n) => (
-            <button key={n} role="radio" aria-checked={confidence === n} aria-label={`Confidence ${n} of 5`} className={confidence === n ? "is-on" : ""} onClick={() => onConfidence(n)}>
+            <button
+              key={n}
+              role="radio"
+              aria-checked={confidence === n}
+              aria-label={`Confidence ${n} of 5`}
+              className={n <= confidence ? "is-on" : ""}
+              style={n <= confidence ? { transitionDelay: `${(n - 1) * 40}ms` } : undefined}
+              onClick={() => onConfidence(n)}
+            >
               {n}
             </button>
           ))}
         </div>
       </div>
+
+      {onRevisitDate ? (
+        <div className="lm-anim lm-revisit" style={delay(370)}>
+          <label htmlFor="lm-revisit" className="lm-label">Revisit on</label>
+          <input
+            id="lm-revisit"
+            type="date"
+            className="lm-input"
+            value={revisitDate ?? ""}
+            onChange={(e) => onRevisitDate(e.target.value)}
+          />
+        </div>
+      ) : null}
 
       {error ? <div className="lm-error" role="alert">{error}</div> : null}
 
@@ -936,15 +971,36 @@ export function Step6Screen({
   const [editText, setEditText] = useState("");
   const [newAud, setNewAud] = useState("");
   const [showAdd, setShowAdd] = useState(false);
+  const [hasFanned, setHasFanned] = useState(false);
+  const bodyWrapRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (tab > drafts.length - 1) setTab(Math.max(0, drafts.length - 1));
   }, [drafts.length, tab]);
 
+  useEffect(() => {
+    if (!hasFanned && drafts.length > 0) setHasFanned(true);
+  }, [hasFanned, drafts.length]);
+
   const d = drafts[tab];
   const words = d ? `${d.subject ?? ""} ${d.body}`.trim().split(/\s+/).filter(Boolean).length : 0;
   const busy = !!d && rewritingId === d.id;
   const copiedCount = drafts.filter((x) => copied[x.id]).length;
+
+  const bodies = drafts.map((x) => x.body.trim());
+  const isConsistent = bodies.every((b) => b === bodies[0]) || bodies.length <= 1;
+
+  useEffect(() => {
+    const el = bodyWrapRef.current;
+    if (!el) return;
+    const target = el.firstElementChild as HTMLElement | null;
+    if (!target) return;
+    const setHeight = () => { el.style.height = `${target.offsetHeight}px`; };
+    setHeight();
+    const ro = new ResizeObserver(setHeight);
+    ro.observe(target);
+    return () => ro.disconnect();
+  }, [d?.id, d?.body, editing]);
 
   const copy = async () => {
     if (!d) return;
@@ -967,13 +1023,14 @@ export function Step6Screen({
         <div className="lm-reading" role="status"><i className="lm-pulse" aria-hidden="true" />writing drafts</div>
       ) : (
         <>
-          <div className="lm-anim lm-tabs" role="tablist" style={delay(150)}>
+          <div className={`lm-anim lm-tabs ${!hasFanned ? "is-fan" : ""}`} role="tablist" style={delay(150)}>
             {drafts.map((x, i) => (
               <button
                 key={x.id}
                 role="tab"
                 aria-selected={i === tab}
                 className={i === tab ? "is-on" : ""}
+                style={!hasFanned ? ({ "--d": `${i * 90}ms` } as CSSProperties) : undefined}
                 onClick={() => {
                   setTab(i);
                   setEditing(false);
@@ -984,6 +1041,11 @@ export function Step6Screen({
               </button>
             ))}
             <button onClick={() => setShowAdd((s) => !s)} aria-expanded={showAdd}>+ Add audience</button>
+          </div>
+
+          <div className={`lm-consistency ${isConsistent ? "" : "is-flagged"}`} role="status">
+            <i aria-hidden="true" />
+            {isConsistent ? "Consistent across audiences" : "Drafts differ across audiences — check before sending"}
           </div>
 
           {showAdd ? (
@@ -1013,15 +1075,17 @@ export function Step6Screen({
                 <span>{d.channel}</span>
                 <span>{busy ? <span className="lm-pulse">rewriting</span> : `${words} words`}</span>
               </div>
-              <div key={d.id + d.body.length} className={`lm-draft-body lm-fade-swap ${busy ? "is-busy" : ""}`}>
-                {editing ? (
-                  <textarea aria-label="Edit draft" value={editText} onChange={(e) => setEditText(e.target.value)} />
-                ) : (
-                  <>
-                    {d.subject ? <div style={{ fontSize: 15, fontWeight: 500, marginBottom: 16 }}>{d.subject}</div> : null}
-                    {d.body}
-                  </>
-                )}
+              <div className="lm-draft-body-wrap" ref={bodyWrapRef}>
+                <div key={d.id + d.body.length} className={`lm-draft-body lm-fade-swap ${busy ? "is-busy" : ""}`}>
+                  {editing ? (
+                    <textarea aria-label="Edit draft" value={editText} onChange={(e) => setEditText(e.target.value)} />
+                  ) : (
+                    <>
+                      {d.subject ? <div style={{ fontSize: 15, fontWeight: 500, marginBottom: 16 }}>{d.subject}</div> : null}
+                      {d.body}
+                    </>
+                  )}
+                </div>
               </div>
               <div className="lm-draft-foot">
                 <div className="lm-chips">
@@ -1057,7 +1121,16 @@ export function Step6Screen({
                   )}
                 </div>
                 <button className={`lm-copy ${copied[d.id] ? "is-copied" : ""}`} onClick={copy} disabled={busy || editing}>
-                  {copied[d.id] ? "Copied" : "Copy"}
+                  {copied[d.id] ? (
+                    <>
+                      <svg className="lm-copy-check" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                        <path d="M3 8.5L6.5 12L13 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      Copied
+                    </>
+                  ) : (
+                    "Copy"
+                  )}
                 </button>
               </div>
             </div>
@@ -1101,6 +1174,10 @@ export function CompleteScreen({
   confidence,
   audiences,
   gaveUp,
+  revisitDate,
+  decidedMinutes,
+  onCopyRecord,
+  recordCopied,
   onHome,
   onReview,
 }: Shell & {
@@ -1109,9 +1186,17 @@ export function CompleteScreen({
   confidence: number;
   audiences: string[];
   gaveUp: string;
+  revisitDate?: string;
+  decidedMinutes?: number | null;
+  onCopyRecord?: () => void;
+  recordCopied?: boolean;
   onHome: () => void;
   onReview: () => void;
 }) {
+  const revisitLabel = revisitDate
+    ? new Date(`${revisitDate}T00:00:00`).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })
+    : null;
+
   return (
     <AppShell aiStatus={aiStatus} initials={initials}>
       <div style={{ paddingTop: 32 }}>
@@ -1122,6 +1207,12 @@ export function CompleteScreen({
           <div><span className="lm-label" style={{ paddingTop: 3 }}>The call</span><span style={{ fontWeight: 500 }}>{call}</span></div>
           <div><span className="lm-label" style={{ paddingTop: 3 }}>Confidence</span><span className="lm-mono" style={{ fontSize: 14 }}>{confidence} of 5</span></div>
           <div><span className="lm-label" style={{ paddingTop: 3 }}>Messages</span><span>{audiences.join(", ")}</span></div>
+          {decidedMinutes ? (
+            <div><span className="lm-label" style={{ paddingTop: 3 }}>Decided in</span><span className="lm-mono" style={{ fontSize: 14 }}>{decidedMinutes} min</span></div>
+          ) : null}
+          {revisitLabel ? (
+            <div><span className="lm-label" style={{ paddingTop: 3 }}>Revisit on</span><span className="lm-mono" style={{ fontSize: 14 }}>{revisitLabel}</span></div>
+          ) : null}
         </div>
 
         {gaveUp.trim() ? (
@@ -1133,6 +1224,20 @@ export function CompleteScreen({
         <div className="lm-anim lm-actions" style={{ marginTop: 44, gap: 12, ...delay(1800) }}>
           <button className="lm-btn" onClick={onHome}>Back to home</button>
           <button className="lm-btn-sec" onClick={onReview}>Review the drafts</button>
+          {onCopyRecord ? (
+            <button className="lm-link lm-record-copy" onClick={onCopyRecord}>
+              {recordCopied ? (
+                <>
+                  <svg className="lm-copy-check" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                    <path d="M3 8.5L6.5 12L13 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  Copied
+                </>
+              ) : (
+                "Copy decision record"
+              )}
+            </button>
+          ) : null}
         </div>
       </div>
     </AppShell>

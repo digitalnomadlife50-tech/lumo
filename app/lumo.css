@@ -70,8 +70,9 @@
 .lm-chip:hover { background: var(--lm-muted); }
 
 /* Cards and fields */
-.lm-card { background: var(--lm-surface); border: 1px solid var(--lm-border); border-radius: 10px; padding: 28px; transition: border-color .2s ease; }
+.lm-card { background: var(--lm-surface); border: 1px solid var(--lm-border); border-radius: 10px; padding: 28px; transition: border-color .2s ease, box-shadow .2s ease; }
 .lm-card-hover:hover { border-color: var(--lm-border-hover); }
+.lm-card-new { border-color: var(--lm-accent); box-shadow: 0 0 0 4px var(--lm-accent-soft); }
 .lm-input, .lm-textarea { width: 100%; background: var(--lm-surface); border: 1px solid var(--lm-border); border-radius: 10px; padding: 14px 18px; font-family: var(--lm-sans); font-size: 15px; line-height: 1.55; color: var(--lm-text); outline: none; transition: border-color .2s ease, box-shadow .2s ease; }
 .lm-input:focus, .lm-textarea:focus { border-color: var(--lm-accent); box-shadow: 0 0 0 4px var(--lm-accent-soft); }
 .lm-textarea { resize: vertical; }
@@ -310,6 +311,19 @@
 .lm-tabs.is-fan button { opacity: 0; animation: lmFadeUp .3s ease-out both; animation-delay: var(--d, 0ms); }
 
 .lm-flip-enter { animation: lmFadeUp .3s ease-out both; }
+.lm-past { transition: transform .3s ease; }
+
+.lm-draft-body-wrap { overflow: hidden; transition: height .25s ease; }
+
+.lm-consistency { display: flex; align-items: center; gap: 8px; margin-top: 16px; font-family: var(--lm-mono); font-size: 12px; color: var(--lm-text-3); }
+.lm-consistency.is-flagged { color: var(--lm-caution); }
+.lm-consistency i { width: 6px; height: 6px; border-radius: 50%; background: var(--lm-positive); flex: none; }
+.lm-consistency.is-flagged i { background: var(--lm-caution); }
+
+.lm-revisit { margin-top: 24px; display: flex; flex-direction: column; gap: 8px; }
+.lm-revisit input { width: auto; }
+
+.lm-record-copy { display: inline-flex; align-items: center; gap: 6px; }
 
 /* ================= RESPONSIVE ================= */
 @media (max-width: 1023px) {
