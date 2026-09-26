@@ -17,7 +17,7 @@ export function delay(ms: number): CSSProperties {
   return { ["--d" as string]: `${ms}ms` } as CSSProperties;
 }
 
-export function useInView<T extends HTMLElement>(threshold = 0.2) {
+export function useInView<T extends HTMLElement>(threshold = 0) {
   const ref = useRef<T | null>(null);
   const [inView, setInView] = useState(false);
   useEffect(() => {
@@ -27,6 +27,9 @@ export function useInView<T extends HTMLElement>(threshold = 0.2) {
       setInView(true);
       return;
     }
+    // Reveal as soon as any part of the element crosses just below the viewport
+    // bottom. A higher threshold never fires for elements taller than the
+    // viewport, which would leave them stuck invisible.
     const obs = new IntersectionObserver(
       (entries) => {
         if (entries.some((e) => e.isIntersecting)) {
@@ -34,10 +37,16 @@ export function useInView<T extends HTMLElement>(threshold = 0.2) {
           obs.disconnect();
         }
       },
-      { threshold }
+      { threshold, rootMargin: "0px 0px -48px 0px" }
     );
     obs.observe(el);
-    return () => obs.disconnect();
+    // Safety net: never let content stay permanently hidden if the observer
+    // somehow doesn't fire (e.g. layout thrash on first paint).
+    const fallback = window.setTimeout(() => setInView(true), 1600);
+    return () => {
+      obs.disconnect();
+      window.clearTimeout(fallback);
+    };
   }, [inView, threshold]);
   return { ref, inView };
 }

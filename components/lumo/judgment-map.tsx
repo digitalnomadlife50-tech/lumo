@@ -19,12 +19,12 @@ export type MapPoint = {
 }
 
 const KINDS: { id: DecisionKind; label: string; color: string }[] = [
-  { id: "timing", label: "Timing", color: "#E26847" },
-  { id: "scope", label: "Scope", color: "#C49144" },
-  { id: "people", label: "People", color: "#4A7A5C" },
-  { id: "hiring", label: "Hiring", color: "#7FA68C" },
-  { id: "vendor", label: "Vendor", color: "#9C8563" },
-  { id: "strategy", label: "Strategy", color: "#B06A4E" },
+  { id: "timing", label: "Timing", color: "#E2683F" },
+  { id: "scope", label: "Scope", color: "#E0A32E" },
+  { id: "people", label: "People", color: "#3F9E6F" },
+  { id: "hiring", label: "Hiring", color: "#3E86C8" },
+  { id: "vendor", label: "Vendor", color: "#8E5BB0" },
+  { id: "strategy", label: "Strategy", color: "#C0405E" },
 ]
 const KIND_COLOR: Record<DecisionKind, string> = Object.fromEntries(KINDS.map((k) => [k.id, k.color])) as Record<DecisionKind, string>
 
@@ -188,8 +188,16 @@ export function JudgmentMap({ points, autoReplay = false }: { points: MapPoint[]
                 aria-label={`No.${p.number}, ${p.title}`}
                 onFocus={() => setSelected(p.number)}
               >
-                {drift ? <line x1={gx} y1={cy} x2={cx} y2={cy} stroke={KIND_COLOR[p.kind]} strokeWidth={1} opacity={0.4} /> : null}
-                <circle cx={cx} cy={cy} r={isSel ? r + 2 : r} fill={KIND_COLOR[p.kind]} opacity={isSel ? 1 : 0.82} />
+                {drift ? <line x1={gx} y1={cy} x2={cx} y2={cy} stroke={KIND_COLOR[p.kind]} strokeWidth={1.5} opacity={0.5} /> : null}
+                <circle
+                  cx={cx}
+                  cy={cy}
+                  r={isSel ? r + 2 : r}
+                  fill={KIND_COLOR[p.kind]}
+                  opacity={isSel ? 1 : 0.92}
+                  stroke="var(--lm-surface)"
+                  strokeWidth={1.5}
+                />
               </g>
             )
           })}
