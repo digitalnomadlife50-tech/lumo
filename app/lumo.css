@@ -541,11 +541,17 @@
 /* ================= OVER TIME (scroll-driven) ================= */
 .lm-ot-scroll { position: relative; height: 200vh; }
 .lm-ot-stage { position: sticky; top: 0; height: 100vh; display: flex; align-items: center; }
-.lm-ot-stage-inner { width: 100%; display: flex; flex-direction: column; gap: 32px; }
+.lm-ot-stage-inner { width: 100%; display: flex; flex-direction: column; gap: 28px; }
 .lm-ot-head { margin-bottom: 0; }
-.lm-ot-head .lm-sec-copy { max-width: 760px; }
+.lm-ot-head .lm-sec-copy { max-width: 760px; gap: 12px; }
+/* The stage is pinned to one viewport, so its copy has to scale with the
+   viewport rather than sit at the fixed section sizes. */
+.lm-ot-head .lm-h2 { font-size: clamp(28px, 3.2vw, 40px); }
+.lm-ot-head .lm-body-lg { font-size: 16px; }
 
-.lm-ot-cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+/* The record card slides in from the right, so the grid clips that offset
+   rather than letting it push a horizontal scrollbar onto the page. */
+.lm-ot-cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: start; overflow: hidden; }
 
 .lm-ot-card { background: var(--lm-surface); border: 1px solid var(--lm-border); border-radius: 10px; }
 .lm-ot-decision { padding: 22px; opacity: 0; transform: translateY(14px); transition: opacity .45s ease, transform .45s cubic-bezier(.2,.7,.3,1); }
@@ -592,22 +598,45 @@
 .lm-ot-step-p { margin: 4px 0 0; font-size: 14px; line-height: 1.55; color: var(--lm-text-2); }
 .lm-ot-step-p.is-accent { color: var(--lm-risk); }
 
-@media (max-width: 1024px) {
+/* Two columns hold down to 880px; collapsing earlier made the pinned stage
+   taller than the viewport and clipped the bottom of the content. */
+@media (max-width: 880px) {
   .lm-ot-cols { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Short viewports: tighten the pinned stage so it still fits in one screen. */
+@media (max-height: 820px) {
+  .lm-ot-stage-inner { gap: 18px; }
+  .lm-ot-head .lm-h2 { font-size: 28px; }
+  .lm-ot-head .lm-body-lg { font-size: 15px; }
+  .lm-ot-decision { padding: 16px; }
+  .lm-ot-q { font-size: 15px; }
+  .lm-ot-record { padding: 14px 16px; }
+  .lm-ot-line { font-size: 14px; }
+  .lm-ot-squares { margin-top: 10px; }
+  .lm-ot-rule { margin-top: 10px; padding-top: 10px; }
+  .lm-ot-recordlink { margin-top: 10px; }
 }
 
 @media (max-width: 640px) {
   .lm-ot-scroll { height: 160vh; }
   .lm-ot-stage { height: 100svh; }
-  .lm-ot-stage-inner { gap: 18px; }
-  .lm-ot-head .lm-h2 { font-size: 26px; }
-  .lm-ot-head .lm-body-lg { font-size: 14px; }
-  .lm-ot-decision { padding: 16px; }
+  .lm-ot-stage-inner { gap: 14px; }
+  .lm-ot-head .lm-sec-copy { gap: 8px; }
+  .lm-ot-head .lm-h2 { font-size: 24px; }
+  .lm-ot-head .lm-body-lg { font-size: 13.5px; }
+  .lm-ot-decision { padding: 14px; }
   .lm-ot-q { font-size: 15px; }
-  .lm-ot-record { padding: 14px 16px; }
-  .lm-ot-squares { gap: 3px; }
+  .lm-ot-input { margin-top: 10px; min-height: 40px; padding: 10px 12px; }
+  .lm-ot-record { padding: 12px 14px; }
+  .lm-ot-line { font-size: 14px; }
+  .lm-ot-squares { gap: 3px; margin-top: 8px; }
   .lm-ot-square { width: 16px; height: 16px; }
+  .lm-ot-slipped { margin-top: 8px; }
+  .lm-ot-rule { margin-top: 8px; padding-top: 8px; }
+  .lm-ot-actions { gap: 8px; }
   .lm-ot-note { flex-basis: 100%; }
+  .lm-ot-recordlink { margin-top: 8px; }
   .lm-ot-step { grid-template-columns: 48px minmax(0, 1fr); gap: 16px; }
   .lm-ot-rail { width: 48px; }
   .lm-ot-art { width: 44px; height: 44px; }

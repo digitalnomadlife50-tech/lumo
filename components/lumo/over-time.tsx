@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useEffect, useRef, useState } from "react"
+import { memo, useEffect, useRef, useState } from "react"
 import { useInView, usePrefersReducedMotion } from "./ui"
 
 const TYPED = "Yes, March 14 works"
@@ -89,7 +89,6 @@ export function OverTime() {
     if (!container) return
 
     let raf = 0
-    let active = false
     let total = 0
     let last = -1
 
@@ -103,42 +102,56 @@ export function OverTime() {
     }
 
     const tick = () => {
-      raf = requestAnimationFrame(tick)
-      if (!active) return
       const p = read()
-      if (Math.abs(p - last) < 0.001) return
-      last = p
-      setProgress(p)
+      if (Math.abs(p - last) >= 0.001) {
+        last = p
+        setProgress(p)
+      }
+      raf = requestAnimationFrame(tick)
+    }
+
+    // The loop only runs while the section is near the viewport, so an idle
+    // page is not paying for a frame callback on every tick.
+    const start = () => {
+      if (raf === 0) raf = requestAnimationFrame(tick)
+    }
+    const stop = () => {
+      if (raf !== 0) cancelAnimationFrame(raf)
+      raf = 0
     }
 
     measure()
-    const initial = read()
-    last = initial
-    setProgress(initial)
+    last = read()
+    setProgress(last)
+
+    // The container is sized in vh, so a viewport change or any reflow that
+    // changes its height invalidates the scroll range.
+    const ro =
+      typeof ResizeObserver === "undefined"
+        ? null
+        : new ResizeObserver(() => {
+            measure()
+            last = -1
+          })
+    ro?.observe(container)
 
     const obs =
       typeof IntersectionObserver === "undefined"
         ? null
         : new IntersectionObserver(
             (entries) => {
-              active = entries.some((e) => e.isIntersecting)
+              if (entries.some((e) => e.isIntersecting)) start()
+              else stop()
             },
-            { rootMargin: "300px 0px 300px 0px" }
+            { rootMargin: "200px 0px 200px 0px" }
           )
     if (obs) obs.observe(container)
-    else active = true
+    else start()
 
-    const onResize = () => {
-      measure()
-      last = -1
-    }
-    window.addEventListener("resize", onResize)
-
-    raf = requestAnimationFrame(tick)
     return () => {
-      cancelAnimationFrame(raf)
+      stop()
+      ro?.disconnect()
       obs?.disconnect()
-      window.removeEventListener("resize", onResize)
     }
   }, [reduced])
 
@@ -211,19 +224,29 @@ export function OverTime() {
         </div>
       </div>
 
-      <div className="lm-wrap lm-section">
-        <div className="lm-sec-head">
-          <div className="lm-sec-copy">
-            <div className="lm-label">How it learns</div>
-            <h2 className="lm-h2">A pattern is only useful if it changes the next decision.</h2>
-          </div>
-        </div>
-        <ol className="lm-ot-loop">
-          {STEPS.map((s) => (
-            <LoopStep key={s.n} step={s} />
-          ))}
-        </ol>
-      </div>
+      <HowItLearns />
     </>
   )
 }
+
+/**
+ * Held out of OverTime and memoized: the scroll loop re-renders its parent on
+ * every frame, and this block has no dependency on that progress.
+ */
+const HowItLearns = memo(function HowItLearns() {
+  return (
+    <div className="lm-wrap lm-section">
+      <div className="lm-sec-head">
+        <div className="lm-sec-copy">
+          <div className="lm-label">How it learns</div>
+          <h2 className="lm-h2">A pattern is only useful if it changes the next decision.</h2>
+        </div>
+      </div>
+      <ol className="lm-ot-loop">
+        {STEPS.map((s) => (
+          <LoopStep key={s.n} step={s} />
+        ))}
+      </ol>
+    </div>
+  )
+})
