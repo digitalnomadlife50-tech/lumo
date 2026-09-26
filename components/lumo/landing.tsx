@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { Reveal, Wordmark, delay, usePrefersReducedMotion } from "./ui";
+import { ConceptAnimation } from "./concept";
+import { ProductReplay } from "./replay";
 
 const DILEMMAS = [
   "Ship v2 now or wait for enterprise",
@@ -19,16 +21,6 @@ const STEPS = [
   { n: "04", name: "Side by side", body: "Every path costs something. See what each one costs, who it hurts, and whether you can undo it.", label: "Can you undo it", sample: "Holding six weeks: no. The re:Invent window closes either way." },
   { n: "05", name: "Your choice", body: "Commit to a path. Say why in a sentence. Rate your confidence. Name what you're giving up.", label: "What I'm giving up", sample: "A clean enterprise story at re:Invent" },
   { n: "06", name: "Tell people", body: "A tailored draft for every audience, written from the same decision. Edit lightly, copy, send.", label: "Drafts", sample: "Engineering, your VP, sales, support" },
-];
-
-const FAN = [
-  ["Engineering", "Scope for Monday, and what moved out"],
-  ["Your VP", "The call, the cost, the risk to watch"],
-  ["Sales", "What to say to three prospects"],
-  ["Support", "What ships and what to tell customers"],
-  ["Design", "What changes for the SSO flows"],
-  ["Marketing", "What to announce at re:Invent"],
-  ["Decision doc", "The record, for whoever asks later"],
 ];
 
 const CHAT = [
@@ -187,23 +179,7 @@ export default function Landing() {
             <p className="lm-body-lg">Each audience needs a different message. Lumo drafts them from the same decision, so they don&apos;t contradict each other.</p>
           </div>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 28 }}>
-            <Reveal>
-              <div className="lm-pill">
-                <span className="lm-mono" style={{ fontSize: 13, opacity: 0.85 }}>No.48</span>
-                Ship v2 now. SSO gets its own date.
-              </div>
-            </Reveal>
-            <div className="lm-fan">
-              {FAN.map(([a, b], i) => (
-                <Reveal key={a} delayMs={200 + i * 110} className="lm-fan-card">
-                  <small>{a}</small>
-                  <span>{b}</span>
-                </Reveal>
-              ))}
-              <Reveal delayMs={200 + FAN.length * 110} className="lm-fan-card">
-                <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--lm-text-3)", fontSize: 14, minHeight: 50 }}>+ add audience</div>
-              </Reveal>
-            </div>
+            <ConceptAnimation />
           </div>
         </div>
       </section>
@@ -269,12 +245,23 @@ export default function Landing() {
         </div>
       </section>
 
-      <section id="proof" className="lm-wrap lm-section lm-split">
-        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-          <div className="lm-label">Example output</div>
-          <h2 className="lm-h2">Judge it by what it writes.</h2>
-          <p className="lm-body-lg">This is the message to engineering from an example decision. Specific names, specific scope, one clear ask.</p>
+      <section id="proof" className="lm-wrap lm-section">
+        <div className="lm-sec-head">
+          <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 640 }}>
+            <div className="lm-label">Example output</div>
+            <h2 className="lm-h2">Watch the whole thing play out.</h2>
+            <p className="lm-body-lg">The real product, walking through a real decision. Pause, skip ahead, or step through it yourself.</p>
+          </div>
           <a href="/app" style={{ fontSize: 16, fontWeight: 500, textDecoration: "none" }}>Try it with your own decision</a>
+        </div>
+        <ProductReplay />
+      </section>
+
+      <section className="lm-wrap lm-section lm-split">
+        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+          <div className="lm-label">One of the drafts</div>
+          <h2 className="lm-h2">Judge it by what it writes.</h2>
+          <p className="lm-body-lg">This is the message to engineering from that same decision. Specific names, specific scope, one clear ask.</p>
         </div>
         <Reveal className="lm-card" delayMs={100}>
           <div className="lm-mono lm-caption" style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 16 }}>

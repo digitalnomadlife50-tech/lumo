@@ -96,6 +96,7 @@ interface SessionDecision {
   revisitDate?: string
   decidedAtMs?: number
   startedAtMs?: number
+  outcome?: string
 }
 
 interface SavedDraft {
@@ -117,6 +118,20 @@ interface SavedDraft {
 
 const DECISIONS_STORAGE_KEY = "lumo-decisions-v1"
 const DRAFT_STORAGE_KEY = "lumo-draft-v1"
+
+const EXAMPLE_SITUATION = `#launch-v2 dana: sales needs v2 live for re:Invent, three enterprise deals riding on it
+#eng marco: SSO is two sprints minimum, can't parallelize with the onboarding fix
+LUM-812: blocker, enterprise SSO not scoped
+dm from vp: need a call on this by friday
+#support: onboarding fix ships in v2, about 40 tickets waiting on it`
+
+interface DecisionOutcome {
+  whatHappened: string
+  rightCall: "yes" | "partly" | "no"
+  sameCallToday: "yes" | "no"
+  lessonLearned?: string
+  savedAtMs: number
+}
 
 /* ─── MAIN COMPONENT ─── */
 export default function ProductApp() {
@@ -156,6 +171,7 @@ export default function ProductApp() {
   const [revisitDate, setRevisitDate] = useState<string>("")
   const [justFiledId, setJustFiledId] = useState<string | null>(null)
   const [recordCopied, setRecordCopied] = useState(false)
+  const [isExample, setIsExample] = useState(false)
   const decisionsLoadedRef = useRef(false)
   const draftLoadedRef = useRef(false)
   const abortRef = useRef<AbortController | null>(null)
@@ -210,6 +226,7 @@ export default function ProductApp() {
     setIsGenerating(false)
     setRevisitDate("")
     setRecordCopied(false)
+    setIsExample(false)
   }, [])
 
   const defaultRevisitDate = () => new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
@@ -426,9 +443,9 @@ export default function ProductApp() {
         analysis,
         readBack,
       }
-      setDecisionNum(nextNum)
+      setDecisionNum(isExample ? null : nextNum)
       setCurrentDecisionId(id)
-      setSessionDecisions((previous) => [savedDecision, ...previous])
+      if (!isExample) setSessionDecisions((previous) => [savedDecision, ...previous])
       setAiOutput(generated)
       setPreviousDrafts({})
       setAiStatus("ok")
@@ -647,7 +664,18 @@ export default function ProductApp() {
         initials="L"
         value={homeInput}
         onChange={setHomeInput}
-        onStart={() => { setStartedAtMs(Date.now()); setSituation(homeInput); navigate("step1") }}
+        onStart={() => { setIsExample(false); setStartedAtMs(Date.now()); setSituation(homeInput); navigate("step1") }}
+        onTryExample={() => {
+          setIsExample(true)
+          setStartedAtMs(Date.now())
+          setHomeInput(EXAMPLE_SITUATION)
+          setSituation(EXAMPLE_SITUATION)
+          navigate("step1")
+        }}
+        isExample={isExample}
+        onSaveOutcome={(id, outcome) => {
+          setSessionDecisions((prev) => prev.map((d) => (d.id === id ? { ...d, outcome } : d)))
+        }}
         decisions={pastDecisions}
         draft={draftInProgress}
         onResume={resumeDraft}
@@ -825,6 +853,7 @@ export default function ProductApp() {
         recordCopied={recordCopied}
         onHome={() => { resetDecision(); navigate("home") }}
         onReview={() => navigate("step6")}
+        isExample={isExample}
       />
     )
   }
@@ -836,7 +865,16 @@ export default function ProductApp() {
       value={homeInput}
       onChange={setHomeInput}
       onStart={() => { setSituation(homeInput); navigate("step1") }}
+      onTryExample={() => {
+        setStartedAtMs(Date.now())
+        setHomeInput(EXAMPLE_SITUATION)
+        setSituation(EXAMPLE_SITUATION)
+        navigate("step1")
+      }}
       decisions={pastDecisions}
+      onSaveOutcome={(id, outcome) => {
+        setSessionDecisions((prev) => prev.map((d) => (d.id === id ? { ...d, outcome } : d)))
+      }}
       newestId={justFiledId}
       onOpenDecision={(id) => {
         const decision = sessionDecisions.find((item) => item.id === id)

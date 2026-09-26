@@ -13,7 +13,8 @@ export type PastDecision = {
   confidence: number;
   gaveUp?: string;
   revisitDate?: string;
-};
+  outcome?: string;
+  };
 
 export type DraftInProgress = {
   id: string;
@@ -110,6 +111,9 @@ export function HomeScreen({
   draft,
   onResume,
   onDiscardDraft,
+  onTryExample,
+  isExample,
+  onSaveOutcome,
 }: Shell & {
   value: string;
   onChange: (v: string) => void;
@@ -120,10 +124,16 @@ export function HomeScreen({
   draft?: DraftInProgress | null;
   onResume?: () => void;
   onDiscardDraft?: () => void;
+  onTryExample?: () => void;
+  isExample?: boolean;
+  onSaveOutcome?: (id: string, outcome: string) => void;
 }) {
+  void isExample;
   const reduced = usePrefersReducedMotion();
   const [ph, setPh] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [outcomeOpenId, setOutcomeOpenId] = useState<string | null>(null);
+  const [outcomeDraft, setOutcomeDraft] = useState("");
   useEffect(() => {
     if (reduced || value) return;
     const t = setInterval(() => setPh((p) => (p + 1) % PLACEHOLDERS.length), 4000);
@@ -172,6 +182,11 @@ export function HomeScreen({
           </div>
           <button className="lm-btn" onClick={onStart} disabled={!value.trim()}>Start</button>
         </div>
+        {onTryExample && !value.trim() ? (
+          <button type="button" className="lm-link" style={{ marginTop: 16 }} onClick={onTryExample}>
+            Try it with an example
+          </button>
+        ) : null}
       </div>
 
       <div style={{ marginTop: 96 }}>
@@ -217,6 +232,58 @@ export function HomeScreen({
                       {i === 0 && d.gaveUp ? (
                         <Signature draw={false} style={{ marginTop: 18 }}>I gave up {lowerFirst(d.gaveUp)}.</Signature>
                       ) : null}
+                      {d.outcome ? (
+                        <div className="lm-caption" style={{ marginTop: 10, color: "var(--lm-text-2)" }}>
+                          <span className="lm-label" style={{ marginRight: 8 }}>Outcome</span>
+                          {d.outcome}
+                        </div>
+                      ) : onSaveOutcome && revisitDue ? (
+                        outcomeOpenId === d.id ? (
+                          <div
+                            style={{ marginTop: 12, display: "flex", gap: 10 }}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <input
+                              className="lm-input"
+                              autoFocus
+                              placeholder="How did it go?"
+                              value={outcomeDraft}
+                              onChange={(e) => setOutcomeDraft(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter" && outcomeDraft.trim()) {
+                                  onSaveOutcome(d.id, outcomeDraft.trim());
+                                  setOutcomeOpenId(null);
+                                  setOutcomeDraft("");
+                                }
+                              }}
+                            />
+                            <button
+                              className="lm-btn-sec"
+                              type="button"
+                              onClick={() => {
+                                if (outcomeDraft.trim()) onSaveOutcome(d.id, outcomeDraft.trim());
+                                setOutcomeOpenId(null);
+                                setOutcomeDraft("");
+                              }}
+                            >
+                              Save
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            className="lm-link"
+                            style={{ marginTop: 10 }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setOutcomeOpenId(d.id);
+                              setOutcomeDraft("");
+                            }}
+                          >
+                            How did it go?
+                          </button>
+                        )
+                      ) : null}
                     </div>
                   </div>
                 );
@@ -224,8 +291,46 @@ export function HomeScreen({
             </div>
           </>
         )}
+        {sorted.length > 0 ? <PatternsSection decisions={sorted} /> : null}
       </div>
     </AppShell>
+  );
+}
+
+function PatternsSection({ decisions }: { decisions: PastDecision[] }) {
+  if (decisions.length < 5) {
+    return (
+      <div style={{ marginTop: 56 }}>
+        <div className="lm-label">Your patterns</div>
+        <p className="lm-caption" style={{ marginTop: 10, maxWidth: 480 }}>
+          File {5 - decisions.length} more decision{5 - decisions.length === 1 ? "" : "s"} and this section will show what your
+          calls actually look like: average confidence, how fast you decide, and what you tend to give up.
+        </p>
+      </div>
+    );
+  }
+
+  const avgConfidence = decisions.reduce((sum, d) => sum + d.confidence, 0) / decisions.length;
+  const gaveUpCount = decisions.filter((d) => d.gaveUp?.trim()).length;
+  const revisited = decisions.filter((d) => d.revisitDate).length;
+
+  return (
+    <div style={{ marginTop: 56 }}>
+      <div className="lm-label">Your patterns</div>
+      <div className="lm-stack" style={{ marginTop: 16, gap: 12 }}>
+        <p className="lm-caption">
+          Average confidence <span className="lm-mono">{avgConfidence.toFixed(1)} of 5</span> across {decisions.length} decisions.
+        </p>
+        <p className="lm-caption">
+          You gave something up in <span className="lm-mono">{gaveUpCount}</span> of {decisions.length}.
+        </p>
+        {revisited > 0 ? (
+          <p className="lm-caption">
+            <span className="lm-mono">{revisited}</span> {revisited === 1 ? "decision" : "decisions"} flagged for a revisit.
+          </p>
+        ) : null}
+      </div>
+    </div>
   );
 }
 
@@ -1180,6 +1285,7 @@ export function CompleteScreen({
   recordCopied,
   onHome,
   onReview,
+  isExample,
 }: Shell & {
   decisionNumber: number;
   call: string;
@@ -1192,10 +1298,25 @@ export function CompleteScreen({
   recordCopied?: boolean;
   onHome: () => void;
   onReview: () => void;
+  isExample?: boolean;
 }) {
   const revisitLabel = revisitDate
     ? new Date(`${revisitDate}T00:00:00`).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })
     : null;
+
+  if (isExample) {
+    return (
+      <AppShell aiStatus={aiStatus} initials={initials}>
+        <div style={{ paddingTop: 32 }}>
+          <h1 className="lm-anim lm-heading">That was an example. Bring a real one.</h1>
+          <p className="lm-anim lm-sub" style={delay(80)}>Nothing here was saved or counted.</p>
+          <div className="lm-anim lm-actions" style={{ marginTop: 32, gap: 12, ...delay(160) }}>
+            <button className="lm-btn" onClick={onHome}>Back to home</button>
+          </div>
+        </div>
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell aiStatus={aiStatus} initials={initials}>
