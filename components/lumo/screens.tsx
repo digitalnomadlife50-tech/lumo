@@ -183,9 +183,12 @@ export function HomeScreen({
           <button className="lm-btn" onClick={onStart} disabled={!value.trim()}>Start</button>
         </div>
         {onTryExample && !value.trim() ? (
-          <button type="button" className="lm-link" style={{ marginTop: 16 }} onClick={onTryExample}>
-            Try it with an example
-          </button>
+          <div className="lm-samplerow">
+            <span className="lm-label">Or start with a sample</span>
+            <button type="button" className="lm-chip" onClick={onTryExample}>
+              Launch date vs. enterprise deal
+            </button>
+          </div>
         ) : null}
       </div>
 

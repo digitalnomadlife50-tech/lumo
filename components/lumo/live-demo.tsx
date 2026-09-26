@@ -22,18 +22,25 @@ export function demoMapPoints(): MapPoint[] {
   }))
 }
 
-const CH_DURATION = 9500
+const CH_DURATION = 8500
 
-const CHAPTERS = [
-  { id: "situation", label: "The situation" },
-  { id: "gut", label: "The gut call" },
-  { id: "agents", label: "The work" },
-  { id: "gap", label: "The gap" },
-  { id: "forward", label: "Play it forward" },
-  { id: "memory", label: "Brought back" },
-  { id: "decision", label: "The call" },
-  { id: "drafts", label: "The messages" },
-  { id: "map", label: "On the record" },
+const CHAPTERS: ReadonlyArray<{ id: string; label: string; phase: number; hold?: number }> = [
+  { id: "situation", label: "The situation", phase: 0 },
+  { id: "gut", label: "Your gut call", phase: 0 },
+  { id: "agents", label: "The research", phase: 1 },
+  { id: "gap", label: "Your gut vs. the evidence", phase: 1, hold: 2 },
+  { id: "forward", label: "How each option plays out", phase: 1 },
+  { id: "memory", label: "A lesson from a past call", phase: 1 },
+  { id: "decision", label: "The call", phase: 2 },
+  { id: "drafts", label: "Messages for each audience", phase: 2 },
+  { id: "map", label: "Saved for review", phase: 3 },
+] as const
+
+const PHASES = [
+  ["Before you decide", "Your gut call, in ten seconds, before you see anything."],
+  ["While you decide", "The research, the risks, and how each option plays out."],
+  ["After you decide", "One call, a tailored message for each audience."],
+  ["Weeks later", "Score the reasoning and the result separately."],
 ] as const
 
 export function LiveDemo() {
@@ -53,8 +60,9 @@ export function LiveDemo() {
   useEffect(() => {
     if (!playing) return
     startRef.current = performance.now()
+    const dur = CH_DURATION * (CHAPTERS[chapter].hold ?? 1)
     const tick = (now: number) => {
-      const t = Math.min(1, (now - startRef.current) / CH_DURATION)
+      const t = Math.min(1, (now - startRef.current) / dur)
       setProgress(t)
       if (t >= 1) {
         setChapter((c) => (c + 1) % CHAPTERS.length)
@@ -80,8 +88,13 @@ export function LiveDemo() {
   return (
     <div className="lm-demo">
       <div className="lm-demo-bar">
-        <span className="lm-mono lm-caption" style={{ fontSize: 12 }}>lumo / No.{d.number}, replaying</span>
-        <span className="lm-mono lm-caption" style={{ fontSize: 12 }}>no API calls, this one already happened</span>
+        <span className="lm-mono lm-caption" style={{ fontSize: 12 }}>lumo</span>
+        <span className="lm-mono lm-caption" style={{ fontSize: 12 }}>No.{d.number} · Example decision, replayed with sample data</span>
+      </div>
+
+      <div key={`ph-${CHAPTERS[chapter].phase}`} className="lm-demo-phase lm-fade-swap">
+        <span className="lm-demo-phase-name">{PHASES[CHAPTERS[chapter].phase][0]}</span>
+        <span className="lm-demo-phase-desc">{PHASES[CHAPTERS[chapter].phase][1]}</span>
       </div>
 
       <div className="lm-demo-stage" aria-live="polite">
@@ -96,7 +109,7 @@ export function LiveDemo() {
           {cur === "drafts" && <DraftsScene d={d} />}
           {cur === "map" && (
             <div className="lm-demo-map">
-              <div className="lm-label">On the record</div>
+              <div className="lm-label">Saved for review</div>
               <p className="lm-demo-lead">This call joins 40 others. The map is where the patterns show.</p>
               <JudgmentMap points={points} autoReplay />
             </div>
@@ -201,7 +214,7 @@ function AgentsScene({ d }: { d: D }) {
 function GapScene({ d }: { d: D }) {
   return (
     <div className="lm-demo-col lm-demo-center">
-      <div className="lm-label">The gap</div>
+      <div className="lm-label">Your gut vs. the evidence</div>
       <p className="lm-demo-gap">{d.gap}</p>
     </div>
   )
@@ -210,7 +223,7 @@ function GapScene({ d }: { d: D }) {
 function ForwardScene({ d }: { d: D }) {
   return (
     <div className="lm-demo-col">
-      <div className="lm-label">Play each path forward</div>
+      <div className="lm-label">How each option plays out</div>
       <div className="lm-demo-forward">
         {d.findings.playItForward.map((col) => {
           const opt = d.options.find((o) => o.letter === col.option)
@@ -236,7 +249,7 @@ function MemoryScene({ d }: { d: D }) {
   const r = d.resurfaced
   return (
     <div className="lm-demo-col lm-demo-center">
-      <div className="lm-label">Lumo brought one back</div>
+      <div className="lm-label">A lesson from a past call</div>
       <div className="lm-demo-memory">
         <div className="lm-mono lm-caption" style={{ fontSize: 12 }}>No.{r.decisionNumber}</div>
         <div className="lm-demo-memory-title">{r.title}</div>

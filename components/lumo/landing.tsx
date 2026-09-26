@@ -7,13 +7,6 @@ import { MonthlyBriefCard } from "./monthly-brief";
 import { DEMO_DECISIONS } from "@/lib/demo/decisions";
 import { computeBrief } from "@/lib/demo/brief";
 
-const HOW = [
-  ["Your gut first.", "Ten seconds, before you see anything. It's the only honest record of what you actually thought."],
-  ["The legwork, done.", "Research, reactions, a premortem, and how each option plays out."],
-  ["See the gap.", "Where your instinct matched the evidence, and what you missed."],
-  ["Learn from how it went.", "Rate the reasoning and the result separately. Good calls can go badly. Lucky ones can go well."],
-];
-
 const CAPTURE = [
   ["Paste", "M9 4h6a1 1 0 0 1 1 1v1h1a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h1V5a1 1 0 0 1 1-1Zm0 3h6V6H9v1Z"],
   ["Screenshot", "M4 7a2 2 0 0 1 2-2h1l1-1.5h6L15 5h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7Zm7 2.5a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z"],
@@ -31,27 +24,28 @@ export default function Landing() {
         <nav className="lm-nav">
           <Wordmark />
           <div className="lm-nav-links">
-            <a className="lm-navlink" href="#how">How it works</a>
-            <a className="lm-navlink" href="#map">The map</a>
+            <a className="lm-navlink" href="#demo">How it works</a>
+            <a className="lm-navlink" href="#record">Over time</a>
             <a className="lm-navlink" href="#why">Why Lumo</a>
-            <a className="lm-btn" href="/app" style={{ padding: "11px 22px" }}>Try Lumo</a>
+            <a className="lm-navlink" href="#about">About</a>
+            <a className="lm-btn" href="/app" style={{ padding: "11px 22px" }}>Try the demo</a>
           </div>
         </nav>
 
         <section className="lm-hero lm-hero-center">
           <div className="lm-hero-copy lm-hero-copy-center">
-            <div className="lm-anim lm-label" style={delay(0)}>For product managers in the AI era</div>
+            <div className="lm-anim lm-label" style={delay(0)}>A decision tool for product managers</div>
             <h1 className="lm-anim lm-h1" style={delay(80)}>
-              Get better at the calls <span>AI can&apos;t make for you.</span>
+              Hard calls, with the <span>legwork done.</span>
             </h1>
             <p className="lm-anim lm-lede" style={delay(160)}>
-              Lumo does the legwork on your hard decisions. You make a quick gut call first, then see what the evidence says. Over time, you learn where your instincts are right and where they need a second look.
+              Make your gut call first. Lumo does the research, shows where your instinct and the evidence disagree, and drafts the message for each audience. It keeps a record, so you learn where your instincts hold and where they slip.
             </p>
             <div className="lm-anim lm-row lm-row-center" style={delay(240)}>
-              <a className="lm-btn" href="/app" style={{ padding: "15px 28px", fontSize: 16 }}>Bring a real decision</a>
+              <a className="lm-btn" href="/app" style={{ padding: "15px 28px", fontSize: 16 }}>Try the demo</a>
               <a className="lm-btn-sec" href="#demo" style={{ padding: "14px 24px", fontSize: 16 }}>Watch it work</a>
             </div>
-            <div className="lm-anim lm-mono lm-caption" style={delay(320)}>Works on day one. No IT approval needed.</div>
+            <div className="lm-anim lm-mono lm-caption" style={delay(320)}>Free demo. No sign-up. Your decisions stay in your browser.</div>
           </div>
         </section>
       </div>
@@ -62,7 +56,10 @@ export default function Landing() {
 
       <section className="lm-wrap lm-section">
         <div className="lm-sec-head">
-          <h2 className="lm-h2" style={{ maxWidth: 680 }}>AI gave you more options. It didn&apos;t give you more judgment.</h2>
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div className="lm-label">The problem</div>
+            <h2 className="lm-h2" style={{ maxWidth: 680 }}>AI gave you more options. It didn&apos;t give you more judgment.</h2>
+          </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 440 }}>
             <p className="lm-body-lg">You get more drafts, more analysis, and more ideas than ever. You still have the same hours to decide what&apos;s right.</p>
             <p className="lm-body-lg">And the more you hand off, the less you practice the part that&apos;s still yours.</p>
@@ -70,45 +67,19 @@ export default function Landing() {
         </div>
       </section>
 
-      <section id="how" style={{ background: "var(--lm-muted)" }}>
-        <div className="lm-wrap lm-section">
-          <div className="lm-sec-head">
-            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              <div className="lm-label">How it works</div>
-              <h2 className="lm-h2">Four moves, every decision.</h2>
-            </div>
-          </div>
-          <div className="lm-grid4">
-            {HOW.map(([t, b], i) => (
-              <Reveal key={t} delayMs={i * 120} className="lm-why-card is-lumo" as="article">
-                <strong>{t}</strong>
-                {b}
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section id="map" className="lm-wrap lm-section">
-        <div className="lm-sec-head">
-          <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 640 }}>
-            <div className="lm-label">The map</div>
-            <h2 className="lm-h2">See how you decide.</h2>
-            <p className="lm-body-lg">Every decision becomes a point. After a few months, the patterns are hard to miss.</p>
-          </div>
-        </div>
-        <JudgmentMap points={demoMapPoints()} />
-      </section>
-
-      <section style={{ background: "var(--lm-muted)" }}>
+      <section id="record" style={{ background: "var(--lm-muted)" }}>
         <div className="lm-wrap lm-section">
           <div className="lm-sec-head">
             <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 640 }}>
-              <div className="lm-label">The brief</div>
-              <h2 className="lm-h2">Once a month, the short version.</h2>
-              <p className="lm-body-lg">What you&apos;re good at, where you run off, and one thing to try next month. Lumo reminds you the next time it comes up.</p>
+              <div className="lm-label">Over time</div>
+              <h2 className="lm-h2">It remembers how your calls turned out.</h2>
+              <p className="lm-body-lg">Every decision becomes a point. After a few months, the patterns are hard to miss.</p>
             </div>
           </div>
+          <JudgmentMap points={demoMapPoints()} />
+          <p className="lm-body-lg" style={{ marginTop: 16, marginBottom: 48, maxWidth: 640, color: "var(--lm-text-2)" }}>
+            Each dot is a decision. Left to right is how sure you were. Up and down is how it turned out.
+          </p>
           <MonthlyBriefCard brief={october} />
         </div>
       </section>
@@ -118,7 +89,7 @@ export default function Landing() {
           <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 640 }}>
             <div className="lm-label">No IT ticket</div>
             <h2 className="lm-h2">Works on day one.</h2>
-            <p className="lm-body-lg">Paste it, clip it, forward it, or just talk it through after the meeting. Names get hidden before anything is sent. Your decisions stay in your browser.</p>
+            <p className="lm-body-lg">Paste it, clip it, forward it, or just talk it through after the meeting.</p>
           </div>
         </div>
         <div className="lm-capture-row">
@@ -131,7 +102,6 @@ export default function Landing() {
             </Reveal>
           ))}
         </div>
-        <div className="lm-mono lm-caption" style={{ marginTop: 20 }}>Connected apps come with the team plan.</div>
       </section>
 
       <section id="why" style={{ background: "var(--lm-muted)" }}>
@@ -139,9 +109,21 @@ export default function Landing() {
           <div className="lm-sec-head">
             <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 720 }}>
               <div className="lm-label">Why Lumo</div>
-              <h2 className="lm-h2">Why not just ask ChatGPT or Claude?</h2>
-              <p className="lm-body-lg">You can, and for one decision it&apos;ll help. But a chat doesn&apos;t record your gut before you know the answer, doesn&apos;t know how your last ten calls went, and won&apos;t remind you of your own advice when it counts.</p>
+              <h2 className="lm-h2">Why not ChatGPT, or a decision journal?</h2>
+              <p className="lm-body-lg">A chat will help with one decision, but it starts from zero every time. It doesn&apos;t record your gut before you know the answer, and it doesn&apos;t know how your last ten calls went. A decision journal keeps the record, but you do all the work. Lumo does the legwork on the decision in front of you and remembers how it turned out.</p>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="about" className="lm-wrap lm-section">
+        <div className="lm-sec-head">
+          <div style={{ display: "flex", flexDirection: "column", gap: 20, maxWidth: 640 }}>
+            <div className="lm-label">Why I built this</div>
+            <p className="lm-body-lg" style={{ fontSize: 19 }}>
+              I&apos;m a product leader and three-time founder. I kept watching PM friends make a hard call, then lose days carrying it to every team that needed to hear it. AI made the drafts faster. It didn&apos;t make the judgment better, and it never remembered how last quarter&apos;s calls went. Lumo is my attempt at that part. It&apos;s a working prototype, built end to end.
+            </p>
+            <a className="lm-link" href="https://linkedin.com/in/terrancerange" style={{ fontWeight: 500 }}>Terrance Range</a>
           </div>
         </div>
       </section>
@@ -149,7 +131,7 @@ export default function Landing() {
       <div className="lm-wrap">
         <Reveal className="lm-ctaband">
           <h2 className="lm-h2">Bring the call you&apos;re sitting on.</h2>
-          <a className="lm-btn-dark" href="/app">Start a decision</a>
+          <a className="lm-btn-dark" href="/app">Try the demo</a>
         </Reveal>
       </div>
 
@@ -157,7 +139,7 @@ export default function Landing() {
         <div className="lm-wrap lm-footer-inner">
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <Wordmark />
-            <div style={{ fontSize: 15, color: "#C9C3B8" }}>Get better at the calls AI can&apos;t make for you.</div>
+            <div style={{ fontSize: 15, color: "#C9C3B8" }}>Hard calls, with the legwork done.</div>
           </div>
           <div style={{ fontSize: 14, color: "var(--lm-text-3)", lineHeight: 1.8 }}>
             <a href="https://linkedin.com/in/terrancerange" style={{ color: "var(--lm-text-3)" }}>Built by Terrance Range</a>

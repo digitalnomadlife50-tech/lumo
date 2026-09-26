@@ -229,7 +229,8 @@
   .lm-pushback-response { margin-top: 6px; font-size: 14px; color: var(--lm-text); line-height: 1.5; }
 
 .lm-callbox { margin-top: 40px; background: var(--lm-surface); border: 1px solid var(--lm-border); border-radius: 12px; padding: 24px 24px 18px; }
-.lm-callinput { position: relative; margin-top: 10px; }
+  .lm-samplerow { display: flex; align-items: center; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
+  .lm-callinput { position: relative; margin-top: 10px; }
 .lm-callinput input { width: 100%; border: none; outline: none; background: transparent; font-family: var(--lm-sans); font-size: 20px; color: var(--lm-text); padding: 4px 0; position: relative; z-index: 1; }
 .lm-callph { position: absolute; left: 0; top: 4px; font-size: 20px; color: var(--lm-text-3); pointer-events: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 .lm-callfoot { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--lm-border); flex-wrap: wrap; }
@@ -425,7 +426,11 @@
 /* ================= LIVE DEMO ================= */
 .lm-demo { border: 1px solid var(--lm-border); border-radius: 16px; overflow: hidden; background: var(--lm-surface); box-shadow: 0 20px 60px rgba(0,0,0,.08); }
 .lm-demo-bar { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 20px; border-bottom: 1px solid var(--lm-border); background: var(--lm-muted); flex-wrap: wrap; }
-.lm-demo-stage { position: relative; min-height: 440px; padding: 40px; display: flex; }
+  .lm-demo-phase { display: flex; flex-direction: column; gap: 4px; padding: 18px 40px; border-bottom: 1px solid var(--lm-border); }
+  .lm-demo-phase-name { font-size: 13px; font-weight: 600; letter-spacing: 0.02em; color: var(--lm-text); }
+  .lm-demo-phase-desc { font-size: 14px; line-height: 1.5; color: var(--lm-text-2); }
+  @media (max-width: 559px) { .lm-demo-phase { padding: 14px 20px; } }
+  .lm-demo-stage { position: relative; min-height: 440px; padding: 40px; display: flex; }
 .lm-demo-scene { width: 100%; display: flex; }
 .lm-demo-col { display: flex; flex-direction: column; gap: 20px; width: 100%; }
 .lm-demo-center { align-items: center; justify-content: center; text-align: center; }

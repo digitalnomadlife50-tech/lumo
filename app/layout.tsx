@@ -24,12 +24,12 @@ const sourceSerif = Source_Serif_4({
 })
 
 export const metadata: Metadata = {
-  title: 'Lumo — AI gives you speed. Lumo gives you clarity.',
-  description: "AI gives you speed. Lumo gives you clarity. A decision-making tool for product managers.",
+  title: 'Lumo | A decision tool for product managers',
+  description: "Hard calls, with the legwork done. Make your gut call, see the evidence, send the right message, and learn from how it turned out.",
   metadataBase: new URL('https://www.trylumo.co'),
   openGraph: {
-    title: 'Lumo — AI gives you speed. Lumo gives you clarity.',
-    description: "AI gives you speed. Lumo gives you clarity. A decision-making tool for product managers.",
+    title: 'Lumo | A decision tool for product managers',
+    description: "Hard calls, with the legwork done. Make your gut call, see the evidence, send the right message, and learn from how it turned out.",
     url: 'https://www.trylumo.co',
     siteName: 'Lumo',
     images: [
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
         url: '/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'Lumo — AI gives you speed. Lumo gives you clarity.',
+        alt: 'Lumo: hard calls, with the legwork done.',
       },
     ],
     locale: 'en_US',
@@ -45,8 +45,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Lumo — AI gives you speed. Lumo gives you clarity.',
-    description: "AI gives you speed. Lumo gives you clarity. A decision-making tool for product managers.",
+    title: 'Lumo | A decision tool for product managers',
+    description: "Hard calls, with the legwork done. Make your gut call, see the evidence, send the right message, and learn from how it turned out.",
     images: ['/og-image.png'],
   },
   icons: {
