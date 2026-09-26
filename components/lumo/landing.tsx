@@ -3,7 +3,12 @@
 import { useEffect, useState } from "react";
 import { Reveal, Wordmark, delay, usePrefersReducedMotion } from "./ui";
 import { ConceptAnimation } from "./concept";
-import { ProductReplay } from "./replay";
+import { LiveDemo, demoMapPoints } from "./live-demo";
+// ProductReplay retired in favor of the full LiveDemo walkthrough
+import { JudgmentMap } from "./judgment-map";
+import { MonthlyBriefCard } from "./monthly-brief";
+import { DEMO_DECISIONS } from "@/lib/demo/decisions";
+import { computeBrief } from "@/lib/demo/brief";
 
 const DILEMMAS = [
   "Ship v2 now or wait for enterprise",
@@ -248,13 +253,29 @@ export default function Landing() {
       <section id="proof" className="lm-wrap lm-section">
         <div className="lm-sec-head">
           <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 640 }}>
-            <div className="lm-label">Example output</div>
-            <h2 className="lm-h2">Watch the whole thing play out.</h2>
-            <p className="lm-body-lg">The real product, walking through a real decision. Pause, skip ahead, or step through it yourself.</p>
+            <div className="lm-label">Watch it work</div>
+            <h2 className="lm-h2">One real decision, start to finish.</h2>
+            <p className="lm-body-lg">Sam, a PM at a scheduling company, has a date to make. Watch Lumo take their gut call, do the work, catch the gap, and hand back the messages. It plays on its own.</p>
           </div>
           <a href="/app" style={{ fontSize: 16, fontWeight: 500, textDecoration: "none" }}>Try it with your own decision</a>
         </div>
-        <ProductReplay />
+        <LiveDemo />
+      </section>
+
+      <section style={{ background: "var(--lm-muted)" }}>
+        <div className="lm-wrap lm-section">
+          <div className="lm-sec-head">
+            <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 640 }}>
+              <div className="lm-label">The part that compounds</div>
+              <h2 className="lm-h2">Every call goes on the record. Then it starts teaching you.</h2>
+              <p className="lm-body-lg">After enough decisions, Lumo can see what you can&apos;t: where your gut is sharp, and where it runs off. This is Sam&apos;s map after 40 calls.</p>
+            </div>
+          </div>
+          <JudgmentMap points={demoMapPoints()} />
+          <div style={{ marginTop: 40 }}>
+            <MonthlyBriefCard brief={computeBrief(DEMO_DECISIONS, "October")} />
+          </div>
+        </div>
       </section>
 
       <section className="lm-wrap lm-section lm-split">
