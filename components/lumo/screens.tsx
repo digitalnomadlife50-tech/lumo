@@ -112,7 +112,6 @@ export function HomeScreen({
   onResume,
   onDiscardDraft,
   onTryExample,
-  isExample,
   onSaveOutcome,
 }: Shell & {
   value: string;
@@ -125,10 +124,8 @@ export function HomeScreen({
   onResume?: () => void;
   onDiscardDraft?: () => void;
   onTryExample?: () => void;
-  isExample?: boolean;
   onSaveOutcome?: (id: string, outcome: string) => void;
 }) {
-  void isExample;
   const reduced = usePrefersReducedMotion();
   const [ph, setPh] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -192,7 +189,7 @@ export function HomeScreen({
         ) : null}
       </div>
 
-      <div style={{ marginTop: 96 }}>
+      <div style={{ marginTop: 72 }}>
         {draft ? (
           <div className="lm-card lm-resume" style={{ marginBottom: 32 }}>
             <div className="lm-label">In progress</div>
@@ -210,7 +207,7 @@ export function HomeScreen({
           <>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
               <div className="lm-label">Recent decisions</div>
-              <div className="lm-mono lm-caption" style={{ fontSize: 12 }}>{sorted.length} decisions</div>
+              <div className="lm-mono lm-caption" style={{ fontSize: 12 }}>{sorted.length} {sorted.length === 1 ? "decision" : "decisions"}</div>
             </div>
             <div className="lm-stack" style={{ marginTop: 20, gap: 16 }}>
               {sorted.map((d, i) => {
@@ -240,7 +237,7 @@ export function HomeScreen({
                           <span className="lm-label" style={{ marginRight: 8 }}>Outcome</span>
                           {d.outcome}
                         </div>
-                      ) : onSaveOutcome && revisitDue ? (
+                      ) : onSaveOutcome ? (
                         outcomeOpenId === d.id ? (
                           <div
                             style={{ marginTop: 12, display: "flex", gap: 10 }}
@@ -1131,24 +1128,35 @@ export function Step6Screen({
         <div className="lm-reading" role="status"><i className="lm-pulse" aria-hidden="true" />writing drafts</div>
       ) : (
         <>
-          <div className={`lm-anim lm-tabs ${!hasFanned ? "is-fan" : ""}`} role="tablist" style={delay(150)}>
-            {drafts.map((x, i) => (
-              <button
-                key={x.id}
-                role="tab"
-                aria-selected={i === tab}
-                className={i === tab ? "is-on" : ""}
-                style={!hasFanned ? ({ "--d": `${i * 90}ms` } as CSSProperties) : undefined}
-                onClick={() => {
-                  setTab(i);
-                  setEditing(false);
-                }}
-              >
-                {x.audience}
-                {copied[x.id] ? <small>copied</small> : null}
-              </button>
-            ))}
-              <button onClick={() => setShowAdd((s) => !s)} aria-expanded={showAdd}>+ Add person or team</button>
+          <div className="lm-tabs-wrap" style={delay(150)}>
+            <div className={`lm-anim lm-tabs ${!hasFanned ? "is-fan" : ""}`} role="tablist" aria-label="Updates">
+              {drafts.map((x, i) => (
+                <button
+                  key={x.id}
+                  role="tab"
+                  id={`lm-tab-${i}`}
+                  aria-selected={i === tab}
+                  aria-controls="lm-draft-panel"
+                  className={i === tab ? "is-on" : ""}
+                  style={!hasFanned ? ({ "--d": `${i * 90}ms` } as CSSProperties) : undefined}
+                  onClick={() => {
+                    setTab(i);
+                    setEditing(false);
+                  }}
+                >
+                  {x.audience}
+                  {copied[x.id] ? <small>copied</small> : null}
+                </button>
+              ))}
+            </div>
+            <button
+              type="button"
+              className="lm-tabs-add"
+              onClick={() => setShowAdd((s) => !s)}
+              aria-expanded={showAdd}
+            >
+              + Add person or team
+            </button>
           </div>
 
           <div className={`lm-consistency ${isConsistent ? "" : "is-flagged"}`} role="status">
@@ -1178,7 +1186,13 @@ export function Step6Screen({
           ) : null}
 
           {d ? (
-            <div className="lm-anim lm-draft" style={delay(220)}>
+            <div
+              className="lm-anim lm-draft"
+              id="lm-draft-panel"
+              role="tabpanel"
+              aria-labelledby={`lm-tab-${tab}`}
+              style={delay(220)}
+            >
               <div className="lm-draft-head">
                 <span>{d.channel}</span>
                 <span>{busy ? <span className="lm-pulse">rewriting</span> : `${words} words`}</span>

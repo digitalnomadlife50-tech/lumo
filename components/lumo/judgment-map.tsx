@@ -92,10 +92,14 @@ export function JudgmentMap({
   const raf = useRef<number | null>(null)
 
   const ordered = useMemo(() => [...points].sort((a, b) => a.number - b.number), [points])
+  const filtered = useMemo(
+    () => (activeKinds.size === 0 ? ordered : ordered.filter((p) => activeKinds.has(p.kind))),
+    [ordered, activeKinds],
+  )
 
   useEffect(() => {
-    setVisible(points.length)
-  }, [points.length])
+    setVisible(filtered.length)
+  }, [filtered.length])
 
   useEffect(() => {
     if (!autoReplay || reduced || ordered.length === 0) return
@@ -113,7 +117,7 @@ export function JudgmentMap({
   function startReplay() {
     stopReplay()
     if (reduced) {
-      setVisible(ordered.length)
+      setVisible(filtered.length)
       return
     }
     setPlaying(true)
@@ -122,11 +126,11 @@ export function JudgmentMap({
     const duration = 8000
     const tick = (now: number) => {
       const t = Math.min(1, (now - start) / duration)
-      setVisible(Math.round(t * ordered.length))
+      setVisible(Math.round(t * filtered.length))
       if (t < 1) {
         raf.current = requestAnimationFrame(tick)
       } else {
-        setVisible(ordered.length)
+        setVisible(filtered.length)
         setPlaying(false)
       }
     }
@@ -134,6 +138,12 @@ export function JudgmentMap({
   }
 
   useEffect(() => () => stopReplay(), [])
+
+  useEffect(() => {
+    if (selected == null || activeKinds.size === 0) return
+    const point = ordered.find((p) => p.number === selected)
+    if (point && !activeKinds.has(point.kind)) setSelected(null)
+  }, [activeKinds, ordered, selected])
 
   const toggleKind = (k: DecisionKind) => {
     setActiveKinds((prev) => {
@@ -145,29 +155,49 @@ export function JudgmentMap({
   }
 
   const selectedPoint = selected != null ? ordered.find((p) => p.number === selected) ?? null : null
-  const shown = ordered.slice(0, visible)
+  const shown = filtered.slice(0, visible)
   const bandPad = (g.H - g.PAD.top - g.PAD.bottom) * 0.08
+
+  const kindCounts = useMemo(() => {
+    const counts = Object.fromEntries(KINDS.map((k) => [k.id, 0])) as Record<DecisionKind, number>
+    for (const p of ordered) counts[p.kind] += 1
+    return counts
+  }, [ordered])
+
+  const filtering = activeKinds.size > 0
+  const matching = filtered.length
 
   return (
     <div className="lm-map">
-      <div className="lm-map-chips" role="group" aria-label="Filter by kind">
+      <div className="lm-map-chips" role="group" aria-label="Filter decisions by kind">
         {KINDS.map((k) => {
-          const on = activeKinds.size === 0 || activeKinds.has(k.id)
+          const on = activeKinds.has(k.id)
           return (
             <button
               key={k.id}
               type="button"
-              className={`lm-map-chip ${activeKinds.has(k.id) ? "is-on" : ""}`}
-              style={{ opacity: on ? 1 : 0.5 }}
+              className={`lm-map-chip ${on ? "is-on" : ""} ${filtering && !on ? "is-dim" : ""}`}
               onClick={() => toggleKind(k.id)}
-              aria-pressed={activeKinds.has(k.id)}
+              aria-pressed={on}
             >
               <i style={{ background: k.color }} aria-hidden="true" />
               {k.label}
+              <span className="lm-map-chip-n">{kindCounts[k.id]}</span>
             </button>
           )
         })}
       </div>
+
+      {filtering ? (
+        <div className="lm-map-filter" role="status" aria-live="polite">
+          <span className="lm-mono lm-caption" style={{ fontSize: 12 }}>
+            Showing {matching} of {ordered.length} decisions
+          </span>
+          <button type="button" className="lm-map-clear" onClick={() => setActiveKinds(new Set())}>
+            Show all
+          </button>
+        </div>
+      ) : null}
 
       <div className="lm-map-frame">
         <svg viewBox={`0 0 ${g.W} ${g.H}`} className="lm-map-svg" role="img" aria-label="Your decisions by confidence and how they turned out">
@@ -212,10 +242,16 @@ export function JudgmentMap({
               <g
                 key={p.number}
                 className="lm-map-pt"
-                style={{ opacity: dimmed ? 0.15 : 1, animationDelay: `${Math.min(i, 40) * 16}ms` }}
+                style={{ opacity: dimmed ? 0.08 : 1, animationDelay: `${Math.min(i, 40) * 16}ms` }}
                 onMouseEnter={() => setSelected(p.number)}
                 onMouseLeave={() => setSelected((s) => (s === p.number ? null : s))}
                 onClick={() => setSelected((s) => (s === p.number ? null : p.number))}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault()
+                    setSelected((s) => (s === p.number ? null : p.number))
+                  }
+                }}
                 tabIndex={0}
                 role="button"
                 aria-label={`No.${p.number}, ${p.title}`}
@@ -287,7 +323,7 @@ export function JudgmentMap({
               type="range"
               className="lm-map-slider"
               min={0}
-              max={ordered.length}
+              max={filtered.length}
               value={visible}
               aria-label="Decisions over time"
               onChange={(e) => {
@@ -296,12 +332,12 @@ export function JudgmentMap({
               }}
             />
             <span className="lm-mono lm-caption" style={{ fontSize: 12, minWidth: 64, textAlign: "right" }}>
-              {visible} of {ordered.length}
+              {visible} of {filtered.length}
             </span>
           </>
         ) : (
           <span className="lm-mono lm-caption" style={{ fontSize: 12 }}>
-            All {ordered.length} decisions shown.
+            {filtering ? `${filtered.length} of ${ordered.length} decisions shown.` : `All ${ordered.length} decisions shown.`}
           </span>
         )}
       </div>
@@ -312,29 +348,4 @@ export function JudgmentMap({
 function shortCall(s: string) {
   const t = s.trim()
   return t.length > 28 ? `${t.slice(0, 27)}\u2026` : t
-}
-
-export function EmptyJudgmentMap({ remaining }: { remaining: number }) {
-  const narrow = useNarrowChart()
-  const g = narrow ? NARROW : FULL
-  return (
-    <div className="lm-map lm-map-empty">
-      <div className="lm-map-frame" style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: 260 }}>
-        <svg viewBox={`0 0 ${g.W} ${g.H}`} className="lm-map-svg" aria-hidden="true">
-          {ROWS.map((r) => (
-            <g key={r}>
-              <line x1={g.PAD.left} y1={yFor(r, g)} x2={g.W - g.PAD.right} y2={yFor(r, g)} className="lm-map-grid" />
-              <text x={g.PAD.left - 10} y={yFor(r, g) + 5} className="lm-map-axis" textAnchor="end">{ROW_LABEL[r]}</text>
-            </g>
-          ))}
-          {[1, 2, 3, 4, 5].map((c) => (
-            <text key={c} x={xFor(c, g)} y={g.H - g.PAD.bottom + TICK_DY} className="lm-map-axis" textAnchor="middle">{c}</text>
-          ))}
-        </svg>
-      </div>
-      <p className="lm-caption" style={{ marginTop: 12, maxWidth: 420 }}>
-        Your map fills in as you record how decisions turn out. {remaining > 0 ? `${remaining} more with an outcome and the patterns start to show.` : ""}
-      </p>
-    </div>
-  )
 }

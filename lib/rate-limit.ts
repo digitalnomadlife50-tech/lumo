@@ -4,28 +4,37 @@ import { Redis } from "@upstash/redis"
 // ─── Upstash Redis-backed rate limiting ────────────────────────────────────
 // Uses a sliding window so limits are enforced consistently across serverless
 // instances (an in-memory Map resets per instance and doesn't scale).
+//
+// Vercel KV and Upstash both expose REST credentials, under different names.
+// Accept either pair so the limiter is actually active in every environment
+// instead of silently failing open.
 
-const redis = Redis.fromEnv()
+const redisUrl = process.env.UPSTASH_REDIS_REST_URL ?? process.env.KV_REST_API_URL
+const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN ?? process.env.KV_REST_API_TOKEN
 
-const limiters = {
-  analyze: new Ratelimit({
-    redis,
-    limiter: Ratelimit.slidingWindow(20, "1 h"),
-    prefix: "lumo:ratelimit:analyze",
-  }),
-  decide: new Ratelimit({
-    redis,
-    limiter: Ratelimit.slidingWindow(20, "1 h"),
-    prefix: "lumo:ratelimit:decide",
-  }),
-  rewrite: new Ratelimit({
-    redis,
-    limiter: Ratelimit.slidingWindow(20, "1 h"),
-    prefix: "lumo:ratelimit:rewrite",
-  }),
-} as const
+const redis = redisUrl && redisToken ? new Redis({ url: redisUrl, token: redisToken }) : null
 
-export type RateLimitedRoute = keyof typeof limiters
+const limiters = redis
+  ? {
+      analyze: new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(20, "1 h"),
+        prefix: "lumo:ratelimit:analyze",
+      }),
+      decide: new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(20, "1 h"),
+        prefix: "lumo:ratelimit:decide",
+      }),
+      rewrite: new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(20, "1 h"),
+        prefix: "lumo:ratelimit:rewrite",
+      }),
+    }
+  : null
+
+export type RateLimitedRoute = "analyze" | "decide" | "rewrite"
 
 export function getClientIp(req: Request): string {
   return (
@@ -37,10 +46,20 @@ export function getClientIp(req: Request): string {
 
 export const RATE_LIMIT_MESSAGE = "You've hit the demo limit. Try again in an hour."
 
+let warnedMissingRedis = false
+
 export async function checkRateLimit(
   route: RateLimitedRoute,
   ip: string,
 ): Promise<{ allowed: boolean; retryAfter?: number }> {
+  if (!limiters) {
+    if (!warnedMissingRedis) {
+      warnedMissingRedis = true
+      console.warn("[rate-limit] No Redis REST credentials found; rate limiting is disabled.")
+    }
+    return { allowed: true }
+  }
+
   try {
     const { success, reset } = await limiters[route].limit(ip)
     if (success) return { allowed: true }
