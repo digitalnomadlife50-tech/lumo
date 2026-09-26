@@ -118,6 +118,11 @@
 .lm-card p { margin: 0; font-size: 15px; line-height: 1.6; color: var(--lm-text-2); }
 .lm-ctaband { background: var(--lm-accent); border-radius: 16px; padding: 80px; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 72px; color: var(--lm-on-dark); }
 .lm-ctaband-copy { display: flex; flex-direction: column; align-items: flex-start; gap: 28px; }
+.lm-ctaband-receipts { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; max-width: 560px; }
+.lm-ctaband-receipts li { padding: 14px 0; border-top: 1px solid rgba(250,247,240,.28); font-size: 16px; line-height: 1.5; }
+.lm-ctaband-receipts li:first-child { border-top: none; padding-top: 0; }
+.lm-ctaband-receipts strong { font-weight: 600; }
+.lm-ctaband-pivot { margin: 0; font-size: 19px; opacity: .92; }
 .lm-ctaband .lm-h2 { font-size: 56px; letter-spacing: -0.035em; max-width: 560px; }
 .lm-ctaband-note { position: relative; width: 100%; max-width: 340px; justify-self: center; transform: rotate(-3deg); }
 .lm-ctaband-tape { position: absolute; top: -12px; left: 50%; width: 72px; height: 24px; transform: translateX(-50%) rotate(-2deg); background: rgba(250,247,240,.55); border-radius: 2px; box-shadow: 0 1px 3px rgba(31,27,23,.16); z-index: 1; }
