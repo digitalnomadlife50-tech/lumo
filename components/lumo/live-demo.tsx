@@ -130,12 +130,14 @@ export function LiveDemo() {
   }
 
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
-    if (e.key === "ArrowLeft") {
+    if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
       e.preventDefault()
-      go(chapter - 1, { focus: true })
-    } else if (e.key === "ArrowRight") {
-      e.preventDefault()
-      go(chapter + 1, { focus: true })
+      const dots = dotsRef.current
+      const focused = document.activeElement
+      const focusedIndex =
+        dots && focused instanceof HTMLElement ? Array.prototype.indexOf.call(dots.children, focused) : -1
+      const base = focusedIndex >= 0 ? focusedIndex : chapter
+      go(base + (e.key === "ArrowRight" ? 1 : -1), { pause: true, focus: true })
     } else if (e.key === " " && !(e.target as HTMLElement).closest("button")) {
       e.preventDefault()
       setPlaying((p) => !p)
@@ -193,13 +195,13 @@ export function LiveDemo() {
 
       <div className="lm-demo-controls" onKeyDown={onKeyDown}>
         <div className="lm-demo-transport">
-          <button type="button" className="lm-demo-step" onClick={() => go(chapter - 1)} aria-label="Previous chapter">
+          <button type="button" className="lm-demo-step" onClick={() => go(chapter - 1, { pause: true })} aria-label="Previous chapter">
             <ChevronLeft size={18} strokeWidth={1.5} aria-hidden="true" />
           </button>
           <button type="button" className="lm-demo-play" onClick={() => setPlaying((p) => !p)} aria-label={playing ? "Pause" : "Play"}>
             {playing ? "Pause" : "Play"}
           </button>
-          <button type="button" className="lm-demo-step" onClick={() => go(chapter + 1)} aria-label="Next chapter">
+          <button type="button" className="lm-demo-step" onClick={() => go(chapter + 1, { pause: true })} aria-label="Next chapter">
             <ChevronRight size={18} strokeWidth={1.5} aria-hidden="true" />
           </button>
         </div>
