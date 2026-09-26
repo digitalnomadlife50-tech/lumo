@@ -153,6 +153,9 @@ export default function ProductApp() {
   const [direction, setDirection] = useState<"fwd" | "back" | undefined>(undefined)
   const [draft, setDraft] = useState<SavedDraft | null>(null)
   const [startedAtMs, setStartedAtMs] = useState<number | null>(null)
+  const [revisitDate, setRevisitDate] = useState<string>("")
+  const [justFiledId, setJustFiledId] = useState<string | null>(null)
+  const [recordCopied, setRecordCopied] = useState(false)
   const decisionsLoadedRef = useRef(false)
   const draftLoadedRef = useRef(false)
   const abortRef = useRef<AbortController | null>(null)
@@ -205,7 +208,11 @@ export default function ProductApp() {
     setNoticed("")
     setIsAnalyzing(false)
     setIsGenerating(false)
+    setRevisitDate("")
+    setRecordCopied(false)
   }, [])
+
+  const defaultRevisitDate = () => new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
 
   useEffect(() => {
     try {
@@ -544,14 +551,47 @@ export default function ProductApp() {
 
   const fileDecision = () => {
     if (!currentDecisionId) return
-    const revisitDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-    updateSavedDecision({ status: "Done", revisitDate, decidedAtMs: Date.now() })
+    const finalRevisitDate = new Date(revisitDate ? `${revisitDate}T00:00:00` : defaultRevisitDate()).toISOString()
+    updateSavedDecision({ status: "Done", revisitDate: finalRevisitDate, decidedAtMs: Date.now() })
+    setJustFiledId(currentDecisionId)
     discardDraft()
     navigate("done")
   }
 
+  const copyDecisionRecord = async () => {
+    const lines = [
+      `No.${decisionNum ?? nextDecisionNumber} — ${chosenDirection}`,
+      "",
+      `The question: ${readBack?.question ?? situation}`,
+      `Why: ${reasoning}`,
+      `Confidence: ${confidence} of 5`,
+      `Gave up: ${whatGivingUp}`,
+      aiOutput ? `Summary: ${aiOutput.claritySummary}` : "",
+      revisitDate ? `Revisit on: ${revisitDate}` : "",
+    ].filter(Boolean)
+    try {
+      await navigator.clipboard.writeText(lines.join("\n"))
+      setRecordCopied(true)
+    } catch {
+      setRecordCopied(false)
+    }
+  }
+
+  useEffect(() => {
+    if (view === "step5" && !revisitDate) setRevisitDate(defaultRevisitDate())
+  }, [view]) // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null
+      const isTyping = !!target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA")
+
+      if (event.key === "Escape" && !isTyping) {
+        const idx = STEP_ORDER.indexOf(view)
+        if (idx > 0) { event.preventDefault(); navigate(STEP_ORDER[idx - 1]) }
+        return
+      }
+
       if (!(event.metaKey || event.ctrlKey) || event.key !== "Enter") return
       if (view === "step1" && situation.trim() && !isAnalyzing) { event.preventDefault(); void handleAnalyze() }
       else if (view === "step2" && readBack) { event.preventDefault(); navigate("step3") }
@@ -726,6 +766,8 @@ export default function ProductApp() {
           direction={direction}
           onJump={jumpTo}
           reversibleById={reversibleById}
+          revisitDate={revisitDate}
+          onRevisitDate={setRevisitDate}
         />
         {aiError ? (
           <div style={{ maxWidth: 784, margin: "16px auto 0", padding: "0 32px" }}>
@@ -767,6 +809,7 @@ export default function ProductApp() {
   }
 
   if (view === "done" && currentDecisionId) {
+    const decidedMinutes = startedAtMs ? Math.max(1, Math.round((Date.now() - startedAtMs) / 60000)) : null
     return (
       <CompleteScreen
         aiStatus={aiStatus}
@@ -776,6 +819,10 @@ export default function ProductApp() {
         confidence={confidence}
         audiences={aiOutput?.drafts.map((draft) => draft.audience) ?? []}
         gaveUp={whatGivingUp}
+        revisitDate={revisitDate}
+        decidedMinutes={decidedMinutes}
+        onCopyRecord={() => { void copyDecisionRecord() }}
+        recordCopied={recordCopied}
         onHome={() => { resetDecision(); navigate("home") }}
         onReview={() => navigate("step6")}
       />
@@ -790,6 +837,7 @@ export default function ProductApp() {
       onChange={setHomeInput}
       onStart={() => { setSituation(homeInput); navigate("step1") }}
       decisions={pastDecisions}
+      newestId={justFiledId}
       onOpenDecision={(id) => {
         const decision = sessionDecisions.find((item) => item.id === id)
         if (decision) openDecision(decision)
