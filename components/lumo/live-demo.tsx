@@ -187,7 +187,7 @@ export function LiveDemo() {
             <div className="lm-demo-map">
               <div className="lm-label">Saved for review</div>
               <p className="lm-demo-lead">This decision joins 40 others. The map is where the patterns show.</p>
-              <JudgmentMap points={points} autoReplay />
+              <JudgmentMap points={points} />
             </div>
           )}
         </div>

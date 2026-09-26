@@ -47,14 +47,7 @@ export default function DemoHome() {
           </div>
         </section>
 
-        <section className="lm-section">
-          <div className="lm-sec-head">
-            <div style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 620 }}>
-              <div className="lm-label">Your judgment, mapped</div>
-              <h2 className="lm-h2">Where your instinct is strong, and where it is off.</h2>
-              <p className="lm-body-lg">Each dot is a decision, placed by how sure you were and how it turned out. Filter by kind, or replay them in order.</p>
-            </div>
-          </div>
+        <section id="map" className="lm-section">
           <JudgmentMap points={points} />
         </section>
 

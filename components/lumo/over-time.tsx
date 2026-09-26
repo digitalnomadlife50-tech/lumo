@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { useEffect, useRef, useState } from "react"
 import { useInView, usePrefersReducedMotion } from "./ui"
 
@@ -203,6 +204,9 @@ export function OverTime() {
               </button>
               <p className="lm-ot-note">Either way, Lumo records what you choose.</p>
             </div>
+            <p className={`lm-ot-recordlink ${actionsIn ? "is-in" : ""}`}>
+              From 40 decisions in this record. <Link href="/app/demo#map">See the whole map</Link>
+            </p>
           </div>
         </div>
       </div>
