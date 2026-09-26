@@ -8,6 +8,15 @@ const TYPED = "Yes, March 14 works"
 const SQUARE_COUNT = 10
 const SLIPPED = 7
 
+// The 40 outcomes in this record, in decision order. Mirrors lib/demo/decisions.ts
+// so the strip below matches the judgment map it links to. Ten decisions per line.
+const RECORD_OUTCOMES = (
+  "better better worse as-expected as-expected better as-expected worse better better " +
+  "as-expected better better as-expected better as-expected as-expected as-expected worse better " +
+  "worse as-expected as-expected better better as-expected as-expected better worse better " +
+  "worse better better worse as-expected worse worse as-expected better as-expected"
+).split(" ") as Array<"better" | "as-expected" | "worse">
+
 // useLayoutEffect during SSR warns and does nothing; fall back to useEffect.
 const useIsoLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect
 
@@ -100,6 +109,7 @@ export function OverTime() {
   const [ruleIn, setRuleIn] = useState(false)
   const [actionsIn, setActionsIn] = useState(false)
   const [chars, setChars] = useState(0)
+  const [choice, setChoice] = useState<"ask" | "commit" | null>(null)
 
   const clearTimers = () => {
     timers.current.forEach((id) => window.clearTimeout(id))
@@ -118,6 +128,7 @@ export function OverTime() {
     setRuleIn(false)
     setActionsIn(false)
     setChars(0)
+    setChoice(null)
     const t = (ms: number, fn: () => void) => {
       timers.current.push(window.setTimeout(fn, ms))
     }
@@ -229,22 +240,50 @@ export function OverTime() {
         </div>
 
         <div className={`lm-ot-actions ${actionsIn ? "is-in" : ""}`}>
-          <button type="button" className="lm-btn">
+          <button
+            type="button"
+            className={`lm-btn ${choice === "ask" ? "is-chosen" : choice ? "is-dimmed" : ""}`}
+            aria-pressed={choice === "ask"}
+            onClick={() => setChoice("ask")}
+          >
             Ask Marco first
           </button>
-          <button type="button" className="lm-btn-sec">
+          <button
+            type="button"
+            className={`lm-btn-sec ${choice === "commit" ? "is-chosen" : choice ? "is-dimmed" : ""}`}
+            aria-pressed={choice === "commit"}
+            onClick={() => setChoice("commit")}
+          >
             Commit anyway
           </button>
-          <p className="lm-ot-note">Either way, Lumo records what you choose.</p>
+          <p className="lm-ot-note" aria-live="polite">
+            {choice === null
+              ? "Either way, Lumo records what you choose."
+              : choice === "ask"
+                ? "Recorded. Lumo will raise Marco's worst case before you commit, then ask how the date landed."
+                : "Recorded. Lumo flagged the date risk and will ask how March 14 landed."}
+          </p>
         </div>
         {armed && !reduced ? (
           <button type="button" className="lm-ot-replay" onClick={replay}>
             Replay
           </button>
         ) : null}
-        <p className={`lm-ot-recordlink ${actionsIn ? "is-in" : ""}`}>
-          From 40 decisions in this record. <Link href="/app/demo#map">See the whole map</Link>
-        </p>
+        <div className={`lm-ot-evidence ${actionsIn ? "is-in" : ""}`}>
+          <div
+            className="lm-ot-record-strip"
+            role="img"
+            aria-label="The 40 decisions in this record: 16 turned out better than expected, 15 as expected, and 9 worse."
+          >
+            {RECORD_OUTCOMES.map((result, i) => (
+              <span key={i} className={`lm-ot-tick is-${result}`} aria-hidden="true" />
+            ))}
+          </div>
+          <p className="lm-ot-recordlink">
+            40 decisions in this record. Lumo read every one &mdash; that&apos;s how it spotted the date pattern.{" "}
+            <Link href="/app/demo#map">See the whole map</Link>
+          </p>
+        </div>
       </div>
 
       <HowItLearns />

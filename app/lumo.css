@@ -147,6 +147,8 @@
 .lm-status { display: inline-flex; align-items: center; gap: 7px; font-family: var(--lm-mono); font-size: 12px; color: var(--lm-text-2); }
 .lm-status i { width: 6px; height: 6px; border-radius: 50%; }
 .lm-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--lm-muted); display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: var(--lm-text-2); }
+.lm-backlink { font-size: 14px; color: var(--lm-text-2); text-decoration: none; white-space: nowrap; }
+.lm-backlink:hover { color: var(--lm-text); text-decoration: underline; text-underline-offset: 2px; }
 .lm-path { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 18px 32px; border-bottom: 1px solid var(--lm-border); font-size: 13px; }
 .lm-path-step { display: inline-flex; align-items: center; gap: 7px; }
 .lm-path-step i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
@@ -590,11 +592,18 @@
 .lm-ot.is-armed .lm-ot-actions { opacity: 0; }
 .lm-ot.is-armed .lm-ot-actions.is-in { opacity: 1; }
 .lm-ot-note { margin: 0; font-size: 13px; color: #8C8780; }
+.lm-ot-actions .is-chosen { outline: 2px solid var(--lm-accent); outline-offset: 2px; }
+.lm-ot-actions .is-dimmed { opacity: .45; }
 .lm-ot-replay { align-self: flex-start; background: none; border: none; padding: 0; font-family: inherit; font-size: 13px; color: #8C8780; cursor: pointer; }
 .lm-ot-replay:hover { color: var(--lm-text-2); text-decoration: underline; text-underline-offset: 2px; }
-.lm-ot-recordlink { margin: 0; font-size: 13px; color: #8C8780; transition: opacity .4s ease; }
-.lm-ot.is-armed .lm-ot-recordlink { opacity: 0; }
-.lm-ot.is-armed .lm-ot-recordlink.is-in { opacity: 1; }
+.lm-ot-evidence { margin-top: 24px; transition: opacity .4s ease; }
+.lm-ot.is-armed .lm-ot-evidence { opacity: 0; }
+.lm-ot.is-armed .lm-ot-evidence.is-in { opacity: 1; }
+.lm-ot-record-strip { display: flex; flex-wrap: wrap; gap: 3px; max-width: 452px; }
+.lm-ot-tick { width: 8px; height: 15px; border-radius: 1.5px; background: #CFC6B4; }
+.lm-ot-tick.is-better { background: var(--lm-positive); }
+.lm-ot-tick.is-worse { background: var(--lm-risk); }
+.lm-ot-recordlink { margin: 12px 0 0; font-size: 13px; color: #8C8780; }
 .lm-ot-recordlink a { color: #8C8780; text-decoration: underline; text-underline-offset: 2px; }
 .lm-ot-recordlink a:hover { color: var(--lm-text-2); }
 
