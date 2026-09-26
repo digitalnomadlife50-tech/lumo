@@ -644,7 +644,7 @@ export default function ProductApp() {
 
   const pastDecisions: PastDecision[] = [...sessionDecisions]
     .sort((left, right) => right.decisionNum - left.decisionNum)
-    .map((decision) => ({ id: decision.id, number: decision.decisionNum, title: decision.question, choice: decision.chosenDirection, confidence: decision.confidence, gaveUp: decision.whatGivingUp, revisitDate: decision.revisitDate }))
+    .map((decision) => ({ id: decision.id, number: decision.decisionNum, title: decision.question, choice: decision.chosenDirection, confidence: decision.confidence, gaveUp: decision.whatGivingUp, revisitDate: decision.revisitDate, outcome: decision.outcome }))
 
   const draftInProgress: DraftInProgress | null = draft
     ? { id: draft.id, number: draft.number, title: draft.situation.slice(0, 80), step: draft.step }
@@ -672,7 +672,6 @@ export default function ProductApp() {
           setSituation(EXAMPLE_SITUATION)
           navigate("step1")
         }}
-        isExample={isExample}
         onSaveOutcome={(id, outcome) => {
           setSessionDecisions((prev) => prev.map((d) => (d.id === id ? { ...d, outcome } : d)))
         }}

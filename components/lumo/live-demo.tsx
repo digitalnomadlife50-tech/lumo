@@ -84,7 +84,7 @@ function parseSlackLine(line: string) {
 export function LiveDemo() {
   const reduced = usePrefersReducedMotion()
   const d = CURRENT_DECISION
-  const points = useMemo(demoMapPoints, [])
+  const points = useMemo(() => demoMapPoints(), [])
   const [chapter, setChapter] = useState(0)
   const [playing, setPlaying] = useState(!reduced)
   const [progress, setProgress] = useState(0)
@@ -356,10 +356,12 @@ function DecisionScene({ d }: { d: D }) {
 
 function UpdatesScene({ d }: { d: D }) {
   const [tab, setTab] = useState(0)
+  const [auto, setAuto] = useState(true)
   useEffect(() => {
+    if (!auto) return
     const t = setInterval(() => setTab((x) => (x + 1) % d.drafts.length), 2200)
     return () => clearInterval(t)
-  }, [d.drafts.length])
+  }, [auto, d.drafts.length])
   const draft = d.drafts[tab]
   const person = personFor(draft.audience)
   return (
@@ -369,7 +371,15 @@ function UpdatesScene({ d }: { d: D }) {
         {d.drafts.map((dr, i) => {
           const p = personFor(dr.audience)
           return (
-            <button key={dr.audience} type="button" className={`lm-tab ${i === tab ? "is-on" : ""}`} onClick={() => setTab(i)}>
+            <button
+              key={dr.audience}
+              type="button"
+              className={`lm-tab ${i === tab ? "is-on" : ""}`}
+              onClick={() => {
+                setAuto(false)
+                setTab(i)
+              }}
+            >
               {p ? <img src={p.avatar} alt="" width={28} height={28} className="lm-tab-avatar" /> : null}
               <span className="lm-tab-text">
                 <span className="lm-tab-name">{dr.audience}</span>
