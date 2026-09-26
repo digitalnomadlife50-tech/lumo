@@ -8,11 +8,16 @@ export const maxDuration = 60
 
 type Channel = "email" | "slack" | "dm"
 type Instruction = "shorter" | "more-direct" | "add-audience"
+interface Pushback {
+  objection: string
+  response: string
+}
 interface Draft {
   audience: string
   channel: Channel
   subject: string
   body: string
+  pushback?: Pushback[]
 }
 interface RewriteRequest {
   draft: Draft
@@ -40,16 +45,37 @@ const rewriteTool: Anthropic.Tool = {
       channel: { type: "string", enum: ["email", "slack", "dm"] },
       subject: { type: "string" },
       body: { type: "string" },
+      pushback: {
+        type: "array",
+        maxItems: 2,
+        description: "Up to two realistic objections this audience would likely raise back, each with the PM's response.",
+        items: {
+          type: "object",
+          properties: {
+            objection: { type: "string" },
+            response: { type: "string" },
+          },
+          required: ["objection", "response"],
+          additionalProperties: false,
+        },
+      },
     },
-    required: ["audience", "channel", "subject", "body"],
+    required: ["audience", "channel", "subject", "body", "pushback"],
     additionalProperties: false,
   },
+}
+
+function isPushback(value: unknown): value is Pushback {
+  if (!value || typeof value !== "object") return false
+  const item = value as Record<string, unknown>
+  return typeof item.objection === "string" && typeof item.response === "string"
 }
 
 function isDraft(value: unknown): value is Draft {
   if (!value || typeof value !== "object") return false
   const draft = value as Record<string, unknown>
-  return typeof draft.audience === "string" && (draft.channel === "email" || draft.channel === "slack" || draft.channel === "dm") && typeof draft.subject === "string" && typeof draft.body === "string" && draft.body.trim().length > 0
+  return typeof draft.audience === "string" && (draft.channel === "email" || draft.channel === "slack" || draft.channel === "dm") && typeof draft.subject === "string" && typeof draft.body === "string" && draft.body.trim().length > 0 &&
+    (draft.pushback === undefined || (Array.isArray(draft.pushback) && draft.pushback.length <= 2 && draft.pushback.every(isPushback)))
 }
 
 function failureResponse(
@@ -116,7 +142,7 @@ export async function POST(req: Request) {
       affectedAudiences: typeof context.affectedAudiences === "string" ? context.affectedAudiences.slice(0, 3000) : "",
     }
     const targetAudience = isAddAudience ? audience : draft.audience.trim()
-    const systemPrompt = `You are Lumo, a thoughtful senior product manager editing a message for colleagues. Preserve the real facts, names, teams, dates, decision, and confidence from the supplied context. Do not invent details. Lead with the decision, include one clear ask when there is one, and match the audience. Executives get the call, cost, risk being watched, and confidence. Engineering gets scope changes and owners. Sales and support get what to say to customers. Keep the body under 100 words. Do not use bold, markdown, or headers inside the body. For email, provide a concise subject. For Slack or DM, return an empty subject. ${HUMAN_WRITING_RULES}`
+    const systemPrompt = `You are Lumo, a thoughtful senior product manager editing a message for colleagues. Preserve the real facts, names, teams, dates, decision, and confidence from the supplied context. Do not invent details. Lead with the decision, include one clear ask when there is one, and match the audience. Executives get the call, cost, risk being watched, and confidence. Engineering gets scope changes and owners. Sales and support get what to say to customers. Keep the body under 100 words. Do not use bold, markdown, or headers inside the body. For email, provide a concise subject. For Slack or DM, return an empty subject. Also return a pushback array of up to two realistic objections this audience would likely raise back in their own voice, each paired with a specific one or two sentence response the PM could give. Keep any existing pushback consistent with the rewritten draft. ${HUMAN_WRITING_RULES}`
     const instructionText = instruction === "shorter" ? "Make this draft shorter while preserving its important facts and clear ask." : instruction === "more-direct" ? "Make this draft more direct and outcome-first without becoming abrupt or changing any facts." : `Create a new draft for the audience named exactly "${targetAudience}". Choose the best channel for this audience and tailor the message to their role.`
     const userPrompt = `INSTRUCTION: ${instructionText}
 

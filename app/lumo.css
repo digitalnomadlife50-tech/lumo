@@ -163,7 +163,13 @@
 .lm-sub { margin: 10px 0 0; font-size: 17px; line-height: 1.55; color: var(--lm-text-2); }
 .lm-kicker { font-family: var(--lm-mono); font-size: 13px; color: var(--lm-text-3); display: flex; justify-content: space-between; gap: 12px; }
 .lm-actions { margin-top: 40px; display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
-.lm-stack { display: flex; flex-direction: column; gap: 14px; }
+  .lm-stack { display: flex; flex-direction: column; gap: 14px; }
+
+  .lm-undo-line { margin-top: 16px; display: flex; align-items: baseline; gap: 8px; }
+  .lm-pushback { margin-top: 28px; border-top: 1px solid var(--lm-border); padding-top: 18px; }
+  .lm-pushback-item { background: var(--lm-surface); border: 1px solid var(--lm-border); border-radius: 10px; padding: 14px 16px; }
+  .lm-pushback-objection { font-size: 14px; font-style: italic; color: var(--lm-text-2); }
+  .lm-pushback-response { margin-top: 6px; font-size: 14px; color: var(--lm-text); line-height: 1.5; }
 
 .lm-callbox { margin-top: 40px; background: var(--lm-surface); border: 1px solid var(--lm-border); border-radius: 12px; padding: 24px 24px 18px; }
 .lm-callinput { position: relative; margin-top: 10px; }

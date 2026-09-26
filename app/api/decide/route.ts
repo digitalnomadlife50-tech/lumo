@@ -13,6 +13,7 @@ interface DecisionContext {
   reasoning: string
   confidence: number
   whatGivingUp: string
+  hardship?: string
   analysis?: {
     realQuestion?: string
     whatMatters?: string
@@ -22,11 +23,16 @@ interface DecisionContext {
 }
 
 type Channel = "email" | "slack" | "dm"
+interface Pushback {
+  objection: string
+  response: string
+}
 interface AudienceDraft {
   audience: string
   channel: Channel
   subject: string
   body: string
+  pushback?: Pushback[]
 }
 interface DecideResult {
   claritySummary: string
@@ -46,22 +52,42 @@ const decideTool: Anthropic.Tool = {
         type: "array",
         minItems: 2,
         maxItems: 8,
-        items: {
-          type: "object",
-          properties: {
-            audience: { type: "string" },
-            channel: { type: "string", enum: ["email", "slack", "dm"] },
-            subject: { type: "string" },
-            body: { type: "string" },
+          items: {
+            type: "object",
+            properties: {
+              audience: { type: "string" },
+              channel: { type: "string", enum: ["email", "slack", "dm"] },
+              subject: { type: "string" },
+              body: { type: "string" },
+              pushback: {
+                type: "array",
+                maxItems: 2,
+                description: "Up to two realistic objections this audience would likely raise back, each with the PM's response.",
+                items: {
+                  type: "object",
+                  properties: {
+                    objection: { type: "string", description: "What this audience will likely say back, in their voice, one sentence." },
+                    response: { type: "string", description: "What the PM can say back, specific, one or two sentences." },
+                  },
+                  required: ["objection", "response"],
+                  additionalProperties: false,
+                },
+              },
+            },
+            required: ["audience", "channel", "subject", "body", "pushback"],
+            additionalProperties: false,
           },
-          required: ["audience", "channel", "subject", "body"],
-          additionalProperties: false,
         },
       },
-    },
     required: ["claritySummary", "executionTeam", "drafts"],
     additionalProperties: false,
   },
+}
+
+function isPushback(value: unknown): value is Pushback {
+  if (!value || typeof value !== "object") return false
+  const item = value as Record<string, unknown>
+  return typeof item.objection === "string" && typeof item.response === "string"
 }
 
 function isAudienceDraft(value: unknown): value is AudienceDraft {
@@ -69,7 +95,8 @@ function isAudienceDraft(value: unknown): value is AudienceDraft {
   const draft = value as Record<string, unknown>
   return typeof draft.audience === "string" && draft.audience.trim().length > 0 &&
     (draft.channel === "email" || draft.channel === "slack" || draft.channel === "dm") &&
-    typeof draft.subject === "string" && typeof draft.body === "string" && draft.body.trim().length > 0
+    typeof draft.subject === "string" && typeof draft.body === "string" && draft.body.trim().length > 0 &&
+    (draft.pushback === undefined || (Array.isArray(draft.pushback) && draft.pushback.length <= 2 && draft.pushback.every(isPushback)))
 }
 
 function isDecideResult(value: unknown): value is DecideResult {
@@ -148,6 +175,7 @@ export async function POST(req: Request) {
     const chosenDirection = typeof body.chosenDirection === "string" ? body.chosenDirection.trim() : ""
     const reasoning = typeof body.reasoning === "string" ? body.reasoning.trim() : ""
     const whatGivingUp = typeof body.whatGivingUp === "string" ? body.whatGivingUp.trim() : ""
+    const hardship = typeof body.hardship === "string" ? body.hardship.trim().slice(0, 500) : ""
     const confidence = body.confidence
     if ([situation, urgency, chosenDirection, reasoning, whatGivingUp].some((value) => !value || value.length > 6000) || typeof confidence !== "number" || !Number.isInteger(confidence) || confidence < 1 || confidence > 5) {
       return Response.json({ success: false, errorCode: "INVALID_INPUT", error: "Complete the decision details before drafting messages." }, { status: 400 })
@@ -161,7 +189,7 @@ export async function POST(req: Request) {
       urgencyRead: typeof analysis.howPressing === "string" ? analysis.howPressing.slice(0, 2000) : "",
     }
 
-    const systemPrompt = `You are Lumo, a thoughtful senior product manager writing real messages to colleagues. Return a short first-person decision summary and one message draft for each affected person or team named in the analysis. Always include an audience named exactly "Your VP" and the execution team that owns the chosen work. Set executionTeam to that team's actual name from the input. If no specific team can be identified, use "Execution team" rather than inventing one. Do not add unrelated audiences. Keep each message under 100 words. Choose the channel that best fits the audience: email, slack, or dm. Email drafts need a concise subject. Slack and DM drafts must have an empty subject. Lead with the decision. Include one clear ask when there is one. Executives get the call, cost, risk being watched, and confidence. Engineering gets scope changes and owners. Sales and support get what to say to customers. Use the real names, teams, dates, and numbers from the input. Do not fabricate details. No bold, markdown, or headers inside draft bodies. ${HUMAN_WRITING_RULES}`
+    const systemPrompt = `You are Lumo, a thoughtful senior product manager writing real messages to colleagues. Return a short first-person decision summary and one message draft for each affected person or team named in the analysis. Always include an audience named exactly "Your VP" and the execution team that owns the chosen work. Set executionTeam to that team's actual name from the input. If no specific team can be identified, use "Execution team" rather than inventing one. Do not add unrelated audiences. Keep each message under 100 words. Choose the channel that best fits the audience: email, slack, or dm. Email drafts need a concise subject. Slack and DM drafts must have an empty subject. Lead with the decision. Include one clear ask when there is one. Executives get the call, cost, risk being watched, and confidence. Engineering gets scope changes and owners. Sales and support get what to say to customers. Use the real names, teams, dates, and numbers from the input. Do not fabricate details. No bold, markdown, or headers inside draft bodies. For every draft, also return a pushback array of up to two realistic objections that specific audience would likely raise back in their own voice, each paired with a specific one or two sentence response the PM could give. Only include genuine, realistic objections; an empty array is fine if none apply. If what is making this hard is provided, let it shape the tone of the draft toward the person it names, but never quote it directly. ${HUMAN_WRITING_RULES}`
 
     const userPrompt = `USER'S DECISION CONTEXT
 Situation: ${situation}
@@ -170,6 +198,7 @@ Chosen direction: ${chosenDirection}
 Why they chose it: ${reasoning}
 Confidence: ${confidence} of 5
 What they are giving up: ${whatGivingUp}
+What's making this hard (private context, never quote directly): ${hardship || "Not specified"}
 
 ANALYSIS
 Core question: ${analysisContext.coreQuestion || "Not provided"}

@@ -9,7 +9,10 @@ export const maxDuration = 60
 interface AnalyzeRequest {
   situation: string
   urgency: string
+  hardship?: string
 }
+
+export type DecisionKind = "timing" | "scope" | "hiring" | "people" | "vendor" | "strategy"
 
 export interface AnalysisResult {
   realQuestion: string
@@ -17,6 +20,7 @@ export interface AnalysisResult {
   whoIsAffected: string
   howPressing: string
   iNoticed: string
+  kind: DecisionKind
   sources: {
     realQuestion: string[]
     whatMatters: string[]
@@ -46,6 +50,7 @@ const analysisTool: Anthropic.Tool = {
       whoIsAffected: { type: "string" },
       howPressing: { type: "string" },
       iNoticed: { type: "string", description: "One subtle, specific observation the user may have missed, in one sentence." },
+      kind: { type: "string", enum: ["timing", "scope", "hiring", "people", "vendor", "strategy"], description: "The single category that best describes this decision." },
       sources: {
         type: "object",
         description: "For each of realQuestion, whatMatters, whoIsAffected, and howPressing, an array of short exact quotes copied verbatim from the user's pasted text that support that field. Use an empty array if nothing in the text supports it.",
@@ -79,7 +84,7 @@ const analysisTool: Anthropic.Tool = {
       },
       observations: { type: "array", items: { type: "string" } },
     },
-    required: ["realQuestion", "whatMatters", "whoIsAffected", "howPressing", "iNoticed", "options", "observations"],
+    required: ["realQuestion", "whatMatters", "whoIsAffected", "howPressing", "iNoticed", "kind", "options", "observations"],
     additionalProperties: false,
   },
 }
@@ -93,6 +98,7 @@ function isAnalysisResult(value: unknown): value is AnalysisResult {
     typeof result.whoIsAffected === "string" &&
     typeof result.howPressing === "string" &&
     typeof result.iNoticed === "string" &&
+    ["timing", "scope", "hiring", "people", "vendor", "strategy"].includes(result.kind as string) &&
     !!result.sources &&
     typeof result.sources === "object" &&
     ["realQuestion", "whatMatters", "whoIsAffected", "howPressing"].every((key) => {
@@ -158,6 +164,7 @@ export async function POST(req: Request) {
   try {
     const body: AnalyzeRequest = await req.json()
     const { situation, urgency } = body
+    const hardship = typeof body.hardship === "string" ? body.hardship.trim().slice(0, 500) : ""
 
     if (!situation || situation.trim().length < 10) {
       return Response.json(
@@ -166,10 +173,11 @@ export async function POST(req: Request) {
       )
     }
 
-    const systemPrompt = `You are Lumo, a decision-structuring tool for Senior Product Managers. Read the user's situation and produce specific, useful analysis. Reframe the core decision in one sentence; explain the key tensions in 2-3 sentences; identify affected stakeholders and why; explain timeline implications based on urgency; name one subtle, specific thing the user may have missed (iNoticed), in one sentence; for realQuestion, whatMatters, whoIsAffected, and howPressing, include a "sources" array of short exact quotes copied verbatim from the user's pasted text that support that field (empty array if nothing supports it, never invent or paraphrase a quote); and suggest 2-3 realistic options, each with a short name, one-sentence description, a cost summary, a cost level (low, medium, or high), who is hurt most by choosing it, whether it is reversible (yes, partly, or no), and its main risk in one sentence. Avoid generic options unless they genuinely apply. Provide the result through the required structured analysis tool.\n\n${HUMAN_WRITING_RULES}`
+    const systemPrompt = `You are Lumo, a decision-structuring tool for Senior Product Managers. Read the user's situation and produce specific, useful analysis. Reframe the core decision in one sentence; explain the key tensions in 2-3 sentences; identify affected stakeholders and why; explain timeline implications based on urgency; name one subtle, specific thing the user may have missed (iNoticed), in one sentence; classify the decision into exactly one kind (timing, scope, hiring, people, vendor, or strategy); for realQuestion, whatMatters, whoIsAffected, and howPressing, include a "sources" array of short exact quotes copied verbatim from the user's pasted text that support that field (empty array if nothing supports it, never invent or paraphrase a quote); and suggest 2-3 realistic options, each with a short name, one-sentence description, a cost summary, a cost level (low, medium, or high), who is hurt most by choosing it, whether it is reversible (yes, partly, or no), and its main risk in one sentence. Avoid generic options unless they genuinely apply. If the user names what is making this hard, let it shape the iNoticed line and lean the tone of later drafts toward the person it names, but never quote it back verbatim. Provide the result through the required structured analysis tool.\n\n${HUMAN_WRITING_RULES}`
 
     const userPrompt = `USER'S SITUATION: ${situation}
 URGENCY: ${urgency || "Not specified"}
+WHAT'S MAKING THIS HARD (private context, never quote directly): ${hardship || "Not specified"}
 
 Analyze this situation specifically.`
 
