@@ -76,7 +76,9 @@ export function ProductReplay() {
   const [playing, setPlaying] = useState(!reduced);
   const [step, setStep] = useState<StepKey>(1);
   const [cycleStart, setCycleStart] = useState(0);
-  const [cursor, setCursor] = useState<{ x: number; y: number; press: boolean } | null>(null);
+  const [cursorVisible, setCursorVisible] = useState(false);
+  const cursorRef = useRef<HTMLDivElement | null>(null);
+  const pressRef = useRef<HTMLSpanElement | null>(null);
   const rafRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -93,6 +95,10 @@ export function ProductReplay() {
   }, [inView, reduced]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
+    setCursorVisible(playing);
+  }, [playing]);
+
+  useEffect(() => {
     if (!playing || reduced) return;
     const tick = () => {
       const elapsed = (Date.now() - cycleStart) % TOTAL_MS;
@@ -100,10 +106,19 @@ export function ProductReplay() {
       for (const key of STEP_ORDER) {
         if (elapsed >= totalBefore(key)) s = key;
       }
-      setStep(s);
+      setStep((prev) => (prev === s ? prev : s));
       const withinStep = elapsed - totalBefore(s);
       const frac = withinStep / STEP_DURATIONS[s];
-      setCursor({ x: 30 + Math.sin(frac * Math.PI * 2 + s) * 20 + 40, y: 60 + Math.cos(frac * Math.PI * 2 + s) * 15 + 20, press: frac % 0.5 < 0.06 });
+      const x = 30 + Math.sin(frac * Math.PI * 2 + s) * 20 + 40;
+      const y = 60 + Math.cos(frac * Math.PI * 2 + s) * 15 + 20;
+      const press = frac % 0.5 < 0.06;
+      if (cursorRef.current) {
+        cursorRef.current.style.left = `${x}%`;
+        cursorRef.current.style.top = `${y}%`;
+      }
+      if (pressRef.current) {
+        pressRef.current.style.opacity = press ? "1" : "0";
+      }
       rafRef.current = requestAnimationFrame(tick);
     };
     rafRef.current = requestAnimationFrame(tick);
@@ -115,7 +130,7 @@ export function ProductReplay() {
   const jump = (s: StepKey) => {
     setStep(s);
     setCycleStart(Date.now() - totalBefore(s));
-    setCursor(null);
+    setCursorVisible(false);
   };
 
   const shared = { aiStatus: "ok" as const, initials: "TR" };
@@ -172,9 +187,9 @@ export function ProductReplay() {
             />
           ) : null}
         </div>
-        {cursor && playing ? (
-          <div className="lm-replay-cursor" style={{ left: `${cursor.x}%`, top: `${cursor.y}%` }} aria-hidden="true">
-            {cursor.press ? <span className="lm-replay-press" /> : null}
+        {cursorVisible && playing ? (
+          <div ref={cursorRef} className="lm-replay-cursor" aria-hidden="true">
+            <span ref={pressRef} className="lm-replay-press" style={{ opacity: 0 }} />
           </div>
         ) : null}
         {!playing && reduced ? (

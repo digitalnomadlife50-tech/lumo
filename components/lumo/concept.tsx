@@ -102,25 +102,24 @@ export function ConceptAnimation() {
       onMouseLeave={() => setHovering(false)}
     >
       <div className="lm-concept-stage">
-        <svg className="lm-concept-lines" aria-hidden="true">
+        <svg className="lm-concept-lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
           {showOptions &&
             OPTIONS.map((o, i) => (
               <path
                 key={o.letter}
                 className={`lm-concept-line ${showOptions ? "is-drawn" : ""} ${chosen && o.letter !== "C" ? "is-dim" : ""} ${chosen && o.letter === "C" ? "is-chosen" : ""}`}
                 style={{ transitionDelay: `${i * 180}ms` }}
-                d="M 20% 50% C 40% 50%, 40% 50%, 50% 50%"
+                d="M 15 50 C 30 50, 30 52, 45 52"
+                vectorEffect="non-scaling-stroke"
               />
             ))}
-          {showTell &&
-            AUDIENCES.map((a, i) => (
-              <path
-                key={a}
-                className="lm-concept-line is-chosen is-drawn"
-                style={{ transitionDelay: `${i * 110}ms` }}
-                d="M 55% 50% C 75% 50%, 75% 50%, 90% 50%"
-              />
-            ))}
+          {showTell && (
+            <path
+              className="lm-concept-line is-chosen is-drawn"
+              d="M 50 58 C 50 75, 50 82, 50 88"
+              vectorEffect="non-scaling-stroke"
+            />
+          )}
         </svg>
 
         <div className={`lm-concept-chips ${showMess ? "is-on" : "is-off"}`} aria-hidden={!showMess}>
