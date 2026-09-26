@@ -30,7 +30,9 @@ const KIND_COLOR: Record<DecisionKind, string> = Object.fromEntries(KINDS.map((k
 
 const W = 660
 const H = 400
-const PAD = { left: 64, right: 28, top: 28, bottom: 56 }
+const PAD = { left: 44, right: 28, top: 34, bottom: 56 }
+const AXIS_FS = 18
+const ZONE_FS = 17
 const ROWS: ResultRating[] = ["better", "as-expected", "worse"]
 const ROW_LABEL: Record<ResultRating, string> = { better: "Better", "as-expected": "As expected", worse: "Worse" }
 
@@ -150,11 +152,11 @@ export function JudgmentMap({ points, autoReplay = false }: { points: MapPoint[]
           <text x={xFor(1.4)} y={yFor("better") - 6} className="lm-map-zone">Underconfident</text>
           <text x={xFor(4.6)} y={yFor("worse") + 30} className="lm-map-zone" textAnchor="end">Overconfident</text>
 
-          {/* y gridlines + labels */}
+          {/* y gridlines + labels (labels sit above each line, left-aligned, so they never overflow) */}
           {ROWS.map((r) => (
             <g key={r}>
               <line x1={PAD.left} y1={yFor(r)} x2={W - PAD.right} y2={yFor(r)} className="lm-map-grid" />
-              <text x={PAD.left - 12} y={yFor(r) + 4} className="lm-map-axis" textAnchor="end">{ROW_LABEL[r]}</text>
+              <text x={PAD.left} y={yFor(r) - 9} className="lm-map-axis" textAnchor="start">{ROW_LABEL[r]}</text>
             </g>
           ))}
 
@@ -279,11 +281,11 @@ export function EmptyJudgmentMap({ remaining }: { remaining: number }) {
           {ROWS.map((r) => (
             <g key={r}>
               <line x1={PAD.left} y1={yFor(r)} x2={W - PAD.right} y2={yFor(r)} className="lm-map-grid" />
-              <text x={PAD.left - 12} y={yFor(r) + 4} className="lm-map-axis" textAnchor="end">{ROW_LABEL[r]}</text>
+              <text x={PAD.left} y={yFor(r) - 9} className="lm-map-axis" fontSize={AXIS_FS} textAnchor="start">{ROW_LABEL[r]}</text>
             </g>
           ))}
           {[1, 2, 3, 4, 5].map((c) => (
-            <text key={c} x={xFor(c)} y={H - PAD.bottom + 24} className="lm-map-axis" textAnchor="middle">{c}</text>
+            <text key={c} x={xFor(c)} y={H - PAD.bottom + 24} className="lm-map-axis" fontSize={AXIS_FS} textAnchor="middle">{c}</text>
           ))}
         </svg>
       </div>

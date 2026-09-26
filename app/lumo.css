@@ -390,8 +390,8 @@
 .lm-map-frame { position: relative; background: var(--lm-surface); border: 1px solid var(--lm-border); border-radius: 12px; padding: 12px; }
 .lm-map-svg { width: 100%; height: auto; display: block; overflow: visible; }
 .lm-map-grid { stroke: var(--lm-border); stroke-width: 1; }
-.lm-map-axis { fill: var(--lm-text-3); font-family: var(--lm-mono); font-size: 12px; }
-.lm-map-zone { fill: var(--lm-text-3); font-family: var(--lm-mono); font-size: 11px; opacity: .8; }
+  .lm-map-axis { fill: var(--lm-text-3); font-family: var(--lm-mono); font-size: 12px; paint-order: stroke; stroke: var(--lm-surface); stroke-width: 3px; stroke-linejoin: round; }
+  .lm-map-zone { fill: var(--lm-text-3); font-family: var(--lm-mono); font-size: 11px; opacity: .8; paint-order: stroke; stroke: var(--lm-surface); stroke-width: 3px; stroke-linejoin: round; }
 .lm-map-pt { cursor: pointer; animation: lmPtIn .4s ease-out both; }
 .lm-map-pt circle { transition: r .15s ease, opacity .15s ease; }
 .lm-map-pt:focus-visible { outline: none; }
