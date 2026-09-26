@@ -51,7 +51,8 @@ export default function Landing() {
         </section>
       </div>
 
-      <section id="demo" className="lm-wrap lm-section" style={{ paddingTop: 8 }}>
+      <section id="demo" className="lm-wrap lm-section lm-section-tight">
+        <h2 className="sr-only">How it works</h2>
         <LiveDemo />
       </section>
 
@@ -67,8 +68,8 @@ export default function Landing() {
             <img
               src="/illustrations/spot-problem.png"
               alt="A tall stack of drafts beside one small blank index card"
-              width={1408}
-              height={768}
+              width={1000}
+              height={545}
               className="lm-spot-img"
             />
           </Reveal>
@@ -78,25 +79,27 @@ export default function Landing() {
       <section id="record" style={{ background: "var(--lm-muted)" }}>
         <div className="lm-wrap lm-section">
           <div className="lm-sec-head">
-            <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 640 }}>
+            <div className="lm-sec-copy">
               <div className="lm-label">Over time</div>
               <h2 className="lm-h2">It remembers how your decisions turned out.</h2>
               <p className="lm-body-lg">Jordan&apos;s 40 past decisions. Each dot is one.</p>
             </div>
           </div>
-          <JudgmentMap points={demoMapPoints()} variant="replay" />
-          <p className="lm-body-lg" style={{ marginTop: 16, marginBottom: 48, maxWidth: 640, color: "var(--lm-text-2)" }}>
-            Left to right is how sure Jordan was, from 1 to 5. Up and down is how it turned out.
-          </p>
-          <MonthlyBriefCard brief={october} />
+          <div className="lm-record">
+            <p className="lm-body-lg lm-record-legend">
+              Left to right is how sure Jordan was, from 1 to 5. Up and down is how it turned out.
+            </p>
+            <JudgmentMap points={demoMapPoints()} variant="replay" />
+            <MonthlyBriefCard brief={october} />
+          </div>
         </div>
       </section>
 
       <section className="lm-wrap lm-section">
         <div className="lm-sec-head">
-          <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 640 }}>
+          <div className="lm-sec-copy">
             <h2 className="lm-h2">Works right away. No IT approval needed.</h2>
-            <p className="lm-body-lg">Paste text, add a screenshot, forward an email, upload a video clip, or talk it through after the meeting.</p>
+            <p className="lm-body-lg">There is nothing to install and no account to set up. Start with whatever you already have.</p>
           </div>
         </div>
         <div className="lm-capture-row">
@@ -112,7 +115,7 @@ export default function Landing() {
       <section id="why" style={{ background: "var(--lm-muted)" }}>
         <div className="lm-wrap lm-section">
           <div className="lm-sec-head">
-            <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 720 }}>
+            <div className="lm-sec-copy">
               <div className="lm-label">Why Lumo</div>
               <h2 className="lm-h2">Why not ChatGPT, or a decision journal?</h2>
               <p className="lm-body-lg">A chat will help with one decision, but it starts from nothing every time. It doesn&apos;t record your first instinct before you know the answer, and it doesn&apos;t know how your past decisions turned out. A decision journal keeps the history, but you do all the work. Lumo does the research on the decision in front of you and remembers how it turned out.</p>

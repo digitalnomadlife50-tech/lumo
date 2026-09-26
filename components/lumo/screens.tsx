@@ -210,7 +210,7 @@ export function HomeScreen({
           <>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
               <div className="lm-label">Recent decisions</div>
-              <div className="lm-mono lm-caption" style={{ fontSize: 12 }}>{sorted.length} filed</div>
+              <div className="lm-mono lm-caption" style={{ fontSize: 12 }}>{sorted.length} decisions</div>
             </div>
             <div className="lm-stack" style={{ marginTop: 20, gap: 16 }}>
               {sorted.map((d, i) => {
@@ -464,7 +464,7 @@ export function Step1Screen({
 
       <div className="lm-actions">
         <button className="lm-btn" onClick={onSubmit} disabled={!text.trim() || loading}>
-          {loading ? "Reading" : "Read it back"}
+          {loading ? "Reading it back" : "Read it back"}
         </button>
         {text.trim() && !loading ? <KeyHint /> : null}
         {onSaveForLater ? <button className="lm-link" onClick={onSaveForLater}>Save for later</button> : null}
@@ -678,7 +678,7 @@ export function Step3Screen({
       <p className="lm-anim lm-sub" style={delay(60)}>The paths you came in with, and at least one you didn&apos;t write down.</p>
 
       {loading ? (
-        <div className="lm-reading" role="status"><i className="lm-pulse" aria-hidden="true" />thinking through options</div>
+        <div className="lm-reading" role="status"><i className="lm-pulse" aria-hidden="true" />reading your options</div>
       ) : (
         <div className="lm-stack" style={{ marginTop: 32 }}>
           {ordered.map((o, i) => {
@@ -690,7 +690,7 @@ export function Step3Screen({
                 <div style={{ flexGrow: 1, minWidth: 0 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", gap: 16 }}>
                     <div className="lm-opt-title">{o.label}</div>
-                    {isLumo ? <span className="lm-badge">LUMO ADDED</span> : <span className="lm-label">Yours</span>}
+                    {isLumo ? <span className="lm-badge">Added by Lumo</span> : <span className="lm-label">Yours</span>}
                   </div>
                   {o.summary ? <div className="lm-opt-sum">{o.summary}</div> : null}
                 </div>
@@ -1032,7 +1032,7 @@ export function Step5Screen({
           <span className="lm-hold-label">{committed ? `Committed. No.${decisionNumber}` : "Hold to commit"}</span>
         </button>
         {!committed ? (
-          <button className="lm-link" onClick={commit}>Commit without holding</button>
+          <button className="lm-link" onClick={commit}>Commit without holding the button</button>
         ) : null}
         <button className="lm-link" style={{ color: "var(--lm-text-3)" }} onClick={onBack}>Back</button>
       </div>
@@ -1341,7 +1341,7 @@ export function CompleteScreen({
 
         {gaveUp.trim() ? (
           <Signature delayMs={1400} style={{ marginTop: 36 }}>
-            You gave up {lowerFirst(gaveUp)}. It&apos;s on record, so the next time someone asks why, the answer is here.
+            You gave up {lowerFirst(gaveUp)}. It&apos;s in your decision history, so the next time someone asks why, the answer is here.
           </Signature>
         ) : null}
 
@@ -1358,7 +1358,7 @@ export function CompleteScreen({
                   Copied
                 </>
               ) : (
-                "Copy decision record"
+                "Copy decision history"
               )}
             </button>
           ) : null}

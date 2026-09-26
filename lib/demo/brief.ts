@@ -32,6 +32,13 @@ function capitalize(text: string) {
   return text.charAt(0).toUpperCase() + text.slice(1)
 }
 
+const NUMBER_WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"]
+
+/** Sentence-initial counts read better as words. */
+function numberWord(n: number) {
+  return NUMBER_WORDS[n] ? capitalize(NUMBER_WORDS[n]) : String(n)
+}
+
 /** Compute the month's brief straight from the data so every number matches. */
 export function computeBrief(decisions: DemoDecision[], month: string): MonthlyBrief {
   const withOutcomes = decisions.filter((d) => d.outcome)
@@ -71,10 +78,10 @@ export function computeBrief(decisions: DemoDecision[], month: string): MonthlyB
 
   return {
     month,
-    strongAt: `${capitalize(strongLabel)} decisions. They turn out as expected or better.`,
-    runsOff: `Dates and deadlines. Of your ${highConfTiming.length} decisions about dates and deadlines rated 4 or 5 for confidence, ${highConfTimingWorse.length} turned out worse than expected. You feel most sure right before a deadline moves.`,
+    strongAt: `${capitalize(strongLabel)} decisions. These have turned out the way you expected, or better.`,
+    runsOff: `Dates and deadlines. You made ${highConfTiming.length} decisions about dates where you rated your confidence 4 or 5 out of 5. ${numberWord(highConfTimingWorse.length)} of them turned out worse than you expected. You feel most certain right before a date moves.`,
     ifThen: IF_THEN_PLANS[0].text,
-    didntNotice: `Support was affected in ${supportAffected} of your ${decisions.length} decisions. Priya (Support) was told in ${priyaTold}.`,
+    didntNotice: `${supportAffected} of your ${decisions.length} decisions affected the support team. You told Priya on that team about ${priyaTold} of them.`,
   }
 }
 

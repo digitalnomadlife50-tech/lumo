@@ -150,7 +150,7 @@ export function LiveDemo() {
         </div>
       </div>
 
-      <div className="lm-demo-stage" aria-live="polite">
+      <div className="lm-demo-stage">
         <div key={cur} className="lm-fade-swap lm-demo-scene">
           {cur === "situation" && <SituationScene d={d} />}
           {cur === "instinct" && <InstinctScene d={d} />}
@@ -174,23 +174,21 @@ export function LiveDemo() {
         <button type="button" className="lm-demo-play" onClick={() => setPlaying((p) => !p)} aria-label={playing ? "Pause" : "Play"}>
           {playing ? "Pause" : "Play"}
         </button>
-        <div className="lm-demo-dots" role="tablist" aria-label="Chapters">
+        <div className="lm-demo-dots" role="group" aria-label="Chapters">
           {CHAPTERS.map((c, i) => (
             <button
               key={c.id}
               type="button"
-              role="tab"
-              aria-selected={i === chapter}
               className={`lm-demo-dot ${i === chapter ? "is-on" : ""}`}
               onClick={() => go(i)}
-              title={c.label}
+              aria-current={i === chapter ? "true" : undefined}
+              aria-label={`Chapter ${i + 1} of ${CHAPTERS.length}: ${c.label}`}
             >
               <span className="lm-demo-dot-fill" style={{ transform: `scaleX(${i < chapter ? 1 : i === chapter ? progress : 0})` }} />
-              <span className="sr-only">{c.label}</span>
             </button>
           ))}
         </div>
-        <span className="lm-mono lm-caption lm-demo-chlabel" style={{ fontSize: 12 }}>{CHAPTERS[chapter].label}</span>
+        <span className="lm-mono lm-caption lm-demo-chlabel" style={{ fontSize: 12 }} aria-live="polite">{CHAPTERS[chapter].label}</span>
       </div>
     </div>
   )

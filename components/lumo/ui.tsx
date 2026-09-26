@@ -83,7 +83,7 @@ export function Wordmark({ href = "/" }: { href?: string }) {
 }
 
 export function AppHeader({ aiStatus, initials = "" }: { aiStatus: AiStatus; initials?: string }) {
-  const label = aiStatus === "ok" ? "ai connected" : aiStatus === "error" ? "ai unavailable" : "ai ready";
+  const label = aiStatus === "ok" ? "Connected" : aiStatus === "error" ? "Not connected" : "Checking";
   const color = aiStatus === "ok" ? "var(--lm-positive)" : aiStatus === "error" ? "var(--lm-caution)" : "var(--lm-text-3)";
   return (
     <header className="lm-header">

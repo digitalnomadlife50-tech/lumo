@@ -2,16 +2,14 @@
 
 import { useState } from "react"
 import type { MonthlyBrief } from "@/lib/demo/types"
-import { PERSONA } from "@/lib/demo/persona"
 
 export function MonthlyBriefCard({ brief }: { brief: MonthlyBrief }) {
   const [remind, setRemind] = useState(false)
-  const firstName = PERSONA.name.split(" ")[0]
   return (
     <div className="lm-brief">
       <div className="lm-brief-head">
         <h3 className="lm-brief-title">
-          {firstName}&apos;s {brief.month} summary
+          Your {brief.month} summary
         </h3>
         <p className="lm-brief-stamp">Delivered Sunday, 8:00 am</p>
       </div>
@@ -33,7 +31,7 @@ export function MonthlyBriefCard({ brief }: { brief: MonthlyBrief }) {
             onClick={() => setRemind((r) => !r)}
             aria-pressed={remind}
           >
-            {remind ? "Reminder set" : "Remind me the next time this comes up"}
+            {remind ? "Reminder set" : "Remind me before my next decision about a date"}
           </button>
         </div>
         <div className="lm-brief-item">

@@ -28,27 +28,44 @@ const KINDS: { id: DecisionKind; label: string; color: string }[] = [
 ]
 const KIND_COLOR: Record<DecisionKind, string> = Object.fromEntries(KINDS.map((k) => [k.id, k.color])) as Record<DecisionKind, string>
 
-const W = 660
-const H = 400
-const PAD = { left: 44, right: 28, top: 34, bottom: 56 }
-const AXIS_FS = 18
-const ZONE_FS = 17
 const ROWS: ResultRating[] = ["better", "as-expected", "worse"]
 const ROW_LABEL: Record<ResultRating, string> = { better: "Better", "as-expected": "As expected", worse: "Worse" }
 
-function xFor(conf: number) {
+type Geo = { W: number; H: number; PAD: { left: number; right: number; top: number; bottom: number } }
+
+/**
+ * Two geometries. The narrow one keeps the axis labels at a readable size on a
+ * phone: the SVG scales to its container, so a shorter viewBox means a larger
+ * effective font. The left gutter is wide enough for "As expected" in both.
+ */
+const FULL: Geo = { W: 660, H: 400, PAD: { left: 96, right: 28, top: 34, bottom: 56 } }
+const NARROW: Geo = { W: 420, H: 360, PAD: { left: 96, right: 16, top: 30, bottom: 52 } }
+
+function xFor(conf: number, g: Geo) {
   const t = (Math.min(5, Math.max(1, conf)) - 1) / 4
-  return PAD.left + t * (W - PAD.left - PAD.right)
+  return g.PAD.left + t * (g.W - g.PAD.left - g.PAD.right)
 }
-function yFor(result: ResultRating) {
+function yFor(result: ResultRating, g: Geo) {
   const i = ROWS.indexOf(result)
   const t = i / (ROWS.length - 1)
-  return PAD.top + t * (H - PAD.top - PAD.bottom)
+  return g.PAD.top + t * (g.H - g.PAD.top - g.PAD.bottom)
 }
 /** Deterministic jitter so points at the same cell don't stack. */
 function jitter(seed: number, spread: number) {
   const s = Math.sin(seed * 12.9898) * 43758.5453
   return (s - Math.floor(s) - 0.5) * spread
+}
+
+function useNarrowChart() {
+  const [narrow, setNarrow] = useState(false)
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 559px)")
+    setNarrow(mq.matches)
+    const on = () => setNarrow(mq.matches)
+    mq.addEventListener("change", on)
+    return () => mq.removeEventListener("change", on)
+  }, [])
+  return narrow
 }
 
 export function JudgmentMap({
@@ -61,6 +78,8 @@ export function JudgmentMap({
   variant?: "full" | "replay"
 }) {
   const reduced = usePrefersReducedMotion()
+  const narrow = useNarrowChart()
+  const g = narrow ? NARROW : FULL
   const [activeKinds, setActiveKinds] = useState<Set<DecisionKind>>(new Set())
   const [selected, setSelected] = useState<number | null>(null)
   const [visible, setVisible] = useState(points.length)
@@ -122,6 +141,7 @@ export function JudgmentMap({
 
   const selectedPoint = selected != null ? ordered.find((p) => p.number === selected) ?? null : null
   const shown = ordered.slice(0, visible)
+  const bandPad = (g.H - g.PAD.top - g.PAD.bottom) * 0.08
 
   return (
     <div className="lm-map">
@@ -145,7 +165,7 @@ export function JudgmentMap({
       </div>
 
       <div className="lm-map-frame">
-        <svg viewBox={`0 0 ${W} ${H}`} className="lm-map-svg" role="img" aria-label="Your decisions by confidence and how they turned out">
+        <svg viewBox={`0 0 ${g.W} ${g.H}`} className="lm-map-svg" role="img" aria-label="Your decisions by confidence and how they turned out">
           {/* calibration band, bottom-left to top-right */}
           <defs>
             <linearGradient id="lm-band" x1="0" y1="1" x2="1" y2="0">
@@ -154,33 +174,33 @@ export function JudgmentMap({
             </linearGradient>
           </defs>
           <polygon
-            points={`${xFor(1)},${yFor("worse") + 34} ${xFor(2.2)},${yFor("worse") + 34} ${xFor(5)},${yFor("better") - 34} ${xFor(3.8)},${yFor("better") - 34}`}
+            points={`${xFor(1, g)},${yFor("worse", g) + bandPad} ${xFor(2.2, g)},${yFor("worse", g) + bandPad} ${xFor(5, g)},${yFor("better", g) - bandPad} ${xFor(3.8, g)},${yFor("better", g) - bandPad}`}
             fill="url(#lm-band)"
           />
-          <text x={xFor(1.4)} y={yFor("better") - 6} className="lm-map-zone">Underconfident</text>
-          <text x={xFor(4.6)} y={yFor("worse") + 30} className="lm-map-zone" textAnchor="end">Overconfident</text>
+          <text x={xFor(1.4, g)} y={yFor("better", g) - 6} className="lm-map-zone">Underconfident</text>
+          <text x={xFor(4.6, g)} y={yFor("worse", g) + 30} className="lm-map-zone" textAnchor="end">Overconfident</text>
 
-          {/* y gridlines + labels (labels sit above each line, left-aligned, so they never overflow) */}
+          {/* y gridlines + labels. Labels sit in the left gutter, right-aligned, so they never overlap the plot. */}
           {ROWS.map((r) => (
             <g key={r}>
-              <line x1={PAD.left} y1={yFor(r)} x2={W - PAD.right} y2={yFor(r)} className="lm-map-grid" />
-              <text x={PAD.left} y={yFor(r) - 9} className="lm-map-axis" textAnchor="start">{ROW_LABEL[r]}</text>
+              <line x1={g.PAD.left} y1={yFor(r, g)} x2={g.W - g.PAD.right} y2={yFor(r, g)} className="lm-map-grid" />
+              <text x={g.PAD.left - 10} y={yFor(r, g) + 5} className="lm-map-axis" textAnchor="end">{ROW_LABEL[r]}</text>
             </g>
           ))}
 
           {/* x labels */}
           {[1, 2, 3, 4, 5].map((c) => (
-            <text key={c} x={xFor(c)} y={H - PAD.bottom + 24} className="lm-map-axis" textAnchor="middle">{c}</text>
+            <text key={c} x={xFor(c, g)} y={g.H - g.PAD.bottom + 24} className="lm-map-axis" textAnchor="middle">{c}</text>
           ))}
-          <text x={(PAD.left + W - PAD.right) / 2} y={H - 12} className="lm-map-axis" textAnchor="middle">Confidence at the time</text>
+          <text x={(g.PAD.left + g.W - g.PAD.right) / 2} y={g.H - 12} className="lm-map-axis" textAnchor="middle">Confidence at the time</text>
 
           {/* points */}
           {shown.map((p, i) => {
             const dimmed = activeKinds.size > 0 && !activeKinds.has(p.kind)
             const jx = jitter(p.number, 26)
             const jy = jitter(p.number * 3.1, 20)
-            const cx = xFor(p.finalConfidence) + jx
-            const cy = yFor(p.result) + jy
+            const cx = xFor(p.finalConfidence, g) + jx
+            const cy = yFor(p.result, g) + jy
             const r = p.stakes === "one-way" ? 9 : 6
             const isSel = selected === p.number
             return (
@@ -209,14 +229,14 @@ export function JudgmentMap({
             )
           })}
 
-          {/* selected point overlay: drawn on top, with its gut -> final drift so lines never stack */}
+          {/* selected point overlay: drawn on top, with its first-instinct -> final drift so lines never stack */}
           {selectedPoint
             ? (() => {
                 const jx = jitter(selectedPoint.number, 26)
                 const jy = jitter(selectedPoint.number * 3.1, 20)
-                const cy = yFor(selectedPoint.result) + jy
-                const cx = xFor(selectedPoint.finalConfidence) + jx
-                const gx = xFor(selectedPoint.gutConfidence) + jx
+                const cy = yFor(selectedPoint.result, g) + jy
+                const cx = xFor(selectedPoint.finalConfidence, g) + jx
+                const gx = xFor(selectedPoint.gutConfidence, g) + jx
                 const color = KIND_COLOR[selectedPoint.kind]
                 const r = (selectedPoint.stakes === "one-way" ? 9 : 6) + 2
                 const drift = selectedPoint.gutConfidence !== selectedPoint.finalConfidence
@@ -240,10 +260,10 @@ export function JudgmentMap({
             <div className="lm-mono lm-caption" style={{ fontSize: 12 }}>No.{selectedPoint.number}</div>
             <div style={{ fontSize: 15, fontWeight: 500, marginTop: 4, lineHeight: 1.35 }}>{selectedPoint.title}</div>
             <div className="lm-caption" style={{ marginTop: 8 }}>
-              Gut said {shortCall(selectedPoint.gutCall)} at {selectedPoint.gutConfidence}. Chose {shortCall(selectedPoint.finalCall)} at {selectedPoint.finalConfidence}.
+              Your first instinct was {shortCall(selectedPoint.gutCall)} at {selectedPoint.gutConfidence} of 5. You chose {shortCall(selectedPoint.finalCall)} at {selectedPoint.finalConfidence} of 5.
             </div>
             <div className="lm-caption" style={{ marginTop: 6, color: "var(--lm-text-2)" }}>
-              Turned out {ROW_LABEL[selectedPoint.result].toLowerCase()}. {selectedPoint.outcome}
+              It turned out {ROW_LABEL[selectedPoint.result].toLowerCase()}. {selectedPoint.outcome}
             </div>
             {selectedPoint.lesson ? (
               <div className="lm-map-lesson">{selectedPoint.lesson}</div>
@@ -290,18 +310,20 @@ function shortCall(s: string) {
 }
 
 export function EmptyJudgmentMap({ remaining }: { remaining: number }) {
+  const narrow = useNarrowChart()
+  const g = narrow ? NARROW : FULL
   return (
     <div className="lm-map lm-map-empty">
       <div className="lm-map-frame" style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: 260 }}>
-        <svg viewBox={`0 0 ${W} ${H}`} className="lm-map-svg" aria-hidden="true">
+        <svg viewBox={`0 0 ${g.W} ${g.H}`} className="lm-map-svg" aria-hidden="true">
           {ROWS.map((r) => (
             <g key={r}>
-              <line x1={PAD.left} y1={yFor(r)} x2={W - PAD.right} y2={yFor(r)} className="lm-map-grid" />
-              <text x={PAD.left} y={yFor(r) - 9} className="lm-map-axis" fontSize={AXIS_FS} textAnchor="start">{ROW_LABEL[r]}</text>
+              <line x1={g.PAD.left} y1={yFor(r, g)} x2={g.W - g.PAD.right} y2={yFor(r, g)} className="lm-map-grid" />
+              <text x={g.PAD.left - 10} y={yFor(r, g) + 5} className="lm-map-axis" textAnchor="end">{ROW_LABEL[r]}</text>
             </g>
           ))}
           {[1, 2, 3, 4, 5].map((c) => (
-            <text key={c} x={xFor(c)} y={H - PAD.bottom + 24} className="lm-map-axis" fontSize={AXIS_FS} textAnchor="middle">{c}</text>
+            <text key={c} x={xFor(c, g)} y={g.H - g.PAD.bottom + 24} className="lm-map-axis" textAnchor="middle">{c}</text>
           ))}
         </svg>
       </div>
