@@ -144,7 +144,7 @@ export function HomeScreen({
 
   return (
     <AppShell aiStatus={aiStatus} initials={initials}>
-      <h1 className="lm-anim lm-display">What&apos;s the call?</h1>
+      <h1 className="lm-anim lm-display">What&apos;s the decision?</h1>
       <p className="lm-anim lm-sub" style={delay(80)}>Think it through. Get the words right. Move on.</p>
 
       <div className="lm-anim lm-callbox" style={delay(160)}>
@@ -205,12 +205,12 @@ export function HomeScreen({
           </div>
         ) : null}
         {sorted.length === 0 ? (
-          <Signature delayMs={300}>Every hard call you make here gets a number, a reason, and what it cost you. Start with the one you&apos;re sitting on.</Signature>
+          <Signature delayMs={300}>Every decision you make here gets a number, a reason, and what it cost you. Start with the one you&apos;re sitting on.</Signature>
         ) : (
           <>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
               <div className="lm-label">Recent decisions</div>
-              <div className="lm-mono lm-caption" style={{ fontSize: 12 }}>{sorted.length} filed</div>
+              <div className="lm-mono lm-caption" style={{ fontSize: 12 }}>{sorted.length} decisions</div>
             </div>
             <div className="lm-stack" style={{ marginTop: 20, gap: 16 }}>
               {sorted.map((d, i) => {
@@ -307,7 +307,7 @@ function PatternsSection({ decisions }: { decisions: PastDecision[] }) {
         <div className="lm-label">Your patterns</div>
         <p className="lm-caption" style={{ marginTop: 10, maxWidth: 480 }}>
           File {5 - decisions.length} more decision{5 - decisions.length === 1 ? "" : "s"} and this section will show what your
-          calls actually look like: average confidence, how fast you decide, and what you tend to give up.
+          decisions actually look like: average confidence, how fast you decide, and what you tend to give up.
         </p>
       </div>
     );
@@ -464,7 +464,7 @@ export function Step1Screen({
 
       <div className="lm-actions">
         <button className="lm-btn" onClick={onSubmit} disabled={!text.trim() || loading}>
-          {loading ? "Reading" : "Read it back"}
+          {loading ? "Reading it back" : "Read it back"}
         </button>
         {text.trim() && !loading ? <KeyHint /> : null}
         {onSaveForLater ? <button className="lm-link" onClick={onSaveForLater}>Save for later</button> : null}
@@ -678,7 +678,7 @@ export function Step3Screen({
       <p className="lm-anim lm-sub" style={delay(60)}>The paths you came in with, and at least one you didn&apos;t write down.</p>
 
       {loading ? (
-        <div className="lm-reading" role="status"><i className="lm-pulse" aria-hidden="true" />thinking through options</div>
+        <div className="lm-reading" role="status"><i className="lm-pulse" aria-hidden="true" />reading your options</div>
       ) : (
         <div className="lm-stack" style={{ marginTop: 32 }}>
           {ordered.map((o, i) => {
@@ -690,7 +690,7 @@ export function Step3Screen({
                 <div style={{ flexGrow: 1, minWidth: 0 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", gap: 16 }}>
                     <div className="lm-opt-title">{o.label}</div>
-                    {isLumo ? <span className="lm-badge">LUMO ADDED</span> : <span className="lm-label">Yours</span>}
+                    {isLumo ? <span className="lm-badge">Added by Lumo</span> : <span className="lm-label">Yours</span>}
                   </div>
                   {o.summary ? <div className="lm-opt-sum">{o.summary}</div> : null}
                 </div>
@@ -842,7 +842,7 @@ export function Step4Screen({
       )}
 
       <div className="lm-actions">
-        <button className="lm-btn" onClick={onNext} disabled={loading}>Make the call</button>
+        <button className="lm-btn" onClick={onNext} disabled={loading}>Make the decision</button>
         {!loading ? <KeyHint /> : null}
         <button className="lm-link" onClick={onBack}>Back to options</button>
       </div>
@@ -1032,7 +1032,7 @@ export function Step5Screen({
           <span className="lm-hold-label">{committed ? `Committed. No.${decisionNumber}` : "Hold to commit"}</span>
         </button>
         {!committed ? (
-          <button className="lm-link" onClick={commit}>Commit without holding</button>
+          <button className="lm-link" onClick={commit}>Commit without holding the button</button>
         ) : null}
         <button className="lm-link" style={{ color: "var(--lm-text-3)" }} onClick={onBack}>Back</button>
       </div>
@@ -1125,7 +1125,7 @@ export function Step6Screen({
     <AppShell aiStatus={aiStatus} initials={initials} step={5}>
       <Kicker number={decisionNumber} step={6} />
       <h1 className="lm-anim lm-heading">Tell people</h1>
-      <p className="lm-anim lm-sub" style={delay(60)}>One decision, written for each audience. Edit, copy, send.</p>
+        <p className="lm-anim lm-sub" style={delay(60)}>One decision, written for each person or team. Edit, copy, send.</p>
 
       {loading || drafts.length === 0 ? (
         <div className="lm-reading" role="status"><i className="lm-pulse" aria-hidden="true" />writing drafts</div>
@@ -1148,12 +1148,12 @@ export function Step6Screen({
                 {copied[x.id] ? <small>copied</small> : null}
               </button>
             ))}
-            <button onClick={() => setShowAdd((s) => !s)} aria-expanded={showAdd}>+ Add audience</button>
+              <button onClick={() => setShowAdd((s) => !s)} aria-expanded={showAdd}>+ Add person or team</button>
           </div>
 
           <div className={`lm-consistency ${isConsistent ? "" : "is-flagged"}`} role="status">
             <i aria-hidden="true" />
-            {isConsistent ? "Consistent across audiences" : "Drafts differ across audiences — check before sending"}
+            {isConsistent ? "Consistent across updates" : "Updates differ. Check before sending."}
           </div>
 
           {showAdd ? (
@@ -1328,9 +1328,9 @@ export function CompleteScreen({
         <h1 className="lm-anim lm-heading" style={{ marginTop: 28, ...delay(700) }}>Filed.</h1>
 
         <div className="lm-anim lm-summary" style={delay(900)}>
-          <div><span className="lm-label" style={{ paddingTop: 3 }}>The call</span><span style={{ fontWeight: 500 }}>{call}</span></div>
+          <div><span className="lm-label" style={{ paddingTop: 3 }}>The decision</span><span style={{ fontWeight: 500 }}>{call}</span></div>
           <div><span className="lm-label" style={{ paddingTop: 3 }}>Confidence</span><span className="lm-mono" style={{ fontSize: 14 }}>{confidence} of 5</span></div>
-          <div><span className="lm-label" style={{ paddingTop: 3 }}>Messages</span><span>{audiences.join(", ")}</span></div>
+          <div><span className="lm-label" style={{ paddingTop: 3 }}>Updates</span><span>{audiences.join(", ")}</span></div>
           {decidedMinutes ? (
             <div><span className="lm-label" style={{ paddingTop: 3 }}>Decided in</span><span className="lm-mono" style={{ fontSize: 14 }}>{decidedMinutes} min</span></div>
           ) : null}
@@ -1341,7 +1341,7 @@ export function CompleteScreen({
 
         {gaveUp.trim() ? (
           <Signature delayMs={1400} style={{ marginTop: 36 }}>
-            You gave up {lowerFirst(gaveUp)}. It&apos;s on record, so the next time someone asks why, the answer is here.
+            You gave up {lowerFirst(gaveUp)}. It&apos;s in your decision history, so the next time someone asks why, the answer is here.
           </Signature>
         ) : null}
 
@@ -1358,7 +1358,7 @@ export function CompleteScreen({
                   Copied
                 </>
               ) : (
-                "Copy decision record"
+                "Copy decision history"
               )}
             </button>
           ) : null}

@@ -5,7 +5,7 @@ export const IF_THEN_PLANS: IfThenPlan[] = [
     id: "customer-date",
     cueKind: "timing",
     cueKeywords: ["date", "customer", "commit", "ship", "launch", "deadline"],
-    text: "When you give a customer a date, add Marco's worst case first.",
+    text: "When you give a customer a date, add your engineering lead's worst case first.",
   },
   {
     id: "tell-support",
@@ -16,7 +16,7 @@ export const IF_THEN_PLANS: IfThenPlan[] = [
 ]
 
 const KIND_LABEL: Record<DecisionKind, string> = {
-  timing: "timing",
+  timing: "dates and deadlines",
   scope: "scope",
   hiring: "hiring",
   people: "people",
@@ -26,6 +26,17 @@ const KIND_LABEL: Record<DecisionKind, string> = {
 
 function countBy(decisions: DemoDecision[], kind: DecisionKind) {
   return decisions.filter((d) => d.kind === kind)
+}
+
+function capitalize(text: string) {
+  return text.charAt(0).toUpperCase() + text.slice(1)
+}
+
+const NUMBER_WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"]
+
+/** Sentence-initial counts read better as words. */
+function numberWord(n: number) {
+  return NUMBER_WORDS[n] ? capitalize(NUMBER_WORDS[n]) : String(n)
 }
 
 /** Compute the month's brief straight from the data so every number matches. */
@@ -56,22 +67,21 @@ export function computeBrief(decisions: DemoDecision[], month: string): MonthlyB
       ? KIND_LABEL[strong.k]
       : "people"
 
-  // Where it runs off: high-confidence timing calls that turned out worse.
+  // Where the instinct is off: high-confidence date calls that turned out worse.
   const timing = countBy(withOutcomes, "timing")
   const highConfTiming = timing.filter((d) => d.final.confidence >= 4)
   const highConfTimingWorse = highConfTiming.filter((d) => d.outcome.result === "worse")
 
-  // Something you might not have noticed: support over the last 20, Priya told count.
-  const last20 = [...decisions].sort((a, b) => b.number - a.number).slice(0, 20)
-  const supportAffected = last20.filter((d) => d.supportAffected).length
-  const priyaTold = last20.filter((d) => d.audiencesTold.some((a) => a.toLowerCase().includes("priya"))).length
+  // Something you might not have noticed: support across the whole record.
+  const supportAffected = decisions.filter((d) => d.supportAffected).length
+  const priyaTold = decisions.filter((d) => d.audiencesTold.some((a) => a.toLowerCase().includes("priya"))).length
 
   return {
     month,
-    strongAt: `Your ${strongLabel} calls hold up. When you decide who works on what, and who to bring on, the results land where you expected or better.`,
-    runsOff: `Timing is where it runs off. Of your ${highConfTiming.length} high-confidence timing calls, ${highConfTimingWorse.length} turned out worse than expected. You feel most sure right before a date slips.`,
+    strongAt: `${capitalize(strongLabel)} decisions. These have turned out the way you expected, or better.`,
+    runsOff: `Dates and deadlines. You made ${highConfTiming.length} decisions about dates where you rated your confidence 4 or 5 out of 5. ${numberWord(highConfTimingWorse.length)} of them turned out worse than you expected. You feel most certain right before a date moves.`,
     ifThen: IF_THEN_PLANS[0].text,
-    didntNotice: `Support was affected in ${supportAffected} of your last 20 decisions. Priya was told in ${priyaTold}.`,
+    didntNotice: `${supportAffected} of your ${decisions.length} decisions affected the support team. You told Priya on that team about ${priyaTold} of them.`,
   }
 }
 

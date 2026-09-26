@@ -23,13 +23,16 @@ const sourceSerif = Source_Serif_4({
   variable: '--font-serif',
 })
 
+const DESCRIPTION =
+  'Make hard product decisions faster, and learn from every one. Write down your first instinct, see the evidence, send the right update, and learn from how it turned out.'
+
 export const metadata: Metadata = {
   title: 'Lumo | A decision tool for product managers',
-  description: "Hard calls, with the legwork done. Make your gut call, see the evidence, send the right message, and learn from how it turned out.",
+  description: DESCRIPTION,
   metadataBase: new URL('https://www.trylumo.co'),
   openGraph: {
     title: 'Lumo | A decision tool for product managers',
-    description: "Hard calls, with the legwork done. Make your gut call, see the evidence, send the right message, and learn from how it turned out.",
+    description: DESCRIPTION,
     url: 'https://www.trylumo.co',
     siteName: 'Lumo',
     images: [
@@ -37,7 +40,7 @@ export const metadata: Metadata = {
         url: '/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'Lumo: hard calls, with the legwork done.',
+        alt: 'Lumo: make hard product decisions faster, and learn from every one.',
       },
     ],
     locale: 'en_US',
@@ -46,7 +49,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Lumo | A decision tool for product managers',
-    description: "Hard calls, with the legwork done. Make your gut call, see the evidence, send the right message, and learn from how it turned out.",
+    description: DESCRIPTION,
     images: ['/og-image.png'],
   },
   icons: {

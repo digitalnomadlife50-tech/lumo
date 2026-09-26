@@ -1,10 +1,10 @@
 import type { DemoPersona } from "./types"
 
 export const PERSONA: DemoPersona = {
-  name: "Sam Rivera",
+  name: "Jordan Ellis",
   role: "Senior Product Manager",
   company: "Relay",
-  companyNote: "a scheduling platform for home-service companies. Sam owns the booking experience.",
+  companyNote: "a scheduling platform for home-service companies. Jordan owns the booking experience.",
   monthsUsing: 8,
   stakeholders: [
     { name: "Maya Chen", role: "VP of Product", note: "Wants the risk first. Pushed back on my last two date commitments." },

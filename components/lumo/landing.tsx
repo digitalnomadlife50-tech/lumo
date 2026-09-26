@@ -6,13 +6,14 @@ import { JudgmentMap } from "./judgment-map";
 import { MonthlyBriefCard } from "./monthly-brief";
 import { DEMO_DECISIONS } from "@/lib/demo/decisions";
 import { computeBrief } from "@/lib/demo/brief";
+import { ClipboardPaste, Forward, Mic, Scan, Video, type LucideIcon } from "lucide-react";
 
-const CAPTURE = [
-  ["Paste", "M9 4h6a1 1 0 0 1 1 1v1h1a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h1V5a1 1 0 0 1 1-1Zm0 3h6V6H9v1Z"],
-  ["Screenshot", "M4 7a2 2 0 0 1 2-2h1l1-1.5h6L15 5h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7Zm7 2.5a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z"],
-  ["Voice", "M12 3a3 3 0 0 1 3 3v5a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3ZM6 11a6 6 0 0 0 12 0M12 17v4"],
-  ["Clip", "M8 6a3 3 0 0 1 6 0v8a4 4 0 0 1-8 0V8"],
-  ["Forward", "M3 6h18v12H3V6Zm0 0 9 7 9-7"],
+const INPUTS: [string, LucideIcon][] = [
+  ["Paste", ClipboardPaste],
+  ["Screenshot", Scan],
+  ["Voice", Mic],
+  ["Video clip", Video],
+  ["Forward", Forward],
 ];
 
 export default function Landing() {
@@ -36,10 +37,10 @@ export default function Landing() {
           <div className="lm-hero-copy lm-hero-copy-center">
             <div className="lm-anim lm-label" style={delay(0)}>A decision tool for product managers</div>
             <h1 className="lm-anim lm-h1" style={delay(80)}>
-              Hard calls, with the <span>legwork done.</span>
+              Make hard product decisions faster, and <span>learn from every one.</span>
             </h1>
             <p className="lm-anim lm-lede" style={delay(160)}>
-              Make your gut call first. Lumo does the research, shows where your instinct and the evidence disagree, and drafts the message for each audience. It keeps a record, so you learn where your instincts hold and where they slip.
+              Write down your first instinct. Lumo does the research, shows where your instinct and the evidence disagree, and drafts an update for each person or team who needs to know. Over time, you see where your instincts are right and where they&apos;re off.
             </p>
             <div className="lm-anim lm-row lm-row-center" style={delay(240)}>
               <a className="lm-btn" href="/app" style={{ padding: "15px 28px", fontSize: 16 }}>Try the demo</a>
@@ -50,54 +51,61 @@ export default function Landing() {
         </section>
       </div>
 
-      <section id="demo" className="lm-wrap lm-section" style={{ paddingTop: 8 }}>
+      <section id="demo" className="lm-wrap lm-section lm-section-tight">
+        <h2 className="sr-only">How it works</h2>
         <LiveDemo />
       </section>
 
       <section className="lm-wrap lm-section">
-        <div className="lm-sec-head">
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <div className="lm-problem">
+          <div className="lm-problem-copy">
             <div className="lm-label">The problem</div>
-            <h2 className="lm-h2" style={{ maxWidth: 680 }}>AI gave you more options. It didn&apos;t give you more judgment.</h2>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 440 }}>
+            <h2 className="lm-h2">AI gave you more options. It didn&apos;t give you more judgment.</h2>
             <p className="lm-body-lg">You get more drafts, more analysis, and more ideas than ever. You still have the same hours to decide what&apos;s right.</p>
             <p className="lm-body-lg">And the more you hand off, the less you practice the part that&apos;s still yours.</p>
           </div>
+          <Reveal className="lm-problem-art">
+            <img
+              src="/illustrations/spot-problem.png"
+              alt="A tall stack of drafts beside one small blank index card"
+              width={1000}
+              height={545}
+              className="lm-spot-img"
+            />
+          </Reveal>
         </div>
       </section>
 
       <section id="record" style={{ background: "var(--lm-muted)" }}>
         <div className="lm-wrap lm-section">
           <div className="lm-sec-head">
-            <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 640 }}>
+            <div className="lm-sec-copy">
               <div className="lm-label">Over time</div>
-              <h2 className="lm-h2">It remembers how your calls turned out.</h2>
-              <p className="lm-body-lg">Every decision becomes a point. After a few months, the patterns are hard to miss.</p>
+              <h2 className="lm-h2">It remembers how your decisions turned out.</h2>
+              <p className="lm-body-lg">Jordan&apos;s 40 past decisions. Each dot is one.</p>
             </div>
           </div>
-          <JudgmentMap points={demoMapPoints()} />
-          <p className="lm-body-lg" style={{ marginTop: 16, marginBottom: 48, maxWidth: 640, color: "var(--lm-text-2)" }}>
-            Each dot is a decision. Left to right is how sure you were. Up and down is how it turned out.
-          </p>
-          <MonthlyBriefCard brief={october} />
+          <div className="lm-record">
+            <p className="lm-body-lg lm-record-legend">
+              Left to right is how sure Jordan was, from 1 to 5. Up and down is how it turned out.
+            </p>
+            <JudgmentMap points={demoMapPoints()} variant="replay" />
+            <MonthlyBriefCard brief={october} />
+          </div>
         </div>
       </section>
 
       <section className="lm-wrap lm-section">
         <div className="lm-sec-head">
-          <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 640 }}>
-            <div className="lm-label">No IT ticket</div>
-            <h2 className="lm-h2">Works on day one.</h2>
-            <p className="lm-body-lg">Paste it, clip it, forward it, or just talk it through after the meeting.</p>
+          <div className="lm-sec-copy">
+            <h2 className="lm-h2">Works right away. No IT approval needed.</h2>
+            <p className="lm-body-lg">There is nothing to install and no account to set up. Start with whatever you already have.</p>
           </div>
         </div>
         <div className="lm-capture-row">
-          {CAPTURE.map(([label, d], i) => (
+          {INPUTS.map(([label, Icon], i) => (
             <Reveal key={label} delayMs={i * 80} className="lm-capture-opt">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                <path d={d} />
-              </svg>
+              <Icon className="lm-capture-icon" strokeWidth={1.5} aria-hidden="true" />
               <span>{label}</span>
             </Reveal>
           ))}
@@ -107,21 +115,28 @@ export default function Landing() {
       <section id="why" style={{ background: "var(--lm-muted)" }}>
         <div className="lm-wrap lm-section">
           <div className="lm-sec-head">
-            <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 720 }}>
+            <div className="lm-sec-copy">
               <div className="lm-label">Why Lumo</div>
               <h2 className="lm-h2">Why not ChatGPT, or a decision journal?</h2>
-              <p className="lm-body-lg">A chat will help with one decision, but it starts from zero every time. It doesn&apos;t record your gut before you know the answer, and it doesn&apos;t know how your last ten calls went. A decision journal keeps the record, but you do all the work. Lumo does the legwork on the decision in front of you and remembers how it turned out.</p>
+              <p className="lm-body-lg">A chat will help with one decision, but it starts from nothing every time. It doesn&apos;t record your first instinct before you know the answer, and it doesn&apos;t know how your past decisions turned out. A decision journal keeps the history, but you do all the work. Lumo does the research on the decision in front of you and remembers how it turned out.</p>
             </div>
           </div>
         </div>
       </section>
 
       <section id="about" className="lm-wrap lm-section">
-        <div className="lm-sec-head">
-          <div style={{ display: "flex", flexDirection: "column", gap: 20, maxWidth: 640 }}>
+        <div className="lm-about">
+          <img
+            src="/illustrations/terry-portrait.png"
+            alt="Terrance Range"
+            width={180}
+            height={180}
+            className="lm-about-portrait"
+          />
+          <div className="lm-about-copy">
             <div className="lm-label">Why I built this</div>
             <p className="lm-body-lg" style={{ fontSize: 19 }}>
-              I&apos;m a product leader and three-time founder. I kept watching PM friends make a hard call, then lose days carrying it to every team that needed to hear it. AI made the drafts faster. It didn&apos;t make the judgment better, and it never remembered how last quarter&apos;s calls went. Lumo is my attempt at that part. It&apos;s a working prototype, built end to end.
+              I&apos;m a product leader and three-time founder. I kept watching product manager friends make a hard decision, then spend days explaining it to every team that needed to hear it. AI made the drafts faster. It didn&apos;t make the decisions better, and it never remembered how last quarter&apos;s decisions turned out. Lumo is my attempt at that part. It&apos;s a working prototype, built end to end.
             </p>
             <a className="lm-link" href="https://linkedin.com/in/terrancerange" style={{ fontWeight: 500 }}>Terrance Range</a>
           </div>
@@ -130,7 +145,8 @@ export default function Landing() {
 
       <div className="lm-wrap">
         <Reveal className="lm-ctaband">
-          <h2 className="lm-h2">Bring the call you&apos;re sitting on.</h2>
+          <div className="lm-ctaband-card" aria-hidden="true" />
+          <h2 className="lm-h2">Bring a decision you&apos;re stuck on.</h2>
           <a className="lm-btn-dark" href="/app">Try the demo</a>
         </Reveal>
       </div>
@@ -139,7 +155,7 @@ export default function Landing() {
         <div className="lm-wrap lm-footer-inner">
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <Wordmark />
-            <div style={{ fontSize: 15, color: "#C9C3B8" }}>Hard calls, with the legwork done.</div>
+            <div style={{ fontSize: 15, color: "#C9C3B8" }}>Make hard product decisions faster, and learn from every one.</div>
           </div>
           <div style={{ fontSize: 14, color: "var(--lm-text-3)", lineHeight: 1.8 }}>
             <a href="https://linkedin.com/in/terrancerange" style={{ color: "var(--lm-text-3)" }}>Built by Terrance Range</a>
