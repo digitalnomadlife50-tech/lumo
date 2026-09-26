@@ -10,10 +10,25 @@ import { DEMO_DECISIONS } from "@/lib/demo/decisions"
 import { CURRENT_DECISION } from "@/lib/demo/current"
 import { computeBrief } from "@/lib/demo/brief"
 
+const NUMBER_WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"]
+
+/** Sentence-initial counts read better as words; mirrors the brief's convention. */
+function countWord(n: number) {
+  const w = NUMBER_WORDS[n] ?? String(n)
+  return w.charAt(0).toUpperCase() + w.slice(1)
+}
+
 export default function DemoHome() {
   const brief = computeBrief(DEMO_DECISIONS, "October")
   const points = demoMapPoints()
   const recent = [...DEMO_DECISIONS].sort((a, b) => b.number - a.number).slice(0, 4)
+  const first = DEMO_DECISIONS.find((d) => d.number === 1) ?? DEMO_DECISIONS[0]
+
+  // Receipt numbers come straight from the record so they can never drift from
+  // the brief and the map, which compute theirs the same way.
+  const total = DEMO_DECISIONS.length
+  const worseCount = DEMO_DECISIONS.filter((d) => d.outcome.result === "worse").length
+  const worseDateCount = DEMO_DECISIONS.filter((d) => d.outcome.result === "worse" && d.kind === "timing").length
 
   return (
     <div className="lm-page">
@@ -88,9 +103,45 @@ export default function DemoHome() {
 
         <section className="lm-section">
           <div className="lm-ctaband">
-            <h2 className="lm-h2">This is what 40 decisions later looks like.</h2>
-            <p style={{ margin: 0, fontSize: 19, opacity: 0.92 }}>Yours starts with one.</p>
-            <Link className="lm-btn-dark" href="/app">Bring a real decision</Link>
+            <div className="lm-ctaband-copy">
+              <h2 className="lm-h2">This is what 40 decisions later looks like.</h2>
+              <ul className="lm-ctaband-receipts">
+                <li>
+                  <strong>One pattern found.</strong>{" "}{countWord(worseCount)} of the {total} calls went worse than expected. {countWord(worseDateCount)} of them were dates.
+                </li>
+                <li>
+                  <strong>One rule that stuck.</strong>{" "}When you give a customer a date, add your engineering lead&apos;s worst case first.
+                </li>
+                <li>
+                  <strong>Nothing dropped.</strong> All {total} revisited and rated, including the ones that stung.
+                </li>
+              </ul>
+              <p className="lm-ctaband-pivot">Yours starts with one.</p>
+              <Link className="lm-btn-dark" href="/app">Bring a real decision</Link>
+            </div>
+            <div className="lm-ctaband-note">
+              <span className="lm-ctaband-tape" aria-hidden="true" />
+              <div className="lm-indexcard lm-ctaband-card">
+                <span className="lm-indexcard-rule" aria-hidden="true" />
+                <div className="lm-indexcard-inner">
+                  <div className="lm-label">Where {PERSONA.name} started</div>
+                  <p className="lm-indexcard-opt">{first.final.option}</p>
+                  <div className="lm-indexcard-rows">
+                    <div>
+                      <span className="lm-caption">Confidence</span>
+                      <span className="lm-indexcard-val">{first.final.confidence} of 5</span>
+                    </div>
+                    <div>
+                      <span className="lm-caption">Gave up</span>
+                      <span className="lm-indexcard-val">{first.final.gaveUp}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="lm-indexcard-stamp">
+                  No. {first.number} &middot; {first.outcome.result === "better" ? "Turned out better" : first.outcome.result === "worse" ? "Turned out worse" : "Went as expected"}
+                </div>
+              </div>
+            </div>
           </div>
         </section>
       </div>
