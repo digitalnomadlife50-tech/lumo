@@ -172,8 +172,6 @@ export function JudgmentMap({ points, autoReplay = false }: { points: MapPoint[]
             const cx = xFor(p.finalConfidence) + jx
             const cy = yFor(p.result) + jy
             const r = p.stakes === "one-way" ? 9 : 6
-            const drift = p.gutConfidence !== p.finalConfidence
-            const gx = xFor(p.gutConfidence) + jx
             const isSel = selected === p.number
             return (
               <g
@@ -188,7 +186,6 @@ export function JudgmentMap({ points, autoReplay = false }: { points: MapPoint[]
                 aria-label={`No.${p.number}, ${p.title}`}
                 onFocus={() => setSelected(p.number)}
               >
-                {drift ? <line x1={gx} y1={cy} x2={cx} y2={cy} stroke={KIND_COLOR[p.kind]} strokeWidth={1.5} opacity={0.5} /> : null}
                 <circle
                   cx={cx}
                   cy={cy}
@@ -201,6 +198,31 @@ export function JudgmentMap({ points, autoReplay = false }: { points: MapPoint[]
               </g>
             )
           })}
+
+          {/* selected point overlay: drawn on top, with its gut -> final drift so lines never stack */}
+          {selectedPoint
+            ? (() => {
+                const jx = jitter(selectedPoint.number, 26)
+                const jy = jitter(selectedPoint.number * 3.1, 20)
+                const cy = yFor(selectedPoint.result) + jy
+                const cx = xFor(selectedPoint.finalConfidence) + jx
+                const gx = xFor(selectedPoint.gutConfidence) + jx
+                const color = KIND_COLOR[selectedPoint.kind]
+                const r = (selectedPoint.stakes === "one-way" ? 9 : 6) + 2
+                const drift = selectedPoint.gutConfidence !== selectedPoint.finalConfidence
+                return (
+                  <g className="lm-map-drift" aria-hidden="true">
+                    {drift ? (
+                      <>
+                        <line x1={gx} y1={cy} x2={cx} y2={cy} stroke={color} strokeWidth={1.5} strokeDasharray="3 3" opacity={0.7} />
+                        <circle cx={gx} cy={cy} r={5} fill="var(--lm-surface)" stroke={color} strokeWidth={1.5} />
+                      </>
+                    ) : null}
+                    <circle cx={cx} cy={cy} r={r} fill={color} opacity={1} stroke="var(--lm-surface)" strokeWidth={1.5} />
+                  </g>
+                )
+              })()
+            : null}
         </svg>
 
         {selectedPoint ? (
