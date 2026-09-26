@@ -92,8 +92,17 @@
 .lm-lede { margin: 0; font-size: 19px; line-height: 1.55; color: var(--lm-text-2); max-width: 520px; }
 .lm-body-lg { margin: 0; font-size: 17px; line-height: 1.55; color: var(--lm-text-2); }
 .lm-hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 72px; align-items: center; padding-top: 112px; padding-bottom: 96px; }
-.lm-hero-copy { display: flex; flex-direction: column; gap: 28px; }
-.lm-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+ .lm-hero-copy { display: flex; flex-direction: column; gap: 28px; }
+ .lm-hero-center { grid-template-columns: minmax(0, 1fr); justify-items: center; text-align: center; padding-bottom: 40px; }
+ .lm-hero-copy-center { align-items: center; max-width: 780px; }
+ .lm-hero-copy-center .lm-h1 { max-width: 760px; }
+ .lm-hero-copy-center .lm-lede { max-width: 640px; }
+ .lm-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+ .lm-row-center { justify-content: center; }
+ .lm-capture-row { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 40px; }
+ .lm-capture-opt { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; min-width: 128px; flex: 1 1 128px; padding: 24px 16px; border: 1px solid var(--lm-border); border-radius: 14px; background: var(--lm-surface); color: var(--lm-text-1); }
+ .lm-capture-opt svg { color: var(--lm-accent); }
+ .lm-capture-opt span { font-size: 14px; font-weight: 500; }
 .lm-panel { position: relative; height: 520px; background: var(--lm-surface); border: 1px solid var(--lm-border); border-radius: 14px; overflow: hidden; }
 .lm-panel-bar { height: 44px; border-bottom: 1px solid var(--lm-border); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; font-family: var(--lm-mono); font-size: 12px; color: var(--lm-text-3); }
 .lm-panel-layer { position: absolute; top: 44px; left: 0; right: 0; bottom: 0; padding: 28px; display: flex; flex-direction: column; gap: 16px; opacity: 0; transform: translateY(8px); pointer-events: none; visibility: hidden; transition-property: opacity, transform, visibility; transition-duration: .3s, .3s, 0s; transition-timing-function: ease; transition-delay: 0s, 0s, .3s; }
