@@ -87,8 +87,9 @@ export function AppHeader({ aiStatus, initials = "" }: { aiStatus: AiStatus; ini
   const color = aiStatus === "ok" ? "var(--lm-positive)" : aiStatus === "error" ? "var(--lm-caution)" : "var(--lm-text-3)";
   return (
     <header className="lm-header">
-      <Wordmark href="/app" />
+      <Wordmark href="/" />
       <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+        <a href="/" className="lm-backlink">Back to site</a>
         <span className="lm-status" role="status">
           <i className={aiStatus === "ok" ? "lm-pulse" : ""} style={{ background: color }} aria-hidden="true" />
           <span>{label}</span>
