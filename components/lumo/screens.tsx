@@ -34,11 +34,13 @@ export type Option = {
   label: string;
   summary: string;
   source: "user" | "lumo";
+  letter: string;
 };
 
 export type Comparison = {
   optionId: string;
   label: string;
+  letter: string;
   costLevel: "low" | "medium" | "high";
   costSummary: string;
   whoItHurts: string;
@@ -548,7 +550,7 @@ export function Step3Screen({
             const d = isLumo ? 300 + i * 200 + 600 : 300 + i * 200;
             return (
               <div key={o.id} className={`lm-opt ${isLumo ? "is-lumo is-in" : "lm-anim"}`} style={delay(d)}>
-                <div className="lm-opt-key">{String.fromCharCode(65 + i)}</div>
+                <div className="lm-opt-key">{o.letter}</div>
                 <div style={{ flexGrow: 1, minWidth: 0 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", gap: 16 }}>
                     <div className="lm-opt-title">{o.label}</div>
@@ -647,9 +649,9 @@ export function Step4Screen({
           <div className="lm-anim lm-cmp" style={delay(150)}>
             <div className="lm-cmp-row is-head" style={cols}>
               <div />
-              {comparisons.map((c, i) => (
+              {comparisons.map((c) => (
                 <div key={c.optionId}>
-                  <div className="lm-mono lm-caption" style={{ fontSize: 12 }}>{String.fromCharCode(65 + i)}</div>
+                  <div className="lm-mono lm-caption" style={{ fontSize: 12 }}>{c.letter}</div>
                   <div style={{ fontSize: 15, fontWeight: 500, marginTop: 4, lineHeight: 1.35 }}>{c.label}</div>
                 </div>
               ))}
@@ -682,7 +684,7 @@ export function Step4Screen({
           <div className="lm-cmp-cards">
             {comparisons.map((c, i) => (
               <div key={c.optionId} className="lm-anim lm-card lm-cmp-card" style={delay(150 + i * 120)}>
-                <div className="lm-mono lm-caption" style={{ fontSize: 12 }}>{String.fromCharCode(65 + i)}</div>
+                <div className="lm-mono lm-caption" style={{ fontSize: 12 }}>{c.letter}</div>
                 <div style={{ fontSize: 17, fontWeight: 500, marginTop: 4 }}>{c.label}</div>
                 <dl>
                   <div>
@@ -797,7 +799,7 @@ export function Step5Screen({
       <p className="lm-anim lm-sub" style={delay(60)}>Pick a path. Say why. Name what it costs you.</p>
 
       <div className="lm-anim lm-stack" style={{ marginTop: 32, gap: 10, ...delay(150) }} role="radiogroup" aria-label="Options">
-        {options.map((o, i) => (
+        {options.map((o) => (
           <button
             key={o.id}
             role="radio"
@@ -805,7 +807,7 @@ export function Step5Screen({
             className={`lm-choice ${selectedId === o.id ? "is-on" : ""}`}
             onClick={() => onSelect(o.id)}
           >
-            <span className="lm-mono" style={{ fontSize: 14, width: 20 }}>{String.fromCharCode(65 + i)}</span>
+            <span className="lm-mono" style={{ fontSize: 14, width: 20 }}>{o.letter}</span>
             <span>{o.label}</span>
             <span className="lm-radio" aria-hidden="true" />
           </button>

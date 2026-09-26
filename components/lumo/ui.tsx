@@ -158,9 +158,12 @@ export function PathBar({ current, onJump }: { current: number; onJump?: (step: 
 
 export function KeyHint({ label = "Enter" }: { label?: string }) {
   const [mac, setMac] = useState(true);
+  const [touch, setTouch] = useState(false);
   useEffect(() => {
     setMac(/Mac|iPhone|iPad/.test(window.navigator.userAgent));
+    setTouch(window.matchMedia("(pointer: coarse)").matches);
   }, []);
+  if (touch) return null;
   return (
     <span className="lm-keyhint" aria-hidden="true">
       {mac ? `\u2318 ${label}` : `Ctrl ${label}`}

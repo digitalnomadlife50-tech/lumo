@@ -12,6 +12,7 @@ import {
   Step5Screen,
   Step6Screen,
   CompleteScreen,
+  detectEntities,
   type PastDecision,
   type ReadBack,
   type Option,
@@ -50,6 +51,12 @@ interface AnalysisResult {
   whoIsAffected: string
   howPressing: string
   iNoticed: string
+  sources: {
+    realQuestion: string[]
+    whatMatters: string[]
+    whoIsAffected: string[]
+    howPressing: string[]
+  }
   options: Array<{
     name: string
     description: string
@@ -310,7 +317,7 @@ export default function ProductApp() {
       setAnalysis(result)
       setReadBack({ question: result.realQuestion, matters: result.whatMatters, affected: result.whoIsAffected, pressing: result.howPressing })
       setNoticed(result.iNoticed)
-      setOptions(result.options.map((option, index) => ({ id: `lumo-${index}`, label: option.name, summary: option.description, source: "lumo" as const })))
+      setOptions(result.options.map((option, index) => ({ id: `lumo-${index}`, label: option.name, summary: option.description, source: "lumo" as const, letter: String.fromCharCode(65 + index) })))
       setIsAnalyzing(false)
       navigate("step2")
     } catch (err) {
@@ -321,7 +328,7 @@ export default function ProductApp() {
   }
 
   const addOption = (label: string) => {
-    setOptions((previous) => [...previous, { id: `user-${Date.now()}`, label, summary: "", source: "user" as const }])
+    setOptions((previous) => [...previous, { id: `user-${Date.now()}`, label, summary: "", source: "user" as const, letter: String.fromCharCode(65 + previous.length) }])
   }
 
   const comparisons: Comparison[] = options.map((option) => {
@@ -329,10 +336,10 @@ export default function ProductApp() {
       const index = Number(option.id.replace("lumo-", ""))
       const source = analysis?.options[index]
       if (source) {
-        return { optionId: option.id, label: option.label, costLevel: source.costLevel, costSummary: source.cost, whoItHurts: source.whoItHurts, reversible: source.reversible, risk: source.risk }
+        return { optionId: option.id, label: option.label, letter: option.letter, costLevel: source.costLevel, costSummary: source.cost, whoItHurts: source.whoItHurts, reversible: source.reversible, risk: source.risk }
       }
     }
-    return { optionId: option.id, label: option.label, costLevel: "medium" as const, costSummary: "Not yet assessed for this option.", whoItHurts: "Not assessed.", reversible: "partly" as const, risk: "This option was added by hand, so Lumo hasn't weighed in on it." }
+    return { optionId: option.id, label: option.label, letter: option.letter, costLevel: "medium" as const, costSummary: "Not yet assessed for this option.", whoItHurts: "Not assessed.", reversible: "partly" as const, risk: "This option was added by hand, so Lumo hasn't weighed in on it." }
   })
 
   /* ─── Step 5 -> Step 6: draft messages ─── */
@@ -562,7 +569,7 @@ export default function ProductApp() {
     setAnalysis(decision.analysis)
     setReadBack(decision.readBack)
     setNoticed(decision.analysis?.iNoticed ?? "")
-    setOptions(decision.analysis ? decision.analysis.options.map((option, index) => ({ id: `lumo-${index}`, label: option.name, summary: option.description, source: "lumo" as const })) : [])
+    setOptions(decision.analysis ? decision.analysis.options.map((option, index) => ({ id: `lumo-${index}`, label: option.name, summary: option.description, source: "lumo" as const, letter: String.fromCharCode(65 + index) })) : [])
     setSelectedOptionId(null)
     setCopiedAudiences(decision.copiedAudiences ?? [])
     setPreviousDrafts({})
@@ -637,6 +644,17 @@ export default function ProductApp() {
         onBack={() => navigate("step1")}
         direction={direction}
         onJump={jumpTo}
+        entities={detectEntities(situation).ranges.slice(0, 6).map((r) => r.value.replace(/^@/, ""))}
+        sources={
+          analysis
+            ? {
+                question: analysis.sources.realQuestion,
+                matters: analysis.sources.whatMatters,
+                affected: analysis.sources.whoIsAffected,
+                pressing: analysis.sources.howPressing,
+              }
+            : undefined
+        }
       />
     )
   }

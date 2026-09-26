@@ -17,6 +17,12 @@ export interface AnalysisResult {
   whoIsAffected: string
   howPressing: string
   iNoticed: string
+  sources: {
+    realQuestion: string[]
+    whatMatters: string[]
+    whoIsAffected: string[]
+    howPressing: string[]
+  }
   options: Array<{
     name: string
     description: string
@@ -40,6 +46,18 @@ const analysisTool: Anthropic.Tool = {
       whoIsAffected: { type: "string" },
       howPressing: { type: "string" },
       iNoticed: { type: "string", description: "One subtle, specific observation the user may have missed, in one sentence." },
+      sources: {
+        type: "object",
+        description: "For each of realQuestion, whatMatters, whoIsAffected, and howPressing, an array of short exact quotes copied verbatim from the user's pasted text that support that field. Use an empty array if nothing in the text supports it.",
+        properties: {
+          realQuestion: { type: "array", items: { type: "string" } },
+          whatMatters: { type: "array", items: { type: "string" } },
+          whoIsAffected: { type: "array", items: { type: "string" } },
+          howPressing: { type: "array", items: { type: "string" } },
+        },
+        required: ["realQuestion", "whatMatters", "whoIsAffected", "howPressing"],
+        additionalProperties: false,
+      },
       options: {
         type: "array",
         minItems: 2,
@@ -75,6 +93,12 @@ function isAnalysisResult(value: unknown): value is AnalysisResult {
     typeof result.whoIsAffected === "string" &&
     typeof result.howPressing === "string" &&
     typeof result.iNoticed === "string" &&
+    !!result.sources &&
+    typeof result.sources === "object" &&
+    ["realQuestion", "whatMatters", "whoIsAffected", "howPressing"].every((key) => {
+      const value = (result.sources as Record<string, unknown>)[key]
+      return Array.isArray(value) && value.every((quote) => typeof quote === "string")
+    }) &&
     Array.isArray(result.options) &&
     result.options.length >= 2 &&
     result.options.length <= 3 &&
@@ -142,7 +166,7 @@ export async function POST(req: Request) {
       )
     }
 
-    const systemPrompt = `You are Lumo, a decision-structuring tool for Senior Product Managers. Read the user's situation and produce specific, useful analysis. Reframe the core decision in one sentence; explain the key tensions in 2-3 sentences; identify affected stakeholders and why; explain timeline implications based on urgency; name one subtle, specific thing the user may have missed (iNoticed), in one sentence; and suggest 2-3 realistic options, each with a short name, one-sentence description, a cost summary, a cost level (low, medium, or high), who is hurt most by choosing it, whether it is reversible (yes, partly, or no), and its main risk in one sentence. Avoid generic options unless they genuinely apply. Provide the result through the required structured analysis tool.\n\n${HUMAN_WRITING_RULES}`
+    const systemPrompt = `You are Lumo, a decision-structuring tool for Senior Product Managers. Read the user's situation and produce specific, useful analysis. Reframe the core decision in one sentence; explain the key tensions in 2-3 sentences; identify affected stakeholders and why; explain timeline implications based on urgency; name one subtle, specific thing the user may have missed (iNoticed), in one sentence; for realQuestion, whatMatters, whoIsAffected, and howPressing, include a "sources" array of short exact quotes copied verbatim from the user's pasted text that support that field (empty array if nothing supports it, never invent or paraphrase a quote); and suggest 2-3 realistic options, each with a short name, one-sentence description, a cost summary, a cost level (low, medium, or high), who is hurt most by choosing it, whether it is reversible (yes, partly, or no), and its main risk in one sentence. Avoid generic options unless they genuinely apply. Provide the result through the required structured analysis tool.\n\n${HUMAN_WRITING_RULES}`
 
     const userPrompt = `USER'S SITUATION: ${situation}
 URGENCY: ${urgency || "Not specified"}
