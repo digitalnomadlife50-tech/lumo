@@ -30,11 +30,17 @@ const STEP_NUMBER: Record<View, number> = { home: 0, step1: 1, step2: 2, step3: 
 
 type DraftChannel = "email" | "slack" | "dm"
 
+interface Pushback {
+  objection: string
+  response: string
+}
+
 interface AudienceDraft {
   audience: string
   channel: DraftChannel
   subject: string
   body: string
+  pushback?: Pushback[]
 }
 
 interface AIOutput {
@@ -123,6 +129,7 @@ export default function ProductApp() {
   const [chosenDirection, setChosenDirection] = useState("")
   const [reasoning, setReasoning] = useState("")
   const [whatGivingUp, setWhatGivingUp] = useState("")
+  const [hardship, setHardship] = useState("")
   const [confidence, setConfidence] = useState(0)
   const [copiedAudiences, setCopiedAudiences] = useState<string[]>([])
   const [decisionNum, setDecisionNum] = useState<number | null>(null)
@@ -180,6 +187,7 @@ export default function ProductApp() {
     setChosenDirection("")
     setReasoning("")
     setWhatGivingUp("")
+    setHardship("")
     setConfidence(0)
     setCopiedAudiences([])
     setAiOutput(null)
@@ -299,7 +307,7 @@ export default function ProductApp() {
       const response = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ situation, urgency }),
+        body: JSON.stringify({ situation, urgency, hardship }),
       })
       const data = await response.json()
 
@@ -367,6 +375,7 @@ export default function ProductApp() {
       reasoning,
       confidence,
       whatGivingUp,
+      hardship,
       analysis: readBack
         ? { realQuestion: readBack.question, whatMatters: readBack.matters, whoIsAffected: readBack.affected, howPressing: readBack.pressing }
         : undefined,
@@ -584,7 +593,11 @@ export default function ProductApp() {
     ? { id: draft.id, number: draft.number, title: draft.situation.slice(0, 80), step: draft.step }
     : null
 
-  const drafts: Draft[] = (aiOutput?.drafts ?? []).map((draft) => ({ id: draft.audience, audience: draft.audience, channel: draft.channel, subject: draft.subject, body: draft.body }))
+  const drafts: Draft[] = (aiOutput?.drafts ?? []).map((draft) => ({ id: draft.audience, audience: draft.audience, channel: draft.channel, subject: draft.subject, body: draft.body, pushback: draft.pushback }))
+
+  const reversibleById: Record<string, "yes" | "partly" | "no"> = Object.fromEntries(
+    comparisons.map((comparison) => [comparison.optionId, comparison.reversible]),
+  )
 
   /* ─────────────────────────────────────────────────────────────── RENDER ─── */
   if (view === "home") {
@@ -620,6 +633,8 @@ export default function ProductApp() {
           loading={isAnalyzing}
           error={aiError}
           direction={direction}
+          hardship={hardship}
+          onHardshipChange={setHardship}
         />
         {SHOW_DEBUG_PANEL && aiError ? (
           <div style={{ maxWidth: 784, margin: "0 auto", padding: "0 32px 32px" }}>
@@ -710,6 +725,7 @@ export default function ProductApp() {
           onBack={() => navigate("step4")}
           direction={direction}
           onJump={jumpTo}
+          reversibleById={reversibleById}
         />
         {aiError ? (
           <div style={{ maxWidth: 784, margin: "16px auto 0", padding: "0 32px" }}>

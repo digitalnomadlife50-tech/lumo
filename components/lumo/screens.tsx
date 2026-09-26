@@ -48,12 +48,18 @@ export type Comparison = {
   risk: string;
 };
 
+export type Pushback = {
+  objection: string;
+  response: string;
+};
+
 export type Draft = {
   id: string;
   audience: string;
   channel: string;
   subject?: string;
   body: string;
+  pushback?: Pushback[];
 };
 
 type Shell = { aiStatus: AiStatus; initials?: string };
@@ -275,6 +281,8 @@ export function Step1Screen({
   loading,
   error,
   direction,
+  hardship = "",
+  onHardshipChange,
 }: Shell & {
   decisionNumber: number;
   text: string;
@@ -284,6 +292,8 @@ export function Step1Screen({
   loading?: boolean;
   error?: string;
   direction?: "fwd" | "back";
+  hardship?: string;
+  onHardshipChange?: (v: string) => void;
 }) {
   const layerRef = useRef<HTMLDivElement>(null);
   const { ranges, counts } = useMemo(() => detectEntities(text), [text]);
@@ -323,6 +333,19 @@ export function Step1Screen({
           <b>{counts.deadlines} {counts.deadlines === 1 ? "deadline" : "deadlines"}</b>
           <b>{counts.blockers} {counts.blockers === 1 ? "ticket" : "tickets"}</b>
           <b>{counts.channels} {counts.channels === 1 ? "channel" : "channels"}</b>
+        </div>
+      ) : null}
+
+      {onHardshipChange ? (
+        <div className="lm-anim" style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 8, ...delay(160) }}>
+          <label htmlFor="lm-hardship" className="lm-label">What&apos;s making this hard (optional)</label>
+          <input
+            id="lm-hardship"
+            className="lm-input"
+            placeholder="Dana pushed back on this last time"
+            value={hardship}
+            onChange={(e) => onHardshipChange(e.target.value)}
+          />
         </div>
       ) : null}
 
@@ -731,6 +754,7 @@ export function Step5Screen({
   onBack,
   direction,
   onJump,
+  reversibleById,
 }: Shell & {
   decisionNumber: number;
   options: Option[];
@@ -746,6 +770,7 @@ export function Step5Screen({
   onBack: () => void;
   direction?: "fwd" | "back";
   onJump?: (step: number) => void;
+  reversibleById?: Record<string, "yes" | "partly" | "no">;
 }) {
   const [holding, setHolding] = useState(false);
   const [committed, setCommitted] = useState(false);
@@ -813,6 +838,18 @@ export function Step5Screen({
           </button>
         ))}
       </div>
+
+      {selectedId && reversibleById?.[selectedId] ? (
+        <div className="lm-anim lm-undo-line" style={delay(190)}>
+          <span className="lm-label">Can you undo this</span>
+          <span
+            className="lm-mono"
+            style={{ fontSize: 13, color: REV[reversibleById[selectedId]] }}
+          >
+            {reversibleById[selectedId]}
+          </span>
+        </div>
+      ) : null}
 
       <div className="lm-anim" style={{ marginTop: 32, display: "flex", flexDirection: "column", gap: 8, ...delay(220) }}>
         <label htmlFor="lm-why" className="lm-label">Why, in one sentence</label>
@@ -1022,6 +1059,20 @@ export function Step6Screen({
                 <button className={`lm-copy ${copied[d.id] ? "is-copied" : ""}`} onClick={copy} disabled={busy || editing}>
                   {copied[d.id] ? "Copied" : "Copy"}
                 </button>
+              </div>
+            </div>
+          ) : null}
+
+          {d?.pushback?.length ? (
+            <div className="lm-anim lm-pushback" style={delay(280)}>
+              <div className="lm-label">What they&apos;ll say back</div>
+              <div className="lm-stack" style={{ marginTop: 10, gap: 10 }}>
+                {d.pushback.map((p, i) => (
+                  <div key={i} className="lm-pushback-item">
+                    <div className="lm-pushback-objection">&ldquo;{p.objection}&rdquo;</div>
+                    <div className="lm-pushback-response">{p.response}</div>
+                  </div>
+                ))}
               </div>
             </div>
           ) : null}
