@@ -1,12 +1,15 @@
 "use client"
 
 import Link from "next/link"
-import { memo, useEffect, useRef, useState } from "react"
+import { memo, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { useInView, usePrefersReducedMotion } from "./ui"
 
 const TYPED = "Yes, March 14 works"
 const SQUARE_COUNT = 10
 const SLIPPED = 7
+
+// useLayoutEffect during SSR warns and does nothing; fall back to useEffect.
+const useIsoLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect
 
 type Step = {
   n: string
@@ -80,148 +83,168 @@ function LoopStep({ step }: { step: Step }) {
 
 export function OverTime() {
   const reduced = usePrefersReducedMotion()
-  const containerRef = useRef<HTMLDivElement | null>(null)
-  const [progress, setProgress] = useState(0)
+  const partRef = useRef<HTMLDivElement | null>(null)
+  const timers = useRef<number[]>([])
+  const runRef = useRef<() => void>(() => {})
 
+  // Armed means JS is running and motion is allowed: elements start hidden
+  // and the sequence reveals them. Unarmed (SSR, no JS, reduced motion) is
+  // the finished state, so the section reads completely with no animation.
+  const [armed, setArmed] = useState(false)
+  const [leftIn, setLeftIn] = useState(false)
+  const [rightIn, setRightIn] = useState(false)
+  const [upIn, setUpIn] = useState(false)
+  const [lineIn, setLineIn] = useState(false)
+  const [squaresShown, setSquaresShown] = useState(0)
+  const [slippedIn, setSlippedIn] = useState(false)
+  const [ruleIn, setRuleIn] = useState(false)
+  const [actionsIn, setActionsIn] = useState(false)
+  const [chars, setChars] = useState(0)
+
+  const clearTimers = () => {
+    timers.current.forEach((id) => window.clearTimeout(id))
+    timers.current = []
+  }
+
+  // The whole sequence runs on its own timing once triggered. Total 4.5s.
+  const run = () => {
+    clearTimers()
+    setLeftIn(false)
+    setRightIn(false)
+    setUpIn(false)
+    setLineIn(false)
+    setSquaresShown(0)
+    setSlippedIn(false)
+    setRuleIn(false)
+    setActionsIn(false)
+    setChars(0)
+    const t = (ms: number, fn: () => void) => {
+      timers.current.push(window.setTimeout(fn, ms))
+    }
+    t(0, () => setLeftIn(true))
+    // Typing: 350ms start, done at 1550ms. 20 chars over 1200ms.
+    for (let i = 1; i <= TYPED.length; i++) t(350 + i * 60, () => setChars(i))
+    t(1750, () => setRightIn(true))
+    t(2000, () => setUpIn(true))
+    t(2250, () => setLineIn(true))
+    for (let i = 1; i <= SQUARE_COUNT; i++) t(2550 + (i - 1) * 90, () => setSquaresShown(i))
+    t(3550, () => setSlippedIn(true))
+    t(3900, () => setRuleIn(true))
+    t(4300, () => setActionsIn(true))
+  }
+  runRef.current = run
+
+  // Arm before the first paint so the hidden start state never flashes. The
+  // media query is read directly: usePrefersReducedMotion only resolves in an
+  // effect, which runs after this one, so it cannot be trusted here.
+  useIsoLayoutEffect(() => {
+    if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) setArmed(true)
+  }, [])
+
+  // One observer, threshold 0.4, disconnected on first fire: the sequence
+  // plays exactly once per page load and never re-triggers on scroll-by.
   useEffect(() => {
     if (reduced) return
-    const container = containerRef.current
-    if (!container) return
-
-    let raf = 0
-    let total = 0
-    let last = -1
-
-    const measure = () => {
-      total = container.offsetHeight - window.innerHeight
+    const el = partRef.current
+    if (!el) return
+    if (typeof IntersectionObserver === "undefined") {
+      runRef.current()
+      return
     }
-
-    const read = () => {
-      const rect = container.getBoundingClientRect()
-      return total > 0 ? Math.min(1, Math.max(0, -rect.top / total)) : 0
-    }
-
-    const tick = () => {
-      const p = read()
-      if (Math.abs(p - last) >= 0.001) {
-        last = p
-        setProgress(p)
-      }
-      raf = requestAnimationFrame(tick)
-    }
-
-    // The loop only runs while the section is near the viewport, so an idle
-    // page is not paying for a frame callback on every tick.
-    const start = () => {
-      if (raf === 0) raf = requestAnimationFrame(tick)
-    }
-    const stop = () => {
-      if (raf !== 0) cancelAnimationFrame(raf)
-      raf = 0
-    }
-
-    measure()
-    last = read()
-    setProgress(last)
-
-    // The container is sized in vh, so a viewport change or any reflow that
-    // changes its height invalidates the scroll range.
-    const ro =
-      typeof ResizeObserver === "undefined"
-        ? null
-        : new ResizeObserver(() => {
-            measure()
-            last = -1
-          })
-    ro?.observe(container)
-
-    const obs =
-      typeof IntersectionObserver === "undefined"
-        ? null
-        : new IntersectionObserver(
-            (entries) => {
-              if (entries.some((e) => e.isIntersecting)) start()
-              else stop()
-            },
-            { rootMargin: "200px 0px 200px 0px" }
-          )
-    if (obs) obs.observe(container)
-    else start()
-
-    return () => {
-      stop()
-      ro?.disconnect()
-      obs?.disconnect()
-    }
+    const obs = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          obs.disconnect()
+          runRef.current()
+        }
+      },
+      { threshold: 0.4 }
+    )
+    obs.observe(el)
+    return () => obs.disconnect()
   }, [reduced])
 
-  const p = reduced ? 1 : progress
-  const leftIn = p > 0.01
-  const chars = p < 0.1 ? 0 : p >= 0.3 ? TYPED.length : Math.floor(((p - 0.1) / 0.2) * TYPED.length)
-  const rightIn = p >= 0.3
-  const squares = p < 0.4 ? 0 : p >= 0.6 ? SQUARE_COUNT : Math.floor(((p - 0.4) / 0.2) * SQUARE_COUNT)
-  const slippedIn = p >= 0.6
-  const ruleIn = p >= 0.7
-  const actionsIn = p >= 0.8
+  useEffect(() => clearTimers, [])
+
+  const replay = () => {
+    const el = partRef.current
+    // Instant reset to the start state, then run the sequence again.
+    el?.classList.add("is-resetting")
+    clearTimers()
+    setLeftIn(false)
+    setRightIn(false)
+    setUpIn(false)
+    setLineIn(false)
+    setSquaresShown(0)
+    setSlippedIn(false)
+    setRuleIn(false)
+    setActionsIn(false)
+    setChars(0)
+    requestAnimationFrame(() => {
+      el?.classList.remove("is-resetting")
+      runRef.current()
+    })
+  }
 
   return (
     <>
-      <div className="lm-ot-scroll" ref={containerRef}>
-        <div className="lm-ot-stage">
-          <div className="lm-wrap lm-ot-stage-inner">
-            <div className="lm-sec-head lm-ot-head">
-              <div className="lm-sec-copy">
-                <div className="lm-label">Weeks later</div>
-                <h2 className="lm-h2">It shows up when you are about to do it again.</h2>
-                <p className="lm-body-lg">
-                  A record you have to go and read is a record you forget. This one interrupts the next decision.
-                </p>
-              </div>
-            </div>
-
-            <div className="lm-ot-cols">
-              <div className={`lm-ot-card lm-ot-decision ${leftIn ? "is-in" : ""}`}>
-                <div className="lm-ot-eyebrow">DECISION No.41</div>
-                <p className="lm-ot-q">Do we promise Northwind the API by March 14?</p>
-                <div className="lm-ot-input">
-                  <span className="lm-sr">{TYPED}</span>
-                  <span aria-hidden="true">{TYPED.slice(0, chars)}</span>
-                  <i className="lm-ot-caret" aria-hidden="true" />
-                </div>
-              </div>
-
-              <div className={`lm-ot-card lm-ot-record ${rightIn ? "is-in" : ""}`}>
-                <div className="lm-ot-eyebrow is-up">You have been here before</div>
-                <p className="lm-ot-line">Ten times you have been this sure about a date.</p>
-                <div className="lm-ot-squares" aria-hidden="true">
-                  {Array.from({ length: SQUARE_COUNT }, (_, i) => (
-                    <span
-                      key={i}
-                      className={`lm-ot-square ${i < squares ? "is-on" : ""} ${i < SLIPPED ? "is-slipped" : ""}`}
-                    />
-                  ))}
-                </div>
-                <p className={`lm-ot-slipped ${slippedIn ? "is-in" : ""}`}>Seven of them slipped.</p>
-                <div className={`lm-ot-rule ${ruleIn ? "is-in" : ""}`}>
-                  <p>Your rule: add Marco&apos;s worst case before you give a date.</p>
-                </div>
-              </div>
-            </div>
-
-            <div className={`lm-ot-actions ${actionsIn ? "is-in" : ""}`}>
-              <button type="button" className="lm-btn">
-                Ask Marco first
-              </button>
-              <button type="button" className="lm-btn-sec">
-                Commit anyway
-              </button>
-              <p className="lm-ot-note">Either way, Lumo records what you choose.</p>
-            </div>
-            <p className={`lm-ot-recordlink ${actionsIn ? "is-in" : ""}`}>
-              From 40 decisions in this record. <Link href="/app/demo#map">See the whole map</Link>
+      <div ref={partRef} className={`lm-wrap lm-section lm-ot ${armed && !reduced ? "is-armed" : ""}`}>
+        <div className="lm-sec-head lm-ot-head">
+          <div className="lm-sec-copy">
+            <div className="lm-label">Weeks later</div>
+            <h2 className="lm-h2">It shows up when you are about to do it again.</h2>
+            <p className="lm-body-lg">
+              A record you have to go and read is a record you forget. This one interrupts the next decision.
             </p>
           </div>
         </div>
+
+        <div className="lm-ot-cols">
+          <div className={`lm-ot-card lm-ot-decision ${leftIn ? "is-in" : ""}`}>
+            <div className="lm-ot-eyebrow">DECISION No.41</div>
+            <p className="lm-ot-q">Do we promise Northwind the API by March 14?</p>
+            <div className="lm-ot-input">
+              <span className="lm-sr">{TYPED}</span>
+              <span aria-hidden="true">{armed ? TYPED.slice(0, chars) : TYPED}</span>
+              <i className="lm-ot-caret" aria-hidden="true" />
+            </div>
+          </div>
+
+          <div className={`lm-ot-card lm-ot-record ${rightIn ? "is-in" : ""}`}>
+            <div className={`lm-ot-eyebrow is-up ${upIn ? "is-in" : ""}`}>You have been here before</div>
+            <p className={`lm-ot-line ${lineIn ? "is-in" : ""}`}>Ten times you have been this sure about a date.</p>
+            <div className="lm-ot-squares" aria-hidden="true">
+              {Array.from({ length: SQUARE_COUNT }, (_, i) => (
+                <span
+                  key={i}
+                  className={`lm-ot-square ${i < squaresShown ? "is-on" : ""} ${i < SLIPPED ? "is-slipped" : ""}`}
+                />
+              ))}
+            </div>
+            <p className={`lm-ot-slipped ${slippedIn ? "is-in" : ""}`}>Seven of them slipped.</p>
+            <div className={`lm-ot-rule ${ruleIn ? "is-in" : ""}`}>
+              <p>Your rule: add Marco&apos;s worst case before you give a date.</p>
+            </div>
+          </div>
+        </div>
+
+        <div className={`lm-ot-actions ${actionsIn ? "is-in" : ""}`}>
+          <button type="button" className="lm-btn">
+            Ask Marco first
+          </button>
+          <button type="button" className="lm-btn-sec">
+            Commit anyway
+          </button>
+          <p className="lm-ot-note">Either way, Lumo records what you choose.</p>
+        </div>
+        {armed && !reduced ? (
+          <button type="button" className="lm-ot-replay" onClick={replay}>
+            Replay
+          </button>
+        ) : null}
+        <p className={`lm-ot-recordlink ${actionsIn ? "is-in" : ""}`}>
+          From 40 decisions in this record. <Link href="/app/demo#map">See the whole map</Link>
+        </p>
       </div>
 
       <HowItLearns />
@@ -230,8 +253,8 @@ export function OverTime() {
 }
 
 /**
- * Held out of OverTime and memoized: the scroll loop re-renders its parent on
- * every frame, and this block has no dependency on that progress.
+ * Held out of OverTime and memoized: the play-once sequence re-renders its
+ * parent on every beat, and this block has no dependency on that state.
  */
 const HowItLearns = memo(function HowItLearns() {
   return (

@@ -538,14 +538,13 @@
   .lm-draft-head, .lm-draft-foot { padding: 14px 20px; }
 }
 
-/* ================= OVER TIME (scroll-driven) ================= */
-.lm-ot-scroll { position: relative; height: 200vh; }
-.lm-ot-stage { position: sticky; top: 0; height: 100vh; display: flex; align-items: center; }
-.lm-ot-stage-inner { width: 100%; display: flex; flex-direction: column; gap: 28px; }
+/* ================= OVER TIME ================= */
+/* Part A is a normal section in normal page flow. JS adds .is-armed before
+   the first paint; without it (no JS, reduced motion) every element renders
+   in its finished state, so the section reads completely with no animation. */
+.lm-ot { display: flex; flex-direction: column; gap: 28px; }
 .lm-ot-head { margin-bottom: 0; }
 .lm-ot-head .lm-sec-copy { max-width: 760px; gap: 12px; }
-/* The stage is pinned to one viewport, so its copy has to scale with the
-   viewport rather than sit at the fixed section sizes. */
 .lm-ot-head .lm-h2 { font-size: clamp(28px, 3.2vw, 40px); }
 .lm-ot-head .lm-body-lg { font-size: 16px; }
 
@@ -554,8 +553,9 @@
 .lm-ot-cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: start; overflow: hidden; }
 
 .lm-ot-card { background: var(--lm-surface); border: 1px solid var(--lm-border); border-radius: 10px; }
-.lm-ot-decision { padding: 22px; opacity: 0; transform: translateY(14px); transition: opacity .45s ease, transform .45s cubic-bezier(.2,.7,.3,1); }
-.lm-ot-decision.is-in { opacity: 1; transform: none; }
+.lm-ot-decision { padding: 22px; transition: opacity .4s ease, transform .4s cubic-bezier(.2,.7,.3,1); }
+.lm-ot.is-armed .lm-ot-decision { opacity: 0; transform: translateY(8px); }
+.lm-ot.is-armed .lm-ot-decision.is-in { opacity: 1; transform: none; }
 
 .lm-ot-eyebrow { font-family: var(--lm-mono); font-size: 10px; letter-spacing: .08em; color: #8C8780; }
 .lm-ot-eyebrow.is-up { text-transform: uppercase; letter-spacing: .09em; }
@@ -564,26 +564,42 @@
 .lm-ot-caret { display: inline-block; width: 1.5px; height: 16px; margin-left: 1px; background: var(--lm-accent); animation: lmCaret 1s step-end infinite; }
 @keyframes lmCaret { 0%, 100% { opacity: 1 } 50% { opacity: 0 } }
 
-.lm-ot-record { padding: 20px 22px; border-top: 3px solid var(--lm-accent); border-radius: 0 0 10px 10px; opacity: 0; transform: translateX(22px); transition: opacity .45s ease, transform .45s cubic-bezier(.2,.7,.3,1); }
-.lm-ot-record.is-in { opacity: 1; transform: none; }
-.lm-ot-line { margin: 10px 0 0; font-size: 15px; line-height: 1.5; color: var(--lm-text); }
+.lm-ot-record { padding: 20px 22px; border-top: 3px solid var(--lm-accent); border-radius: 0 0 10px 10px; transition: opacity .4s ease, transform .4s cubic-bezier(.2,.7,.3,1); }
+.lm-ot.is-armed .lm-ot-record { opacity: 0; transform: translateX(22px); }
+.lm-ot.is-armed .lm-ot-record.is-in { opacity: 1; transform: none; }
+.lm-ot-eyebrow.is-up { transition: opacity .4s ease; }
+.lm-ot.is-armed .lm-ot-eyebrow.is-up { opacity: 0; }
+.lm-ot.is-armed .lm-ot-eyebrow.is-up.is-in { opacity: 1; }
+.lm-ot-line { margin: 10px 0 0; font-size: 15px; line-height: 1.5; color: var(--lm-text); transition: opacity .4s ease; }
+.lm-ot.is-armed .lm-ot-line { opacity: 0; }
+.lm-ot.is-armed .lm-ot-line.is-in { opacity: 1; }
 .lm-ot-squares { display: flex; gap: 4px; margin-top: 12px; }
-.lm-ot-square { width: 19px; height: 19px; border-radius: 2px; background: var(--lm-muted); border: 1px solid var(--lm-border); opacity: 0; transform: scale(.6); transition: opacity .3s ease, transform .3s cubic-bezier(.2,.7,.3,1); }
-.lm-ot-square.is-on { opacity: 1; transform: none; }
+.lm-ot-square { width: 19px; height: 19px; border-radius: 2px; background: var(--lm-muted); border: 1px solid var(--lm-border); transition: opacity .4s ease, transform .4s cubic-bezier(.2,.7,.3,1); }
+.lm-ot.is-armed .lm-ot-square { opacity: 0; transform: scale(.6); }
+.lm-ot.is-armed .lm-ot-square.is-on { opacity: 1; transform: none; }
 .lm-ot-square.is-slipped { background: var(--lm-risk); border-color: var(--lm-risk); }
-.lm-ot-slipped { margin: 12px 0 0; font-size: 13px; color: var(--lm-risk); opacity: 0; transition: opacity .45s ease; }
-.lm-ot-slipped.is-in { opacity: 1; }
-.lm-ot-rule { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--lm-border); opacity: 0; transition: opacity .45s ease; }
-.lm-ot-rule.is-in { opacity: 1; }
+.lm-ot-slipped { margin: 12px 0 0; font-size: 13px; color: var(--lm-risk); transition: opacity .4s ease; }
+.lm-ot.is-armed .lm-ot-slipped { opacity: 0; }
+.lm-ot.is-armed .lm-ot-slipped.is-in { opacity: 1; }
+.lm-ot-rule { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--lm-border); transition: opacity .4s ease; }
+.lm-ot.is-armed .lm-ot-rule { opacity: 0; }
+.lm-ot.is-armed .lm-ot-rule.is-in { opacity: 1; }
 .lm-ot-rule p { margin: 0; font-size: 13px; line-height: 1.5; color: var(--lm-text-2); }
 
-.lm-ot-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; opacity: 0; transition: opacity .45s ease; }
-.lm-ot-actions.is-in { opacity: 1; }
+.lm-ot-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; transition: opacity .4s ease; }
+.lm-ot.is-armed .lm-ot-actions { opacity: 0; }
+.lm-ot.is-armed .lm-ot-actions.is-in { opacity: 1; }
 .lm-ot-note { margin: 0; font-size: 13px; color: #8C8780; }
-.lm-ot-recordlink { margin: 14px 0 0; font-size: 13px; color: #8C8780; opacity: 0; transition: opacity .45s ease; }
-.lm-ot-recordlink.is-in { opacity: 1; }
+.lm-ot-replay { align-self: flex-start; background: none; border: none; padding: 0; font-family: inherit; font-size: 13px; color: #8C8780; cursor: pointer; }
+.lm-ot-replay:hover { color: var(--lm-text-2); text-decoration: underline; text-underline-offset: 2px; }
+.lm-ot-recordlink { margin: 0; font-size: 13px; color: #8C8780; transition: opacity .4s ease; }
+.lm-ot.is-armed .lm-ot-recordlink { opacity: 0; }
+.lm-ot.is-armed .lm-ot-recordlink.is-in { opacity: 1; }
 .lm-ot-recordlink a { color: #8C8780; text-decoration: underline; text-underline-offset: 2px; }
 .lm-ot-recordlink a:hover { color: var(--lm-text-2); }
+
+/* Instant reset while replaying: no fade-out, straight to the start state. */
+.lm-ot.is-resetting * { transition: none !important; }
 
 .lm-ot-loop { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 26px; }
 .lm-ot-step { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 20px; align-items: stretch; }
@@ -598,30 +614,12 @@
 .lm-ot-step-p { margin: 4px 0 0; font-size: 14px; line-height: 1.55; color: var(--lm-text-2); }
 .lm-ot-step-p.is-accent { color: var(--lm-risk); }
 
-/* Two columns hold down to 880px; collapsing earlier made the pinned stage
-   taller than the viewport and clipped the bottom of the content. */
 @media (max-width: 880px) {
   .lm-ot-cols { grid-template-columns: minmax(0, 1fr); }
 }
 
-/* Short viewports: tighten the pinned stage so it still fits in one screen. */
-@media (max-height: 820px) {
-  .lm-ot-stage-inner { gap: 18px; }
-  .lm-ot-head .lm-h2 { font-size: 28px; }
-  .lm-ot-head .lm-body-lg { font-size: 15px; }
-  .lm-ot-decision { padding: 16px; }
-  .lm-ot-q { font-size: 15px; }
-  .lm-ot-record { padding: 14px 16px; }
-  .lm-ot-line { font-size: 14px; }
-  .lm-ot-squares { margin-top: 10px; }
-  .lm-ot-rule { margin-top: 10px; padding-top: 10px; }
-  .lm-ot-recordlink { margin-top: 10px; }
-}
-
 @media (max-width: 640px) {
-  .lm-ot-scroll { height: 160vh; }
-  .lm-ot-stage { height: 100svh; }
-  .lm-ot-stage-inner { gap: 14px; }
+  .lm-ot { gap: 14px; }
   .lm-ot-head .lm-sec-copy { gap: 8px; }
   .lm-ot-head .lm-h2 { font-size: 24px; }
   .lm-ot-head .lm-body-lg { font-size: 13.5px; }
@@ -646,9 +644,5 @@
 @media (prefers-reduced-motion: reduce) {
   .lm-page *, .lm-page *::before, .lm-page *::after { animation: none !important; transition: none !important; }
   .lm-reveal { opacity: 1; }
-  .lm-ot-scroll { height: auto; }
-  .lm-ot-stage { position: static; height: auto; padding: 80px 0; }
-  .lm-ot-decision, .lm-ot-record, .lm-ot-slipped, .lm-ot-rule, .lm-ot-actions, .lm-ot-recordlink { opacity: 1; transform: none; }
-  .lm-ot-square { opacity: 1; transform: none; }
   .lm-ot-art { clip-path: none; }
 }
