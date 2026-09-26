@@ -38,8 +38,13 @@ type Geo = { W: number; H: number; PAD: { left: number; right: number; top: numb
  * phone: the SVG scales to its container, so a shorter viewBox means a larger
  * effective font. The left gutter is wide enough for "As expected" in both.
  */
-const FULL: Geo = { W: 660, H: 400, PAD: { left: 96, right: 28, top: 34, bottom: 56 } }
-const NARROW: Geo = { W: 420, H: 360, PAD: { left: 96, right: 16, top: 30, bottom: 52 } }
+const FULL: Geo = { W: 660, H: 400, PAD: { left: 96, right: 28, top: 34, bottom: 88 } }
+const NARROW: Geo = { W: 420, H: 360, PAD: { left: 96, right: 16, top: 30, bottom: 80 } }
+
+/** The zone label, the tick numbers, and the axis title each get their own row below the plot. */
+const ZONE_LABEL_DY = 22
+const TICK_DY = 46
+const AXIS_TITLE_DY = 68
 
 function xFor(conf: number, g: Geo) {
   const t = (Math.min(5, Math.max(1, conf)) - 1) / 4
@@ -178,7 +183,7 @@ export function JudgmentMap({
             fill="url(#lm-band)"
           />
           <text x={xFor(1.4, g)} y={yFor("better", g) - 6} className="lm-map-zone">Underconfident</text>
-          <text x={xFor(4.6, g)} y={yFor("worse", g) + 30} className="lm-map-zone" textAnchor="end">Overconfident</text>
+          <text x={xFor(4.6, g)} y={yFor("worse", g) + ZONE_LABEL_DY} className="lm-map-zone" textAnchor="end">Overconfident</text>
 
           {/* y gridlines + labels. Labels sit in the left gutter, right-aligned, so they never overlap the plot. */}
           {ROWS.map((r) => (
@@ -190,9 +195,9 @@ export function JudgmentMap({
 
           {/* x labels */}
           {[1, 2, 3, 4, 5].map((c) => (
-            <text key={c} x={xFor(c, g)} y={g.H - g.PAD.bottom + 24} className="lm-map-axis" textAnchor="middle">{c}</text>
+            <text key={c} x={xFor(c, g)} y={g.H - g.PAD.bottom + TICK_DY} className="lm-map-axis" textAnchor="middle">{c}</text>
           ))}
-          <text x={(g.PAD.left + g.W - g.PAD.right) / 2} y={g.H - 12} className="lm-map-axis" textAnchor="middle">Confidence at the time</text>
+          <text x={(g.PAD.left + g.W - g.PAD.right) / 2} y={g.H - g.PAD.bottom + AXIS_TITLE_DY} className="lm-map-axis" textAnchor="middle">Confidence at the time</text>
 
           {/* points */}
           {shown.map((p, i) => {
@@ -323,7 +328,7 @@ export function EmptyJudgmentMap({ remaining }: { remaining: number }) {
             </g>
           ))}
           {[1, 2, 3, 4, 5].map((c) => (
-            <text key={c} x={xFor(c, g)} y={g.H - g.PAD.bottom + 24} className="lm-map-axis" textAnchor="middle">{c}</text>
+            <text key={c} x={xFor(c, g)} y={g.H - g.PAD.bottom + TICK_DY} className="lm-map-axis" textAnchor="middle">{c}</text>
           ))}
         </svg>
       </div>
