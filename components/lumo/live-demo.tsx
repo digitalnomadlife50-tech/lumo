@@ -1,11 +1,11 @@
 "use client"
 
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react"
 import { CURRENT_DECISION } from "@/lib/demo/current"
 import { DEMO_DECISIONS } from "@/lib/demo/decisions"
 import { usePrefersReducedMotion } from "./ui"
 import { JudgmentMap, type MapPoint } from "./judgment-map"
-import { PenLine, Send, Telescope, TrendingUp, type LucideIcon } from "lucide-react"
+import { ChevronLeft, ChevronRight, PenLine, Send, Telescope, TrendingUp, type LucideIcon } from "lucide-react"
 
 export function demoMapPoints(): MapPoint[] {
   return DEMO_DECISIONS.filter((d) => d.outcome).map((d) => ({
@@ -115,10 +115,33 @@ export function LiveDemo() {
     }
   }, [playing, chapter])
 
-  const go = (i: number) => {
-    setChapter((i + CHAPTERS.length) % CHAPTERS.length)
+  const dotsRef = useRef<HTMLDivElement>(null)
+
+  const go = (i: number, opts?: { pause?: boolean; focus?: boolean }) => {
+    const next = (i + CHAPTERS.length) % CHAPTERS.length
+    setChapter(next)
     setProgress(0)
     startRef.current = performance.now()
+    if (opts?.pause) setPlaying(false)
+    if (opts?.focus) {
+      const target = dotsRef.current?.children[next]
+      if (target instanceof HTMLElement) target.focus()
+    }
+  }
+
+  const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+      e.preventDefault()
+      const dots = dotsRef.current
+      const focused = document.activeElement
+      const focusedIndex =
+        dots && focused instanceof HTMLElement ? Array.prototype.indexOf.call(dots.children, focused) : -1
+      const base = focusedIndex >= 0 ? focusedIndex : chapter
+      go(base + (e.key === "ArrowRight" ? 1 : -1), { pause: true, focus: true })
+    } else if (e.key === " " && !(e.target as HTMLElement).closest("button")) {
+      e.preventDefault()
+      setPlaying((p) => !p)
+    }
   }
 
   const cur = CHAPTERS[chapter].id
@@ -170,25 +193,37 @@ export function LiveDemo() {
         </div>
       </div>
 
-      <div className="lm-demo-controls">
-        <button type="button" className="lm-demo-play" onClick={() => setPlaying((p) => !p)} aria-label={playing ? "Pause" : "Play"}>
-          {playing ? "Pause" : "Play"}
-        </button>
-        <div className="lm-demo-dots" role="group" aria-label="Chapters">
+      <div className="lm-demo-controls" onKeyDown={onKeyDown}>
+        <div className="lm-demo-transport">
+          <button type="button" className="lm-demo-step" onClick={() => go(chapter - 1, { pause: true })} aria-label="Previous chapter">
+            <ChevronLeft size={18} strokeWidth={1.5} aria-hidden="true" />
+          </button>
+          <button type="button" className="lm-demo-play" onClick={() => setPlaying((p) => !p)} aria-label={playing ? "Pause" : "Play"}>
+            {playing ? "Pause" : "Play"}
+          </button>
+          <button type="button" className="lm-demo-step" onClick={() => go(chapter + 1, { pause: true })} aria-label="Next chapter">
+            <ChevronRight size={18} strokeWidth={1.5} aria-hidden="true" />
+          </button>
+        </div>
+        <div className="lm-demo-dots" role="group" aria-label="Chapters" ref={dotsRef}>
           {CHAPTERS.map((c, i) => (
             <button
               key={c.id}
               type="button"
               className={`lm-demo-dot ${i === chapter ? "is-on" : ""}`}
-              onClick={() => go(i)}
+              onClick={() => go(i, { pause: true })}
               aria-current={i === chapter ? "true" : undefined}
               aria-label={`Chapter ${i + 1} of ${CHAPTERS.length}: ${c.label}`}
+              data-label={c.label}
             >
               <span className="lm-demo-dot-fill" style={{ transform: `scaleX(${i < chapter ? 1 : i === chapter ? progress : 0})` }} />
             </button>
           ))}
         </div>
-        <span className="lm-mono lm-caption lm-demo-chlabel" style={{ fontSize: 12 }} aria-live="polite">{CHAPTERS[chapter].label}</span>
+        <span className="lm-mono lm-caption lm-demo-chlabel" style={{ fontSize: 12 }} aria-live="polite">
+          <span className="lm-demo-chpos">{chapter + 1} / {CHAPTERS.length}</span>{" "}
+          {CHAPTERS[chapter].label}
+        </span>
       </div>
     </div>
   )
