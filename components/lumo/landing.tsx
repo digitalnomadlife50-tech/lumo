@@ -1,11 +1,8 @@
 "use client";
 
 import { Reveal, Wordmark, delay } from "./ui";
-import { LiveDemo, demoMapPoints } from "./live-demo";
-import { JudgmentMap } from "./judgment-map";
-import { MonthlyBriefCard } from "./monthly-brief";
-import { DEMO_DECISIONS } from "@/lib/demo/decisions";
-import { computeBrief } from "@/lib/demo/brief";
+import { LiveDemo } from "./live-demo";
+import { OverTime } from "./over-time";
 import { ClipboardPaste, Forward, Mic, Scan, Video, type LucideIcon } from "lucide-react";
 
 const INPUTS: [string, LucideIcon][] = [
@@ -17,8 +14,6 @@ const INPUTS: [string, LucideIcon][] = [
 ];
 
 export default function Landing() {
-  const october = computeBrief(DEMO_DECISIONS, "October");
-
   return (
     <div className="lm-page">
       <div className="lm-wrap">
@@ -77,22 +72,7 @@ export default function Landing() {
       </section>
 
       <section id="record" style={{ background: "var(--lm-muted)" }}>
-        <div className="lm-wrap lm-section">
-          <div className="lm-sec-head">
-            <div className="lm-sec-copy">
-              <div className="lm-label">Over time</div>
-              <h2 className="lm-h2">It remembers how your decisions turned out.</h2>
-              <p className="lm-body-lg">Jordan&apos;s 40 past decisions. Each dot is one.</p>
-            </div>
-          </div>
-          <div className="lm-record">
-            <p className="lm-body-lg lm-record-legend">
-              Left to right is how sure Jordan was, from 1 to 5. Up and down is how it turned out.
-            </p>
-            <JudgmentMap points={demoMapPoints()} variant="replay" />
-            <MonthlyBriefCard brief={october} />
-          </div>
-        </div>
+        <OverTime />
       </section>
 
       <section className="lm-wrap lm-section">

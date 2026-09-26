@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56" fill="none" role="img" aria-label="Four cards, three checked and one crossed">
+  <rect x="5.5" y="17.5" width="10" height="21" rx="2" fill="#FFFFFF" stroke="#1F1B17" stroke-width="1.5"/>
+  <rect x="18.5" y="17.5" width="10" height="21" rx="2" fill="#FFFFFF" stroke="#1F1B17" stroke-width="1.5"/>
+  <rect x="31.5" y="17.5" width="10" height="21" rx="2" fill="#FFFFFF" stroke="#1F1B17" stroke-width="1.5"/>
+  <rect x="44.5" y="17.5" width="10" height="21" rx="2" fill="#FFFFFF" stroke="#1F1B17" stroke-width="1.5"/>
+  <path d="M7.6 30.5l1.9 1.9 3.4-3.9" stroke="#4A7A5C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M20.6 30.5l1.9 1.9 3.4-3.9" stroke="#4A7A5C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M33.6 30.5l1.9 1.9 3.4-3.9" stroke="#4A7A5C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M46.6 28.6l4.8 4.8M51.4 28.6l-4.8 4.8" stroke="#A04A38" stroke-width="1.5" stroke-linecap="round"/>
+</svg>
