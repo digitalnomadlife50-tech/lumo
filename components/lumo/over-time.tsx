@@ -22,7 +22,7 @@ const STEPS: Step[] = [
     n: "1",
     eyebrow: "The pattern",
     headline: "Dates and deadlines are where your instinct is off.",
-    support: "Seven of the ten date decisions you felt surest about turned out worse than you expected.",
+    support: "Seven of the ten date decisions you were most sure about turned out worse than you expected.",
     accent: true,
     art: "/illustrations/loop-pattern.svg",
     alt: "A cloud with three rain strokes",
@@ -30,15 +30,15 @@ const STEPS: Step[] = [
   {
     n: "2",
     eyebrow: "Why it happens",
-    headline: "You commit hardest right before a date moves.",
-    support: "Your confidence peaks when the schedule is already under pressure, which is when it is least reliable.",
+    headline: "You are most confident right before a date slips.",
+    support: "Your confidence peaks when the schedule is already under pressure. That is when it is least reliable.",
     art: "/illustrations/loop-why.svg",
     alt: "A calendar page with one date circled",
   },
   {
     n: "3",
     eyebrow: "The rule you set",
-    headline: "Before you give a customer a date, add your engineering lead's worst case first.",
+    headline: "Before you give a customer a date, add your engineering lead's worst case.",
     support: "Saved. Lumo raises this the next time a date comes up.",
     art: "/illustrations/loop-rule.svg",
     alt: "An index card with a checked box",
@@ -168,7 +168,7 @@ export function OverTime() {
             <div className="lm-ot-cols">
               <div className={`lm-ot-card lm-ot-decision ${leftIn ? "is-in" : ""}`}>
                 <div className="lm-ot-eyebrow">DECISION No.41</div>
-                <p className="lm-ot-q">Do we promise the API to Northwind by March 14?</p>
+                <p className="lm-ot-q">Do we promise Northwind the API by March 14?</p>
                 <div className="lm-ot-input">
                   <span className="lm-sr">{TYPED}</span>
                   <span aria-hidden="true">{TYPED.slice(0, chars)}</span>
@@ -178,7 +178,7 @@ export function OverTime() {
 
               <div className={`lm-ot-card lm-ot-record ${rightIn ? "is-in" : ""}`}>
                 <div className="lm-ot-eyebrow is-up">You have been here before</div>
-                <p className="lm-ot-line">Ten times you were this sure about a date.</p>
+                <p className="lm-ot-line">Ten times you have been this sure about a date.</p>
                 <div className="lm-ot-squares" aria-hidden="true">
                   {Array.from({ length: SQUARE_COUNT }, (_, i) => (
                     <span
@@ -201,7 +201,7 @@ export function OverTime() {
               <button type="button" className="lm-btn-sec">
                 Commit anyway
               </button>
-              <p className="lm-ot-note">Either way, Lumo records what you chose.</p>
+              <p className="lm-ot-note">Either way, Lumo records what you choose.</p>
             </div>
           </div>
         </div>
