@@ -145,7 +145,14 @@ export default function Landing() {
 
       <div className="lm-wrap">
         <Reveal className="lm-ctaband">
-          <div className="lm-ctaband-card" aria-hidden="true" />
+          <div className="lm-ctaband-note" aria-hidden="true">
+            <span className="lm-ctaband-tape" />
+            <span className="lm-ctaband-note-rule" />
+            <span className="lm-ctaband-note-prompt">
+              your decision here
+              <span className="lm-ctaband-caret" />
+            </span>
+          </div>
           <h2 className="lm-h2">Bring a decision you&apos;re stuck on.</h2>
           <a className="lm-btn-dark" href="/app">Try the demo</a>
         </Reveal>
