@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useRef, useState } from "react"
+import { Fragment, useEffect, useMemo, useRef, useState } from "react"
 import type { DecisionKind, ResultRating, Stakes } from "@/lib/demo/types"
 import { usePrefersReducedMotion } from "./ui"
 
@@ -28,43 +28,25 @@ const KINDS: { id: DecisionKind; label: string; color: string }[] = [
 ]
 const KIND_COLOR: Record<DecisionKind, string> = Object.fromEntries(KINDS.map((k) => [k.id, k.color])) as Record<DecisionKind, string>
 
+const CONFS = [1, 2, 3, 4, 5]
 const ROWS: ResultRating[] = ["better", "as-expected", "worse"]
-const ROW_LABEL: Record<ResultRating, string> = { better: "Better", "as-expected": "As expected", worse: "Worse" }
 
-type Geo = { W: number; H: number; PAD: { left: number; right: number; top: number; bottom: number } }
-
-/**
- * Two geometries. The narrow one keeps the axis labels at a readable size on a
- * phone: the SVG scales to its container, so a shorter viewBox means a larger
- * effective font. The left gutter is wide enough for "As expected" in both.
- */
-const FULL: Geo = { W: 660, H: 400, PAD: { left: 96, right: 28, top: 34, bottom: 88 } }
-const NARROW: Geo = { W: 420, H: 360, PAD: { left: 96, right: 16, top: 30, bottom: 80 } }
-
-/** The zone label, the tick numbers, and the axis title each get their own row below the plot. */
-const ZONE_LABEL_DY = 22
-const TICK_DY = 46
-const AXIS_TITLE_DY = 68
-
-function xFor(conf: number, g: Geo) {
-  const t = (Math.min(5, Math.max(1, conf)) - 1) / 4
-  return g.PAD.left + t * (g.W - g.PAD.left - g.PAD.right)
+/** Matches the wording the recent-call cards already use, so the map reads in the same voice. */
+const ROW_LABEL: Record<ResultRating, string> = {
+  better: "Better than expected",
+  "as-expected": "As expected",
+  worse: "Worse than expected",
 }
-function yFor(result: ResultRating, g: Geo) {
-  const i = ROWS.indexOf(result)
-  const t = i / (ROWS.length - 1)
-  return g.PAD.top + t * (g.H - g.PAD.top - g.PAD.bottom)
-}
-/** Deterministic jitter so points at the same cell don't stack. */
-function jitter(seed: number, spread: number) {
-  const s = Math.sin(seed * 12.9898) * 43758.5453
-  return (s - Math.floor(s) - 0.5) * spread
+const ROW_LABEL_SHORT: Record<ResultRating, string> = {
+  better: "Better",
+  "as-expected": "As expected",
+  worse: "Worse",
 }
 
 function useNarrowChart() {
   const [narrow, setNarrow] = useState(false)
   useEffect(() => {
-    const mq = window.matchMedia("(max-width: 559px)")
+    const mq = window.matchMedia("(max-width: 767px)")
     setNarrow(mq.matches)
     const on = () => setNarrow(mq.matches)
     mq.addEventListener("change", on)
@@ -84,7 +66,6 @@ export function JudgmentMap({
 }) {
   const reduced = usePrefersReducedMotion()
   const narrow = useNarrowChart()
-  const g = narrow ? NARROW : FULL
   const [activeKinds, setActiveKinds] = useState<Set<DecisionKind>>(new Set())
   const [selected, setSelected] = useState<number | null>(null)
   const [visible, setVisible] = useState(points.length)
@@ -155,8 +136,6 @@ export function JudgmentMap({
   }
 
   const selectedPoint = selected != null ? ordered.find((p) => p.number === selected) ?? null : null
-  const shown = filtered.slice(0, visible)
-  const bandPad = (g.H - g.PAD.top - g.PAD.bottom) * 0.08
 
   const kindCounts = useMemo(() => {
     const counts = Object.fromEntries(KINDS.map((k) => [k.id, 0])) as Record<DecisionKind, number>
@@ -164,8 +143,69 @@ export function JudgmentMap({
     return counts
   }, [ordered])
 
+  /** One bucket per confidence level and outcome, so every decision keeps its own dot. */
+  const cells = useMemo(() => {
+    const m = new Map<string, MapPoint[]>()
+    for (const p of filtered) {
+      const c = Math.min(5, Math.max(1, p.finalConfidence))
+      const key = `${c}|${p.result}`
+      const list = m.get(key)
+      if (list) list.push(p)
+      else m.set(key, [p])
+    }
+    return m
+  }, [filtered])
+
+  /** Position in the replay order, so dots fade in without the grid reflowing. */
+  const orderIndex = useMemo(() => {
+    const m = new Map<number, number>()
+    filtered.forEach((p, i) => m.set(p.number, i))
+    return m
+  }, [filtered])
+
+  /** The pattern, read off the data rather than asserted. */
+  const insight = useMemo(() => {
+    const byConf = new Map<number, MapPoint[]>()
+    for (const p of ordered) {
+      const c = Math.min(5, Math.max(1, p.finalConfidence))
+      const list = byConf.get(c)
+      if (list) list.push(p)
+      else byConf.set(c, [p])
+    }
+    const confs = [...byConf.keys()].sort((a, b) => a - b)
+    if (confs.length === 0) return null
+    const top = confs[confs.length - 1]
+    const topPts = byConf.get(top) ?? []
+    const topWorse = topPts.filter((p) => p.result === "worse").length
+    const allWorse = topPts.length > 1 && topWorse === topPts.length
+
+    // The level where things most often went better, for contrast against the top.
+    let best: { conf: number; better: number; total: number; rate: number } | null = null
+    for (const c of confs) {
+      const pts = byConf.get(c) ?? []
+      if (pts.length < 3) continue
+      const better = pts.filter((p) => p.result === "better").length
+      const rate = better / pts.length
+      if (!best || rate > best.rate) best = { conf: c, better, total: pts.length, rate }
+    }
+
+    const headline = allWorse
+      ? "The more sure you were, the worse it went."
+      : "Your confidence and your outcomes do not line up."
+    const parts: string[] = [
+      allWorse
+        ? `All ${topPts.length} calls at ${top} of 5 landed worse than expected.`
+        : `${topWorse} of ${topPts.length} calls at ${top} of 5 landed worse than expected.`,
+    ]
+    if (best && best.rate > 0.5 && best.conf !== top) {
+      parts.push(`At ${best.conf} of 5, ${best.better} of ${best.total} landed better.`)
+    }
+    return { headline, support: parts.join(" ") }
+  }, [ordered])
+
   const filtering = activeKinds.size > 0
   const matching = filtered.length
+  const rowLabel = narrow ? ROW_LABEL_SHORT : ROW_LABEL
 
   return (
     <div className="lm-map">
@@ -200,117 +240,84 @@ export function JudgmentMap({
       ) : null}
 
       <div className="lm-map-frame">
-        <svg viewBox={`0 0 ${g.W} ${g.H}`} className="lm-map-svg" role="img" aria-label="Your decisions by confidence and how they turned out">
-          {/* calibration band, bottom-left to top-right */}
-          <defs>
-            <linearGradient id="lm-band" x1="0" y1="1" x2="1" y2="0">
-              <stop offset="0%" stopColor="var(--lm-accent-soft)" stopOpacity="0.5" />
-              <stop offset="100%" stopColor="var(--lm-accent-soft)" stopOpacity="0.5" />
-            </linearGradient>
-          </defs>
-          <polygon
-            points={`${xFor(1, g)},${yFor("worse", g) + bandPad} ${xFor(2.2, g)},${yFor("worse", g) + bandPad} ${xFor(5, g)},${yFor("better", g) - bandPad} ${xFor(3.8, g)},${yFor("better", g) - bandPad}`}
-            fill="url(#lm-band)"
-          />
-          <text x={xFor(1.4, g)} y={yFor("better", g) - 6} className="lm-map-zone">Underconfident</text>
-          <text x={xFor(4.6, g)} y={yFor("worse", g) + ZONE_LABEL_DY} className="lm-map-zone" textAnchor="end">Overconfident</text>
+        {insight ? (
+          <div className="lm-map-insight">
+            <p className="lm-map-insight-h">{insight.headline}</p>
+            <p className="lm-map-insight-p">{insight.support}</p>
+          </div>
+        ) : null}
 
-          {/* y gridlines + labels. Labels sit in the left gutter, right-aligned, so they never overlap the plot. */}
+        <div
+          className="lm-map-grid"
+          role="group"
+          aria-label="Decisions by how sure you were and how they turned out"
+        >
+          <div className="lm-map-corner" aria-hidden="true" />
+          {CONFS.map((c) => (
+            <div key={c} className="lm-map-colhead" aria-hidden="true">
+              {c}
+            </div>
+          ))}
+
           {ROWS.map((r) => (
-            <g key={r}>
-              <line x1={g.PAD.left} y1={yFor(r, g)} x2={g.W - g.PAD.right} y2={yFor(r, g)} className="lm-map-grid" />
-              <text x={g.PAD.left - 10} y={yFor(r, g) + 5} className="lm-map-axis" textAnchor="end">{ROW_LABEL[r]}</text>
-            </g>
-          ))}
-
-          {/* x labels */}
-          {[1, 2, 3, 4, 5].map((c) => (
-            <text key={c} x={xFor(c, g)} y={g.H - g.PAD.bottom + TICK_DY} className="lm-map-axis" textAnchor="middle">{c}</text>
-          ))}
-          <text x={(g.PAD.left + g.W - g.PAD.right) / 2} y={g.H - g.PAD.bottom + AXIS_TITLE_DY} className="lm-map-axis" textAnchor="middle">Confidence at the time</text>
-
-          {/* points */}
-          {shown.map((p, i) => {
-            const dimmed = activeKinds.size > 0 && !activeKinds.has(p.kind)
-            const jx = jitter(p.number, 26)
-            const jy = jitter(p.number * 3.1, 20)
-            const cx = xFor(p.finalConfidence, g) + jx
-            const cy = yFor(p.result, g) + jy
-            const r = p.stakes === "one-way" ? 9 : 6
-            const isSel = selected === p.number
-            return (
-              <g
-                key={p.number}
-                className="lm-map-pt"
-                style={{ opacity: dimmed ? 0.08 : 1, animationDelay: `${Math.min(i, 40) * 16}ms` }}
-                onMouseEnter={() => setSelected(p.number)}
-                onMouseLeave={() => setSelected((s) => (s === p.number ? null : s))}
-                onClick={() => setSelected((s) => (s === p.number ? null : p.number))}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault()
-                    setSelected((s) => (s === p.number ? null : p.number))
-                  }
-                }}
-                tabIndex={0}
-                role="button"
-                aria-label={`No.${p.number}, ${p.title}`}
-                onFocus={() => setSelected(p.number)}
-              >
-                <circle
-                  cx={cx}
-                  cy={cy}
-                  r={isSel ? r + 2 : r}
-                  fill={KIND_COLOR[p.kind]}
-                  opacity={isSel ? 1 : 0.92}
-                  stroke="var(--lm-surface)"
-                  strokeWidth={1.5}
-                />
-              </g>
-            )
-          })}
-
-          {/* selected point overlay: drawn on top, with its first-instinct -> final drift so lines never stack */}
-          {selectedPoint
-            ? (() => {
-                const jx = jitter(selectedPoint.number, 26)
-                const jy = jitter(selectedPoint.number * 3.1, 20)
-                const cy = yFor(selectedPoint.result, g) + jy
-                const cx = xFor(selectedPoint.finalConfidence, g) + jx
-                const gx = xFor(selectedPoint.gutConfidence, g) + jx
-                const color = KIND_COLOR[selectedPoint.kind]
-                const r = (selectedPoint.stakes === "one-way" ? 9 : 6) + 2
-                const drift = selectedPoint.gutConfidence !== selectedPoint.finalConfidence
+            <Fragment key={r}>
+              <div className={`lm-map-rowlabel is-${r}`}>{rowLabel[r]}</div>
+              {CONFS.map((c) => {
+                const cell = cells.get(`${c}|${r}`) ?? []
                 return (
-                  <g className="lm-map-drift" aria-hidden="true">
-                    {drift ? (
-                      <>
-                        <line x1={gx} y1={cy} x2={cx} y2={cy} stroke={color} strokeWidth={1.5} strokeDasharray="3 3" opacity={0.7} />
-                        <circle cx={gx} cy={cy} r={5} fill="var(--lm-surface)" stroke={color} strokeWidth={1.5} />
-                      </>
-                    ) : null}
-                    <circle cx={cx} cy={cy} r={r} fill={color} opacity={1} stroke="var(--lm-surface)" strokeWidth={1.5} />
-                  </g>
+                  <div key={c} className={`lm-map-cell is-${r}`}>
+                    {cell.map((p) => {
+                      const idx = orderIndex.get(p.number) ?? 0
+                      const hidden = idx >= visible
+                      const isSel = selected === p.number
+                      return (
+                        <button
+                          key={p.number}
+                          type="button"
+                          className={`lm-map-dot ${p.stakes === "one-way" ? "is-oneway" : ""} ${
+                            hidden ? "is-hidden" : ""
+                          } ${isSel ? "is-sel" : ""}`}
+                          style={{ background: KIND_COLOR[p.kind] }}
+                          onClick={() => setSelected((s) => (s === p.number ? null : p.number))}
+                          onFocus={() => setSelected(p.number)}
+                          aria-pressed={isSel}
+                          aria-label={`No.${p.number}, ${p.title}. ${ROW_LABEL[p.result]} at ${p.finalConfidence} of 5.`}
+                        />
+                      )
+                    })}
+                  </div>
                 )
-              })()
-            : null}
-        </svg>
+              })}
+            </Fragment>
+          ))}
+
+          <div className="lm-map-axis-title">How sure you were</div>
+        </div>
 
         {selectedPoint ? (
           <div className="lm-map-card" role="status">
-            <div className="lm-mono lm-caption" style={{ fontSize: 12 }}>No.{selectedPoint.number}</div>
-            <div style={{ fontSize: 15, fontWeight: 500, marginTop: 4, lineHeight: 1.35 }}>{selectedPoint.title}</div>
-            <div className="lm-caption" style={{ marginTop: 8 }}>
-              Your first instinct was {shortCall(selectedPoint.gutCall)} at {selectedPoint.gutConfidence} of 5. You chose {shortCall(selectedPoint.finalCall)} at {selectedPoint.finalConfidence} of 5.
+            <div className="lm-map-card-head">
+              <div className="lm-mono lm-caption" style={{ fontSize: 12 }}>
+                No.{selectedPoint.number}
+              </div>
+              <div className="lm-map-card-title">{selectedPoint.title}</div>
             </div>
-            <div className="lm-caption" style={{ marginTop: 6, color: "var(--lm-text-2)" }}>
-              It turned out {ROW_LABEL[selectedPoint.result].toLowerCase()}. {selectedPoint.outcome}
+            <div className="lm-map-card-body">
+              <p className="lm-caption">
+                Your first instinct was {shortCall(selectedPoint.gutCall)} at {selectedPoint.gutConfidence} of 5. You
+                chose {shortCall(selectedPoint.finalCall)} at {selectedPoint.finalConfidence} of 5.
+              </p>
+              <p className="lm-caption" style={{ color: "var(--lm-text-2)" }}>
+                It turned out {ROW_LABEL[selectedPoint.result].toLowerCase()}. {selectedPoint.outcome}
+              </p>
+              {selectedPoint.lesson ? <div className="lm-map-lesson">{selectedPoint.lesson}</div> : null}
             </div>
-            {selectedPoint.lesson ? (
-              <div className="lm-map-lesson">{selectedPoint.lesson}</div>
-            ) : null}
           </div>
         ) : null}
+
+        <p className="lm-sr">
+          {ordered.length} decisions. {insight ? `${insight.headline} ${insight.support}` : ""}
+        </p>
       </div>
 
       <div className="lm-map-controls">
