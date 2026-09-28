@@ -21,6 +21,8 @@ import {
   type DraftInProgress,
 } from "@/components/lumo/screens"
 import type { AiStatus } from "@/components/lumo/ui"
+import { useDict, useLocale } from "@/lib/i18n"
+import { fill } from "@/lib/i18n/get-dictionary"
 
 /* ─── TYPES ─── */
 type View = "home" | "step1" | "step2" | "step3" | "step4" | "step5" | "step6" | "done"
@@ -119,12 +121,6 @@ interface SavedDraft {
 const DECISIONS_STORAGE_KEY = "lumo-decisions-v1"
 const DRAFT_STORAGE_KEY = "lumo-draft-v1"
 
-const EXAMPLE_SITUATION = `#launch-v2 dana: sales needs v2 live for re:Invent, three enterprise deals riding on it
-#eng marco: SSO is two sprints minimum, can't parallelize with the onboarding fix
-LUM-812: blocker, enterprise SSO not scoped
-dm from vp: need a call on this by friday
-#support: onboarding fix ships in v2, about 40 tickets waiting on it`
-
 interface DecisionOutcome {
   whatHappened: string
   rightCall: "yes" | "partly" | "no"
@@ -135,10 +131,13 @@ interface DecisionOutcome {
 
 /* ─── MAIN COMPONENT ─── */
 export default function ProductApp() {
+  const t = useDict().appPage
+  const locale = useLocale()
+  const EXAMPLE_SITUATION = t.exampleSituation
   const [view, setView] = useState<View>("home")
   const [homeInput, setHomeInput] = useState("")
   const [situation, setSituation] = useState("")
-  const [urgency] = useState("Not specified")
+  const [urgency] = useState(t.urgencyNotSpecified)
   const [options, setOptions] = useState<Option[]>([])
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null)
   const [chosenDirection, setChosenDirection] = useState("")
@@ -252,7 +251,7 @@ export default function ProductApp() {
     try {
       window.localStorage.setItem(DECISIONS_STORAGE_KEY, JSON.stringify(sessionDecisions))
     } catch {
-      setRewriteError("This browser could not save the latest decision changes.")
+      setRewriteError(t.errorSave)
     }
   }, [sessionDecisions])
 
@@ -331,7 +330,7 @@ export default function ProductApp() {
       const response = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ situation, urgency, hardship }),
+        body: JSON.stringify({ situation, urgency, hardship, locale }),
       })
       const data = await response.json()
 
@@ -354,7 +353,7 @@ export default function ProductApp() {
       navigate("step2")
     } catch (err) {
       setAiStatus("error")
-      setAiError(err instanceof Error ? err.message : "Analysis failed")
+      setAiError(err instanceof Error ? err.message : t.errorAnalysisFailed)
       setIsAnalyzing(false)
     }
   }
@@ -371,7 +370,7 @@ export default function ProductApp() {
         return { optionId: option.id, label: option.label, letter: option.letter, costLevel: source.costLevel, costSummary: source.cost, whoItHurts: source.whoItHurts, reversible: source.reversible, risk: source.risk }
       }
     }
-    return { optionId: option.id, label: option.label, letter: option.letter, costLevel: "medium" as const, costSummary: "Not yet assessed for this option.", whoItHurts: "Not assessed.", reversible: "partly" as const, risk: "This option was added by hand, so Lumo hasn't weighed in on it." }
+    return { optionId: option.id, label: option.label, letter: option.letter, costLevel: "medium" as const, costSummary: t.costNotAssessed, whoItHurts: t.whoNotAssessed, reversible: "partly" as const, risk: t.riskManual }
   })
 
   /* ─── Step 5 -> Step 6: draft messages ─── */
@@ -400,6 +399,7 @@ export default function ProductApp() {
       confidence,
       whatGivingUp,
       hardship,
+      locale,
       analysis: readBack
         ? { realQuestion: readBack.question, whatMatters: readBack.matters, whoIsAffected: readBack.affected, howPressing: readBack.pressing }
         : undefined,
@@ -453,7 +453,7 @@ export default function ProductApp() {
     } catch (err) {
       if ((err as Error).name === "AbortError") return
       setAiStatus("error")
-      setAiError(err instanceof Error ? err.message : "Something went wrong on our end. Try again.")
+      setAiError(err instanceof Error ? err.message : t.errorGeneric)
       setAiErrorDetails(failureDetails)
       setIsGenerating(false)
       navigate("step5")
@@ -464,7 +464,7 @@ export default function ProductApp() {
     if (!isGenerating) return
     const cancelTimer = setTimeout(() => {
       if (abortRef.current) abortRef.current.abort()
-      setAiError("This is taking too long. Try again.")
+      setAiError(t.errorTimeout)
       setAiErrorCode("TIMEOUT")
       setIsGenerating(false)
       navigate("step5")
@@ -489,13 +489,14 @@ export default function ProductApp() {
           draft: sourceDraft,
           context: { situation, urgency, chosenDirection, reasoning, confidence, whatGivingUp, claritySummary: aiOutput.claritySummary, affectedAudiences: readBack?.affected ?? "" },
           instruction,
+          locale,
         }),
       })
       const data = await response.json()
       if (!data.success) {
         setAiStatus("error")
         setRewriteDiagnostics(isAIDiagnostics(data.diagnostics) ? data.diagnostics : null)
-        throw new Error(data.error ?? "The draft could not be rewritten.")
+        throw new Error(data.error ?? t.errorRewrite)
       }
       const rewritten = data.draft as AudienceDraft
       setPreviousDrafts((previous) => ({ ...previous, [audienceId]: sourceDraft }))
@@ -504,7 +505,7 @@ export default function ProductApp() {
       updateSavedDecision({ drafts: updatedDrafts })
       setAiStatus("ok")
     } catch (error) {
-      setRewriteError(error instanceof Error ? error.message : "The draft could not be rewritten. Try again.")
+      setRewriteError(error instanceof Error ? error.message : t.errorRewrite)
     } finally {
       setRewritingAudience(null)
     }
@@ -526,13 +527,14 @@ export default function ProductApp() {
           context: { situation, urgency, chosenDirection, reasoning, confidence, whatGivingUp, claritySummary: aiOutput.claritySummary, affectedAudiences: readBack?.affected ?? "" },
           instruction: "add-audience",
           audience: audienceName.trim(),
+          locale,
         }),
       })
       const data = await response.json()
       if (!data.success) {
         setAiStatus("error")
         setRewriteDiagnostics(isAIDiagnostics(data.diagnostics) ? data.diagnostics : null)
-        throw new Error(data.error ?? "Could not draft an update for that person or team.")
+        throw new Error(data.error ?? t.errorAddAudience)
       }
       const rewritten = data.draft as AudienceDraft
       const updatedDrafts = [...aiOutput.drafts, rewritten]
@@ -540,7 +542,7 @@ export default function ProductApp() {
       updateSavedDecision({ drafts: updatedDrafts })
       setAiStatus("ok")
     } catch (error) {
-      setRewriteError(error instanceof Error ? error.message : "Could not draft an update for that person or team.")
+      setRewriteError(error instanceof Error ? error.message : t.errorAddAudience)
     } finally {
       setAddingAudience(false)
     }
@@ -577,14 +579,14 @@ export default function ProductApp() {
 
   const copyDecisionRecord = async () => {
     const lines = [
-      `No.${decisionNum ?? nextDecisionNumber} — ${chosenDirection}`,
+      fill(t.record.title, { number: decisionNum ?? nextDecisionNumber, call: chosenDirection }),
       "",
-      `The question: ${readBack?.question ?? situation}`,
-      `Why: ${reasoning}`,
-      `Confidence: ${confidence} of 5`,
-      `Gave up: ${whatGivingUp}`,
-      aiOutput ? `Summary: ${aiOutput.claritySummary}` : "",
-      revisitDate ? `Revisit on: ${revisitDate}` : "",
+      fill(t.record.question, { question: readBack?.question ?? situation }),
+      fill(t.record.why, { reasoning }),
+      fill(t.record.confidence, { confidence }),
+      fill(t.record.gaveUp, { gaveUp: whatGivingUp }),
+      aiOutput ? fill(t.record.summary, { summary: aiOutput.claritySummary }) : "",
+      revisitDate ? fill(t.record.revisit, { date: revisitDate }) : "",
     ].filter(Boolean)
     try {
       await navigator.clipboard.writeText(lines.join("\n"))

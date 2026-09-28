@@ -1,17 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { usePathname } from "next/navigation";
+import { useDict, useLocale } from "@/lib/i18n";
+import { fill } from "@/lib/i18n/get-dictionary";
+import { LOCALES, LOCALE_LABELS, type Locale } from "@/lib/i18n/locales";
 
 export type AiStatus = "idle" | "ok" | "error";
-
-export const STEP_NAMES = [
-  "What's happening",
-  "What I'm reading",
-  "Your options",
-  "Side by side",
-  "Your choice",
-  "Tell people",
-] as const;
 
 export function delay(ms: number): CSSProperties {
   return { ["--d" as string]: `${ms}ms` } as CSSProperties;
@@ -75,21 +70,57 @@ export function Reveal({
 }
 
 export function Wordmark({ href = "/" }: { href?: string }) {
+  const d = useDict();
   return (
-    <a href={href} className="lm-wordmark" aria-label="Lumo home">
+    <a href={href} className="lm-wordmark" aria-label={d.common.wordmarkAria}>
       lumo<i aria-hidden="true" />
     </a>
   );
 }
 
+/**
+ * Switch between locales while staying on the same page. The current path
+ * always carries a locale prefix ("/en/app", "/es/app"), so swapping the
+ * first segment preserves the rest of the route.
+ */
+export function LanguageSwitcher() {
+  const locale = useLocale();
+  const pathname = usePathname() || `/${locale}`;
+  const d = useDict();
+
+  const hrefFor = (target: Locale) => {
+    const segments = pathname.split("/");
+    segments[1] = target;
+    return segments.join("/") || `/${target}`;
+  };
+
+  return (
+    <nav className="lm-langswitch" aria-label={d.common.languageSwitcherAria}>
+      {LOCALES.map((l) =>
+        l === locale ? (
+          <span key={l} className="is-active" aria-current="true">
+            {LOCALE_LABELS[l]}
+          </span>
+        ) : (
+          <a key={l} href={hrefFor(l)} hrefLang={l}>
+            {LOCALE_LABELS[l]}
+          </a>
+        )
+      )}
+    </nav>
+  );
+}
+
 export function AppHeader({ aiStatus, initials = "" }: { aiStatus: AiStatus; initials?: string }) {
-  const label = aiStatus === "ok" ? "Connected" : aiStatus === "error" ? "Not connected" : "Checking";
+  const d = useDict();
+  const label = aiStatus === "ok" ? d.status.connected : aiStatus === "error" ? d.status.notConnected : d.status.checking;
   const color = aiStatus === "ok" ? "var(--lm-positive)" : aiStatus === "error" ? "var(--lm-caution)" : "var(--lm-text-3)";
   return (
     <header className="lm-header">
       <Wordmark href="/" />
       <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-        <a href="/" className="lm-backlink">Back to site</a>
+        <LanguageSwitcher />
+        <a href="/" className="lm-backlink">{d.common.backToSite}</a>
         <span className="lm-status" role="status">
           <i className={aiStatus === "ok" ? "lm-pulse" : ""} style={{ background: color }} aria-hidden="true" />
           <span>{label}</span>
@@ -101,11 +132,13 @@ export function AppHeader({ aiStatus, initials = "" }: { aiStatus: AiStatus; ini
 }
 
 export function PathBar({ current, onJump }: { current: number; onJump?: (step: number) => void }) {
+  const d = useDict();
+  const steps = d.steps;
   const [listOpen, setListOpen] = useState(false);
   return (
     <>
-      <nav className="lm-path" aria-label="Progress">
-        {STEP_NAMES.map((name, i) => {
+      <nav className="lm-path" aria-label={d.common.progressAria}>
+        {steps.map((name, i) => {
           const color = i < current ? "var(--lm-text)" : i === current ? "var(--lm-accent)" : "var(--lm-text-3)";
           const canJump = i < current && !!onJump;
           const Tag = canJump ? "button" : "span";
@@ -121,12 +154,12 @@ export function PathBar({ current, onJump }: { current: number; onJump?: (step: 
                 <i aria-hidden="true" />
                 {name}
               </Tag>
-              {i < STEP_NAMES.length - 1 ? <span className={`lm-path-dash ${i < current ? "is-done" : ""}`} aria-hidden="true"><i /></span> : null}
+              {i < steps.length - 1 ? <span className={`lm-path-dash ${i < current ? "is-done" : ""}`} aria-hidden="true"><i /></span> : null}
             </span>
           );
         })}
       </nav>
-      <div className="lm-path-mobile" aria-label="Progress" style={{ position: "relative" }}>
+      <div className="lm-path-mobile" aria-label={d.common.progressAria} style={{ position: "relative" }}>
         <button
           type="button"
           className="lm-path-mobile-text is-jump"
@@ -134,14 +167,14 @@ export function PathBar({ current, onJump }: { current: number; onJump?: (step: 
           aria-expanded={listOpen}
           style={{ background: "none", border: "none", padding: 0, font: "inherit", color: "var(--lm-text-2)", cursor: "pointer" }}
         >
-          Step {current + 1} of 6. {STEP_NAMES[current]}
+          {fill(d.common.stepOf, { current: current + 1, total: steps.length })}. {steps[current]}
         </button>
         <div className="lm-path-mobile-bar">
           <i style={{ width: `${((current + 1) / 6) * 100}%` }} />
         </div>
         {listOpen ? (
           <div className="lm-path-jumplist" role="menu">
-            {STEP_NAMES.map((name, i) => {
+            {steps.map((name, i) => {
               const canJump = i < current && !!onJump;
               return (
                 <button
@@ -155,7 +188,7 @@ export function PathBar({ current, onJump }: { current: number; onJump?: (step: 
                     }
                   }}
                 >
-                  Step {i + 1}. {name}
+                  {fill(d.common.stepLabel, { number: i + 1, name })}
                 </button>
               );
             })}
@@ -166,7 +199,9 @@ export function PathBar({ current, onJump }: { current: number; onJump?: (step: 
   );
 }
 
-export function KeyHint({ label = "Enter" }: { label?: string }) {
+export function KeyHint({ label }: { label?: string }) {
+  const d = useDict();
+  const text = label ?? d.common.enter;
   const [mac, setMac] = useState(true);
   const [touch, setTouch] = useState(false);
   useEffect(() => {
@@ -176,16 +211,17 @@ export function KeyHint({ label = "Enter" }: { label?: string }) {
   if (touch) return null;
   return (
     <span className="lm-keyhint" aria-hidden="true">
-      {mac ? `\u2318 ${label}` : `Ctrl ${label}`}
+      {mac ? `⌘ ${text}` : `Ctrl ${text}`}
     </span>
   );
 }
 
 export function Kicker({ number, step, right }: { number: number; step: number; right?: ReactNode }) {
+  const d = useDict();
   return (
     <div className="lm-kicker">
       <span>
-        No.{number} / step {step} of 6
+        {fill(d.common.noStepOf, { number, step, total: d.steps.length })}
       </span>
       {right ? <span>{right}</span> : null}
     </div>

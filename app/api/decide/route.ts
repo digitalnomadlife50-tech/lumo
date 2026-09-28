@@ -3,6 +3,7 @@ import { ANTHROPIC_MODEL } from "@/lib/anthropic-model"
 import { cleanAIValue, getAnthropicErrorMetadata, HUMAN_WRITING_RULES, safeAIErrorMessage, safeRawModelOutput } from "@/lib/ai-output-utils"
 import type { AIAttemptDiagnostic, AIDiagnostics } from "@/lib/ai-debug-config"
 import { checkRateLimit, getClientIp, RATE_LIMIT_MESSAGE } from "@/lib/rate-limit"
+import { aiLanguageInstruction, resolveAiLocale } from "@/lib/ai-locale"
 
 export const maxDuration = 60
 
@@ -14,6 +15,7 @@ interface DecisionContext {
   confidence: number
   whatGivingUp: string
   hardship?: string
+  locale?: string
   analysis?: {
     realQuestion?: string
     whatMatters?: string
@@ -99,13 +101,13 @@ function isAudienceDraft(value: unknown): value is AudienceDraft {
     (draft.pushback === undefined || (Array.isArray(draft.pushback) && draft.pushback.length <= 2 && draft.pushback.every(isPushback)))
 }
 
-function isDecideResult(value: unknown): value is DecideResult {
+function isDecideResult(value: unknown, vpAudience: string): value is DecideResult {
   if (!value || typeof value !== "object") return false
   const result = value as Record<string, unknown>
   if (typeof result.claritySummary !== "string" || typeof result.executionTeam !== "string" || !result.executionTeam.trim()) return false
   if (!Array.isArray(result.drafts) || result.drafts.length < 2 || result.drafts.length > 8 || !result.drafts.every(isAudienceDraft)) return false
   const audiences = result.drafts.map((draft) => draft.audience.trim().toLowerCase())
-  return audiences.includes("your vp") && audiences.includes(result.executionTeam.trim().toLowerCase())
+  return audiences.includes(vpAudience.toLowerCase()) && audiences.includes(result.executionTeam.trim().toLowerCase())
 }
 
 function getDiagnosticsResponse(
@@ -177,6 +179,8 @@ export async function POST(req: Request) {
     const whatGivingUp = typeof body.whatGivingUp === "string" ? body.whatGivingUp.trim() : ""
     const hardship = typeof body.hardship === "string" ? body.hardship.trim().slice(0, 500) : ""
     const confidence = body.confidence
+    const locale = resolveAiLocale(body.locale)
+    const vpAudience = locale === "es" ? "Tu VP" : "Your VP"
     if ([situation, urgency, chosenDirection, reasoning, whatGivingUp].some((value) => !value || value.length > 6000) || typeof confidence !== "number" || !Number.isInteger(confidence) || confidence < 1 || confidence > 5) {
       return Response.json({ success: false, errorCode: "INVALID_INPUT", error: "Complete the decision details before drafting messages." }, { status: 400 })
     }
@@ -189,7 +193,7 @@ export async function POST(req: Request) {
       urgencyRead: typeof analysis.howPressing === "string" ? analysis.howPressing.slice(0, 2000) : "",
     }
 
-    const systemPrompt = `You are Lumo, a thoughtful senior product manager writing real messages to colleagues. Return a short first-person decision summary and one message draft for each affected person or team named in the analysis. Always include an audience named exactly "Your VP" and the execution team that owns the chosen work. Set executionTeam to that team's actual name from the input. If no specific team can be identified, use "Execution team" rather than inventing one. Do not add unrelated audiences. Keep each message under 100 words. Choose the channel that best fits the audience: email, slack, or dm. Email drafts need a concise subject. Slack and DM drafts must have an empty subject. Lead with the decision. Include one clear ask when there is one. Executives get the call, cost, risk being watched, and confidence. Engineering gets scope changes and owners. Sales and support get what to say to customers. Use the real names, teams, dates, and numbers from the input. Do not fabricate details. No bold, markdown, or headers inside draft bodies. For every draft, also return a pushback array of up to two realistic objections that specific audience would likely raise back in their own voice, each paired with a specific one or two sentence response the PM could give. Only include genuine, realistic objections; an empty array is fine if none apply. If what is making this hard is provided, let it shape the tone of the draft toward the person it names, but never quote it directly. ${HUMAN_WRITING_RULES}`
+    const systemPrompt = `You are Lumo, a thoughtful senior product manager writing real messages to colleagues. Return a short first-person decision summary and one message draft for each affected person or team named in the analysis. Always include an audience named exactly "${vpAudience}" and the execution team that owns the chosen work. Set executionTeam to that team's actual name from the input. If no specific team can be identified, use "Execution team" rather than inventing one. Do not add unrelated audiences. Keep each message under 100 words. Choose the channel that best fits the audience: email, slack, or dm. Email drafts need a concise subject. Slack and DM drafts must have an empty subject. Lead with the decision. Include one clear ask when there is one. Executives get the call, cost, risk being watched, and confidence. Engineering gets scope changes and owners. Sales and support get what to say to customers. Use the real names, teams, dates, and numbers from the input. Do not fabricate details. No bold, markdown, or headers inside draft bodies. For every draft, also return a pushback array of up to two realistic objections that specific audience would likely raise back in their own voice, each paired with a specific one or two sentence response the PM could give. Only include genuine, realistic objections; an empty array is fine if none apply. If what is making this hard is provided, let it shape the tone of the draft toward the person it names, but never quote it directly. ${aiLanguageInstruction(locale)} ${HUMAN_WRITING_RULES}`
 
     const userPrompt = `USER'S DECISION CONTEXT
 Situation: ${situation}
@@ -231,7 +235,7 @@ Draft for every affected audience, plus Your VP and the team responsible for exe
           attempts.push({ attempt, ...lastFailure })
           continue
         }
-        if (!isDecideResult(toolResult.input)) {
+        if (!isDecideResult(toolResult.input, vpAudience)) {
           lastFailure = { stage: "output didn't match the expected shape", httpStatus: 200, requestId, errorMessage: "The structured draft output was missing a required audience or had incorrect fields.", rawModelOutput: safeRawModelOutput(toolResult.input), result: "Tool output did not match expected shape" }
           attempts.push({ attempt, ...lastFailure })
           continue

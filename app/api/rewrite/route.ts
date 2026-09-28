@@ -3,6 +3,7 @@ import { ANTHROPIC_MODEL } from "@/lib/anthropic-model"
 import { cleanAIValue, getAnthropicErrorMetadata, HUMAN_WRITING_RULES, safeAIErrorMessage, safeRawModelOutput } from "@/lib/ai-output-utils"
 import type { AIAttemptDiagnostic, AIDiagnostics } from "@/lib/ai-debug-config"
 import { checkRateLimit, getClientIp, RATE_LIMIT_MESSAGE } from "@/lib/rate-limit"
+import { aiLanguageInstruction, resolveAiLocale } from "@/lib/ai-locale"
 
 export const maxDuration = 60
 
@@ -33,6 +34,7 @@ interface RewriteRequest {
   }
   instruction: Instruction
   audience?: string
+  locale?: string
 }
 
 const rewriteTool: Anthropic.Tool = {
@@ -123,6 +125,7 @@ export async function POST(req: Request) {
     const context = body.context
     const instruction = body.instruction
     const audience = typeof body.audience === "string" ? body.audience.trim() : ""
+    const locale = resolveAiLocale(body.locale)
     if (!draft || typeof draft !== "object" || !context || typeof context !== "object" || !["shorter", "more-direct", "add-audience"].includes(instruction ?? "")) {
       return Response.json({ success: false, errorCode: "INVALID_INPUT", error: "The rewrite request is incomplete." }, { status: 400 })
     }
@@ -142,7 +145,7 @@ export async function POST(req: Request) {
       affectedAudiences: typeof context.affectedAudiences === "string" ? context.affectedAudiences.slice(0, 3000) : "",
     }
     const targetAudience = isAddAudience ? audience : draft.audience.trim()
-    const systemPrompt = `You are Lumo, a thoughtful senior product manager editing a message for colleagues. Preserve the real facts, names, teams, dates, decision, and confidence from the supplied context. Do not invent details. Lead with the decision, include one clear ask when there is one, and match the audience. Executives get the call, cost, risk being watched, and confidence. Engineering gets scope changes and owners. Sales and support get what to say to customers. Keep the body under 100 words. Do not use bold, markdown, or headers inside the body. For email, provide a concise subject. For Slack or DM, return an empty subject. Also return a pushback array of up to two realistic objections this audience would likely raise back in their own voice, each paired with a specific one or two sentence response the PM could give. Keep any existing pushback consistent with the rewritten draft. ${HUMAN_WRITING_RULES}`
+    const systemPrompt = `You are Lumo, a thoughtful senior product manager editing a message for colleagues. Preserve the real facts, names, teams, dates, decision, and confidence from the supplied context. Do not invent details. Lead with the decision, include one clear ask when there is one, and match the audience. Executives get the call, cost, risk being watched, and confidence. Engineering gets scope changes and owners. Sales and support get what to say to customers. Keep the body under 100 words. Do not use bold, markdown, or headers inside the body. For email, provide a concise subject. For Slack or DM, return an empty subject. Also return a pushback array of up to two realistic objections this audience would likely raise back in their own voice, each paired with a specific one or two sentence response the PM could give. Keep any existing pushback consistent with the rewritten draft. ${aiLanguageInstruction(locale)} ${HUMAN_WRITING_RULES}`
     const instructionText = instruction === "shorter" ? "Make this draft shorter while preserving its important facts and clear ask." : instruction === "more-direct" ? "Make this draft more direct and outcome-first without becoming abrupt or changing any facts." : `Create a new draft for the audience named exactly "${targetAudience}". Choose the best channel for this audience and tailor the message to their role.`
     const userPrompt = `INSTRUCTION: ${instructionText}
 
