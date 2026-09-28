@@ -6,6 +6,8 @@ import { DEMO_DECISIONS } from "@/lib/demo/decisions"
 import { usePrefersReducedMotion } from "./ui"
 import { JudgmentMap, type MapPoint } from "./judgment-map"
 import { ChevronLeft, ChevronRight, PenLine, Send, Telescope, TrendingUp, type LucideIcon } from "lucide-react"
+import { useDict } from "@/lib/i18n"
+import { fill } from "@/lib/i18n/get-dictionary"
 
 export function demoMapPoints(): MapPoint[] {
   return DEMO_DECISIONS.filter((d) => d.outcome).map((d) => ({
@@ -25,46 +27,26 @@ export function demoMapPoints(): MapPoint[] {
 
 const CH_DURATION = 8500
 
-const PHASES: ReadonlyArray<{ name: string; desc: string; Icon: LucideIcon }> = [
-  {
-    name: "Before you decide",
-    desc: "Write down your first instinct before you see anything.",
-    Icon: PenLine,
-  },
-  {
-    name: "While you decide",
-    desc: "The research, the risks, and how each option plays out.",
-    Icon: Telescope,
-  },
-  {
-    name: "After you decide",
-    desc: "One decision, a tailored update for each person or team.",
-    Icon: Send,
-  },
-  {
-    name: "Weeks later",
-    desc: "Was the thinking sound, and did it work out? Lumo tracks both, because a good decision can still turn out badly.",
-    Icon: TrendingUp,
-  },
-]
+const PHASE_ICONS: LucideIcon[] = [PenLine, Telescope, Send, TrendingUp]
 
-const CHAPTERS: ReadonlyArray<{ id: string; label: string; phase: number; hold?: number }> = [
-  { id: "situation", label: "The situation", phase: 0 },
-  { id: "instinct", label: "Your first instinct", phase: 0 },
-  { id: "research", label: "The research", phase: 1 },
-  { id: "gap", label: "Your instinct vs. the evidence", phase: 1, hold: 2 },
-  { id: "forward", label: "How each option plays out", phase: 1 },
-  { id: "memory", label: "A lesson from a past decision", phase: 1 },
-  { id: "decision", label: "Your decision", phase: 2 },
-  { id: "updates", label: "Updates for each team", phase: 2 },
-  { id: "map", label: "Saved for review", phase: 3 },
+const CHAPTER_META: ReadonlyArray<{ id: string; phase: number; hold?: number }> = [
+  { id: "situation", phase: 0 },
+  { id: "instinct", phase: 0 },
+  { id: "research", phase: 1 },
+  { id: "gap", phase: 1, hold: 2 },
+  { id: "forward", phase: 1 },
+  { id: "memory", phase: 1 },
+  { id: "decision", phase: 2 },
+  { id: "updates", phase: 2 },
+  { id: "map", phase: 3 },
 ] as const
 
-const PEOPLE: Record<string, { name: string; role: string; avatar: string }> = {
-  "Maya Chen": { name: "Maya Chen", role: "VP of Product", avatar: "/illustrations/avatar-maya.png" },
-  "Marco Diaz": { name: "Marco Diaz", role: "Engineering lead", avatar: "/illustrations/avatar-marco.png" },
-  "Dana Brooks": { name: "Dana Brooks", role: "Sales lead", avatar: "/illustrations/avatar-dana.png" },
-  "Priya Shah": { name: "Priya Shah", role: "Support lead", avatar: "/illustrations/avatar-priya.png" },
+type RoleKey = "maya" | "marco" | "dana" | "priya"
+const PEOPLE: Record<string, { name: string; roleKey: RoleKey; avatar: string }> = {
+  "Maya Chen": { name: "Maya Chen", roleKey: "maya", avatar: "/illustrations/avatar-maya.png" },
+  "Marco Diaz": { name: "Marco Diaz", roleKey: "marco", avatar: "/illustrations/avatar-marco.png" },
+  "Dana Brooks": { name: "Dana Brooks", roleKey: "dana", avatar: "/illustrations/avatar-dana.png" },
+  "Priya Shah": { name: "Priya Shah", roleKey: "priya", avatar: "/illustrations/avatar-priya.png" },
 }
 
 function personFor(name: string) {
@@ -83,6 +65,9 @@ function parseSlackLine(line: string) {
 
 export function LiveDemo() {
   const reduced = usePrefersReducedMotion()
+  const dict = useDict()
+  const t = dict.liveDemo
+  const chapters = CHAPTER_META.map((m, i) => ({ ...m, label: t.chapters[i] }))
   const d = CURRENT_DECISION
   const points = useMemo(() => demoMapPoints(), [])
   const [chapter, setChapter] = useState(0)
@@ -98,12 +83,12 @@ export function LiveDemo() {
   useEffect(() => {
     if (!playing) return
     startRef.current = performance.now()
-    const dur = CH_DURATION * (CHAPTERS[chapter].hold ?? 1)
+    const dur = CH_DURATION * (chapters[chapter].hold ?? 1)
     const tick = (now: number) => {
       const t = Math.min(1, (now - startRef.current) / dur)
       setProgress(t)
       if (t >= 1) {
-        setChapter((c) => (c + 1) % CHAPTERS.length)
+        setChapter((c) => (c + 1) % chapters.length)
         setProgress(0)
         startRef.current = performance.now()
       }
@@ -118,7 +103,7 @@ export function LiveDemo() {
   const dotsRef = useRef<HTMLDivElement>(null)
 
   const go = (i: number, opts?: { pause?: boolean; focus?: boolean }) => {
-    const next = (i + CHAPTERS.length) % CHAPTERS.length
+    const next = (i + chapters.length) % chapters.length
     setChapter(next)
     setProgress(0)
     startRef.current = performance.now()
@@ -144,14 +129,15 @@ export function LiveDemo() {
     }
   }
 
-  const cur = CHAPTERS[chapter].id
-  const phase = PHASES[CHAPTERS[chapter].phase]
+  const cur = chapters[chapter].id
+  const phaseIndex = chapters[chapter].phase
+  const phase = { ...t.phases[phaseIndex], Icon: PHASE_ICONS[phaseIndex] }
 
   return (
     <div className="lm-demo">
       <div className="lm-demo-bar">
         <span className="lm-mono lm-caption" style={{ fontSize: 12 }}>lumo</span>
-        <span className="lm-mono lm-caption" style={{ fontSize: 12 }}>Decision No.{d.number} · Sample data</span>
+        <span className="lm-mono lm-caption" style={{ fontSize: 12 }}>{fill(t.decisionNo, { number: d.number })} · {t.sampleData}</span>
       </div>
 
       <div className="lm-demo-who">
@@ -162,10 +148,10 @@ export function LiveDemo() {
           height={44}
           className="lm-demo-who-avatar"
         />
-        <p>Jordan Ellis is a sample product manager. This is Jordan&apos;s 41st decision in Lumo.</p>
+        <p>{t.whoLine}</p>
       </div>
 
-      <div key={`ph-${CHAPTERS[chapter].phase}`} className="lm-demo-phase lm-fade-swap">
+      <div key={`ph-${phaseIndex}`} className="lm-demo-phase lm-fade-swap">
         <phase.Icon className="lm-demo-phase-icon" strokeWidth={1.5} aria-hidden="true" />
         <div className="lm-demo-phase-text">
           <span className="lm-demo-phase-name">{phase.name}</span>
@@ -185,8 +171,8 @@ export function LiveDemo() {
           {cur === "updates" && <UpdatesScene d={d} />}
           {cur === "map" && (
             <div className="lm-demo-map">
-              <div className="lm-label">Saved for review</div>
-              <p className="lm-demo-lead">This decision joins 40 others. The map is where the patterns show.</p>
+              <div className="lm-label">{t.mapLabel}</div>
+              <p className="lm-demo-lead">{t.mapLead}</p>
               <JudgmentMap points={points} />
             </div>
           )}
@@ -195,25 +181,25 @@ export function LiveDemo() {
 
       <div className="lm-demo-controls" onKeyDown={onKeyDown}>
         <div className="lm-demo-transport">
-          <button type="button" className="lm-demo-step" onClick={() => go(chapter - 1, { pause: true })} aria-label="Previous chapter">
+          <button type="button" className="lm-demo-step" onClick={() => go(chapter - 1, { pause: true })} aria-label={t.prevChapter}>
             <ChevronLeft size={18} strokeWidth={1.5} aria-hidden="true" />
           </button>
-          <button type="button" className="lm-demo-play" onClick={() => setPlaying((p) => !p)} aria-label={playing ? "Pause" : "Play"}>
-            {playing ? "Pause" : "Play"}
+          <button type="button" className="lm-demo-play" onClick={() => setPlaying((p) => !p)} aria-label={playing ? t.pause : t.play}>
+            {playing ? t.pause : t.play}
           </button>
-          <button type="button" className="lm-demo-step" onClick={() => go(chapter + 1, { pause: true })} aria-label="Next chapter">
+          <button type="button" className="lm-demo-step" onClick={() => go(chapter + 1, { pause: true })} aria-label={t.nextChapter}>
             <ChevronRight size={18} strokeWidth={1.5} aria-hidden="true" />
           </button>
         </div>
-        <div className="lm-demo-dots" role="group" aria-label="Chapters" ref={dotsRef}>
-          {CHAPTERS.map((c, i) => (
+        <div className="lm-demo-dots" role="group" aria-label={t.chaptersAria} ref={dotsRef}>
+          {chapters.map((c, i) => (
             <button
               key={c.id}
               type="button"
               className={`lm-demo-dot ${i === chapter ? "is-on" : ""}`}
               onClick={() => go(i, { pause: true })}
               aria-current={i === chapter ? "true" : undefined}
-              aria-label={`Chapter ${i + 1} of ${CHAPTERS.length}: ${c.label}`}
+              aria-label={fill(t.chapterOf, { current: i + 1, total: chapters.length, label: c.label })}
               data-label={c.label}
             >
               <span className="lm-demo-dot-fill" style={{ transform: `scaleX(${i < chapter ? 1 : i === chapter ? progress : 0})` }} />
@@ -221,8 +207,8 @@ export function LiveDemo() {
           ))}
         </div>
         <span className="lm-mono lm-caption lm-demo-chlabel" style={{ fontSize: 12 }} aria-live="polite">
-          <span className="lm-demo-chpos">{chapter + 1} / {CHAPTERS.length}</span>{" "}
-          {CHAPTERS[chapter].label}
+          <span className="lm-demo-chpos">{chapter + 1} / {chapters.length}</span>{" "}
+          {chapters[chapter].label}
         </span>
       </div>
     </div>
@@ -232,9 +218,11 @@ export function LiveDemo() {
 type D = typeof CURRENT_DECISION
 
 function SituationScene({ d }: { d: D }) {
+  const dict = useDict()
+  const t = dict.liveDemo
   return (
     <div className="lm-demo-col">
-      <div className="lm-label">What&apos;s happening</div>
+      <div className="lm-label">{t.scenes.situation}</div>
       <h3 className="lm-demo-q">{d.question}</h3>
       <div className="lm-demo-sources">
         {d.sources.map((s) => (
@@ -249,7 +237,7 @@ function SituationScene({ d }: { d: D }) {
                   <div>
                     <div className="lm-demo-slackline-who">
                       <span>{parsed.person.name}</span>
-                      <span className="lm-caption">{parsed.person.role}</span>
+                      <span className="lm-caption">{t.roles[parsed.person.roleKey]}</span>
                     </div>
                     <p>{parsed.text}</p>
                   </div>
@@ -264,48 +252,52 @@ function SituationScene({ d }: { d: D }) {
 }
 
 function InstinctCard({ d, compact = false }: { d: D; compact?: boolean }) {
+  const dict = useDict()
+  const t = dict.liveDemo.card
   const opt = d.options.find((o) => o.letter === d.gut.option)
   return (
     <div className={`lm-indexcard ${compact ? "is-compact" : ""}`}>
       <span className="lm-indexcard-rule" aria-hidden="true" />
       <div className="lm-indexcard-inner">
-        <div className="lm-label">Leaning toward</div>
+        <div className="lm-label">{t.leaningToward}</div>
         <p className="lm-indexcard-opt">{opt?.label}</p>
         <div className="lm-indexcard-rows">
           <div>
-            <span className="lm-caption">Confidence</span>
-            <span className="lm-indexcard-val">{d.gut.confidence} of 5</span>
+            <span className="lm-caption">{dict.common.confidence}</span>
+            <span className="lm-indexcard-val">{d.gut.confidence} {dict.common.of5}</span>
           </div>
           <div>
-            <span className="lm-caption">What&apos;s nagging</span>
+            <span className="lm-caption">{t.whatsNagging}</span>
             <span className="lm-indexcard-val">{d.gut.worry}</span>
           </div>
         </div>
       </div>
-      <div className="lm-indexcard-stamp">Tuesday, 9:40 pm</div>
+      <div className="lm-indexcard-stamp">{t.stamp}</div>
     </div>
   )
 }
 
 function InstinctScene({ d }: { d: D }) {
+  const t = useDict().liveDemo
   return (
     <div className="lm-demo-col">
-      <div className="lm-label">Your first instinct</div>
-      <p className="lm-demo-lead">Lumo asks first, so your instinct is written down before it shows you anything.</p>
+      <div className="lm-label">{t.scenes.instinct}</div>
+      <p className="lm-demo-lead">{t.scenes.instinctLead}</p>
       <InstinctCard d={d} />
     </div>
   )
 }
 
 function ResearchScene({ d }: { d: D }) {
+  const t = useDict().liveDemo
   const rows = [
-    ["Went and looked", d.findings.research],
-    ["The outside view", d.findings.outsideView],
-    ["Ran it forward and it failed", d.findings.premortem],
+    [t.research.wentAndLooked, d.findings.research],
+    [t.research.outsideView, d.findings.outsideView],
+    [t.research.premortem, d.findings.premortem],
   ]
   return (
     <div className="lm-demo-col">
-      <div className="lm-label">The research</div>
+      <div className="lm-label">{t.scenes.research}</div>
       <div className="lm-demo-agents">
         {rows.map(([t, b], i) => (
           <div key={i} className="lm-demo-agent" style={{ animationDelay: `${i * 160}ms` }}>
@@ -319,9 +311,10 @@ function ResearchScene({ d }: { d: D }) {
 }
 
 function GapScene({ d }: { d: D }) {
+  const t = useDict().liveDemo
   return (
     <div className="lm-demo-col">
-      <div className="lm-label">Your instinct vs. the evidence</div>
+      <div className="lm-label">{t.scenes.gap}</div>
       <div className="lm-demo-gapwrap">
         <InstinctCard d={d} compact />
         <p className="lm-demo-gap">{d.gap}</p>
@@ -331,16 +324,17 @@ function GapScene({ d }: { d: D }) {
 }
 
 function ForwardScene({ d }: { d: D }) {
+  const t = useDict().liveDemo
   return (
     <div className="lm-demo-col">
-      <div className="lm-label">How each option plays out</div>
+      <div className="lm-label">{t.scenes.forward}</div>
       <div className="lm-demo-forward">
         {d.findings.playItForward.map((col) => {
           const opt = d.options.find((o) => o.letter === col.option)
           const chosen = col.option === d.final.option
           return (
             <div key={col.option} className={`lm-demo-track ${chosen ? "is-chosen" : ""}`}>
-              <div className="lm-mono lm-caption" style={{ fontSize: 12 }}>Path {col.option}{chosen ? ", chosen" : ""}</div>
+              <div className="lm-mono lm-caption" style={{ fontSize: 12 }}>{fill(t.forward.path, { option: col.option })}{chosen ? t.forward.chosen : ""}</div>
               <div className="lm-demo-track-name">{opt?.label}</div>
               <ul>
                 {col.beats.map((b, i) => (
@@ -356,10 +350,11 @@ function ForwardScene({ d }: { d: D }) {
 }
 
 function MemoryScene({ d }: { d: D }) {
+  const t = useDict().liveDemo
   const r = d.resurfaced
   return (
     <div className="lm-demo-col lm-demo-center">
-      <div className="lm-label">A lesson from a past decision</div>
+      <div className="lm-label">{t.scenes.memory}</div>
       <div className="lm-demo-memory">
         <div className="lm-mono lm-caption" style={{ fontSize: 12 }}>No.{r.decisionNumber}</div>
         <div className="lm-demo-memory-title">{r.title}</div>
@@ -372,17 +367,19 @@ function MemoryScene({ d }: { d: D }) {
 }
 
 function DecisionScene({ d }: { d: D }) {
+  const dict = useDict()
+  const t = dict.liveDemo
   const opt = d.options.find((o) => o.letter === d.final.option)
   return (
     <div className="lm-demo-col">
-      <div className="lm-label">Your decision</div>
+      <div className="lm-label">{t.scenes.decision}</div>
       <div className="lm-demo-decision">
         <div className="lm-demo-decision-opt">{opt?.label}</div>
         <p className="lm-demo-lead">{d.final.why}</p>
         <div className="lm-demo-decision-meta">
-          <div><div className="lm-caption">Confidence</div><div>{d.final.confidence}/5</div></div>
-          <div><div className="lm-caption">Giving up</div><div>{d.final.gaveUp}</div></div>
-          <div><div className="lm-caption">Revisit</div><div>{d.tripwire}</div></div>
+          <div><div className="lm-caption">{dict.common.confidence}</div><div>{d.final.confidence}/5</div></div>
+          <div><div className="lm-caption">{t.decisionMeta.givingUp}</div><div>{d.final.gaveUp}</div></div>
+          <div><div className="lm-caption">{t.decisionMeta.revisit}</div><div>{d.tripwire}</div></div>
         </div>
       </div>
     </div>
@@ -390,6 +387,8 @@ function DecisionScene({ d }: { d: D }) {
 }
 
 function UpdatesScene({ d }: { d: D }) {
+  const dict = useDict()
+  const t = dict.liveDemo
   const [tab, setTab] = useState(0)
   const [auto, setAuto] = useState(true)
   useEffect(() => {
@@ -401,7 +400,7 @@ function UpdatesScene({ d }: { d: D }) {
   const person = personFor(draft.audience)
   return (
     <div className="lm-demo-col">
-      <div className="lm-label">One decision, {d.drafts.length} updates</div>
+      <div className="lm-label">{fill(t.scenes.updates, { count: d.drafts.length })}</div>
       <div className="lm-demo-tabs">
         {d.drafts.map((dr, i) => {
           const p = personFor(dr.audience)
@@ -418,7 +417,7 @@ function UpdatesScene({ d }: { d: D }) {
               {p ? <img src={p.avatar} alt="" width={28} height={28} className="lm-tab-avatar" /> : null}
               <span className="lm-tab-text">
                 <span className="lm-tab-name">{dr.audience}</span>
-                <span className="lm-tab-role">{p ? p.role : "Customer"}</span>
+                <span className="lm-tab-role">{p ? t.roles[p.roleKey] : t.customerRole}</span>
               </span>
             </button>
           )
@@ -429,7 +428,7 @@ function UpdatesScene({ d }: { d: D }) {
           {person ? <img src={person.avatar} alt="" width={36} height={36} className="lm-demo-draft-avatar" /> : null}
           <div>
             <div className="lm-mono lm-caption" style={{ fontSize: 12 }}>{draft.audience} / {draft.channel}</div>
-            <div className="lm-caption">{person ? person.role : "Customer"}</div>
+            <div className="lm-caption">{person ? t.roles[person.roleKey] : t.customerRole}</div>
           </div>
         </div>
         <p>{draft.body}</p>

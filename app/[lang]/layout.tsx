@@ -1,10 +1,10 @@
 import type { Metadata } from "next"
 import { Inter, JetBrains_Mono, Source_Serif_4 } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
-import { NextIntlClientProvider, hasLocale } from "next-intl"
-import { getTranslations } from "next-intl/server"
 import { notFound } from "next/navigation"
-import { routing } from "@/i18n/routing"
+import { LocaleProvider } from "@/lib/i18n"
+import { getDictionary, resolveLocale } from "@/lib/i18n/get-dictionary"
+import { LOCALES, isLocale } from "@/lib/i18n/locales"
 import "../globals.css"
 import "../lumo.css"
 
@@ -28,7 +28,7 @@ const sourceSerif = Source_Serif_4({
 })
 
 export function generateStaticParams() {
-  return routing.locales.map((lang) => ({ lang }))
+  return LOCALES.map((lang) => ({ lang }))
 }
 
 export async function generateMetadata({
@@ -37,27 +37,28 @@ export async function generateMetadata({
   params: Promise<{ lang: string }>
 }): Promise<Metadata> {
   const { lang } = await params
-  const t = await getTranslations({ locale: lang, namespace: "metadata" })
-  const isEs = lang === "es"
+  const locale = resolveLocale(lang)
+  const d = getDictionary(locale)
+  const isEs = locale === "es"
   const canonical = isEs ? "https://www.trylumo.co/es" : "https://www.trylumo.co"
 
   return {
-    title: t("title"),
-    description: t("description"),
+    title: d.metadata.title,
+    description: d.metadata.description,
     metadataBase: new URL("https://www.trylumo.co"),
     openGraph: {
-      title: t("title"),
-      description: t("description"),
+      title: d.metadata.title,
+      description: d.metadata.description,
       url: canonical,
       siteName: "Lumo",
-      images: [{ url: "/og-image.png", width: 1200, height: 630, alt: t("ogAlt") }],
+      images: [{ url: "/og-image.png", width: 1200, height: 630, alt: d.metadata.ogAlt }],
       locale: isEs ? "es_ES" : "en_US",
       type: "website",
     },
     twitter: {
       card: "summary_large_image",
-      title: t("title"),
-      description: t("description"),
+      title: d.metadata.title,
+      description: d.metadata.description,
       images: ["/og-image.png"],
     },
     icons: { icon: "/favicon.jpg" },
@@ -79,14 +80,17 @@ export default async function LocaleLayout({
   params: Promise<{ lang: string }>
 }>) {
   const { lang } = await params
-  if (!hasLocale(routing.locales, lang)) {
+  if (!isLocale(lang)) {
     notFound()
   }
+  const dictionary = getDictionary(lang)
 
   return (
     <html lang={lang} className="bg-background">
       <body className={`${inter.variable} ${jetbrainsMono.variable} ${sourceSerif.variable} antialiased`}>
-        <NextIntlClientProvider>{children}</NextIntlClientProvider>
+        <LocaleProvider locale={lang} dictionary={dictionary}>
+          {children}
+        </LocaleProvider>
         {process.env.NODE_ENV === "production" && <Analytics />}
       </body>
     </html>

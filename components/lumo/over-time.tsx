@@ -3,8 +3,8 @@
 import Link from "next/link"
 import { memo, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { useInView, usePrefersReducedMotion } from "./ui"
+import { useDict, useLocaleHref } from "@/lib/i18n"
 
-const TYPED = "Yes, March 14 works"
 const SQUARE_COUNT = 10
 const SLIPPED = 7
 
@@ -30,41 +30,13 @@ type Step = {
   alt: string
 }
 
-const STEPS: Step[] = [
-  {
-    n: "1",
-    eyebrow: "The pattern",
-    headline: "Dates and deadlines are where your instinct is off.",
-    support: "Seven of the ten date decisions you were most sure about turned out worse than you expected.",
-    accent: true,
-    art: "/illustrations/loop-pattern.svg",
-    alt: "A cloud with three rain strokes",
-  },
-  {
-    n: "2",
-    eyebrow: "Why it happens",
-    headline: "You are most confident right before a date slips.",
-    support: "Your confidence peaks when the schedule is already under pressure. That is when it is least reliable.",
-    art: "/illustrations/loop-why.svg",
-    alt: "A calendar page with one date circled",
-  },
-  {
-    n: "3",
-    eyebrow: "The rule you set",
-    headline: "Before you give a customer a date, add your engineering lead's worst case.",
-    support: "Saved. Lumo raises this the next time a date comes up.",
-    art: "/illustrations/loop-rule.svg",
-    alt: "An index card with a checked box",
-  },
-  {
-    n: "4",
-    eyebrow: "Since then",
-    headline: "Three of your last four date decisions landed.",
-    support: "One still slipped. The record keeps counting either way.",
-    art: "/illustrations/loop-since.svg",
-    alt: "Four cards, three checked and one crossed",
-  },
-]
+// Locale-independent frame; the translatable text comes from the dictionary.
+const STEP_META = [
+  { n: "1", art: "/illustrations/loop-pattern.svg", accent: true },
+  { n: "2", art: "/illustrations/loop-why.svg" },
+  { n: "3", art: "/illustrations/loop-rule.svg" },
+  { n: "4", art: "/illustrations/loop-since.svg" },
+] as const
 
 function LoopStep({ step }: { step: Step }) {
   const { ref, inView } = useInView<HTMLLIElement>()
@@ -91,6 +63,10 @@ function LoopStep({ step }: { step: Step }) {
 }
 
 export function OverTime() {
+  const d = useDict()
+  const t = d.overTime
+  const lh = useLocaleHref()
+  const TYPED = t.typed
   const reduced = usePrefersReducedMotion()
   const partRef = useRef<HTMLDivElement | null>(null)
   const timers = useRef<number[]>([])
@@ -202,18 +178,18 @@ export function OverTime() {
       <div ref={partRef} className={`lm-wrap lm-section lm-ot ${armed && !reduced ? "is-armed" : ""}`}>
         <div className="lm-sec-head lm-ot-head">
           <div className="lm-sec-copy">
-            <div className="lm-label">Weeks later</div>
-            <h2 className="lm-h2">It shows up when you are about to do it again.</h2>
+            <div className="lm-label">{t.label}</div>
+            <h2 className="lm-h2">{t.title}</h2>
             <p className="lm-body-lg">
-              A record you have to go and read is a record you forget. This one interrupts the next decision.
+              {t.body}
             </p>
           </div>
         </div>
 
         <div className="lm-ot-cols">
           <div className={`lm-ot-card lm-ot-decision ${leftIn ? "is-in" : ""}`}>
-            <div className="lm-ot-eyebrow">DECISION No.41</div>
-            <p className="lm-ot-q">Do we promise Northwind the API by March 14?</p>
+            <div className="lm-ot-eyebrow">{t.decisionEyebrow}</div>
+            <p className="lm-ot-q">{t.decisionQ}</p>
             <div className="lm-ot-input">
               <span className="lm-sr">{TYPED}</span>
               <span aria-hidden="true">{armed ? TYPED.slice(0, chars) : TYPED}</span>
@@ -222,8 +198,8 @@ export function OverTime() {
           </div>
 
           <div className={`lm-ot-card lm-ot-record ${rightIn ? "is-in" : ""}`}>
-            <div className={`lm-ot-eyebrow is-up ${upIn ? "is-in" : ""}`}>You have been here before</div>
-            <p className={`lm-ot-line ${lineIn ? "is-in" : ""}`}>Ten times you have been this sure about a date.</p>
+            <div className={`lm-ot-eyebrow is-up ${upIn ? "is-in" : ""}`}>{t.beenHere}</div>
+            <p className={`lm-ot-line ${lineIn ? "is-in" : ""}`}>{t.tenTimes}</p>
             <div className="lm-ot-squares" aria-hidden="true">
               {Array.from({ length: SQUARE_COUNT }, (_, i) => (
                 <span
@@ -232,9 +208,9 @@ export function OverTime() {
                 />
               ))}
             </div>
-            <p className={`lm-ot-slipped ${slippedIn ? "is-in" : ""}`}>Seven of them slipped.</p>
+            <p className={`lm-ot-slipped ${slippedIn ? "is-in" : ""}`}>{t.sevenSlipped}</p>
             <div className={`lm-ot-rule ${ruleIn ? "is-in" : ""}`}>
-              <p>Your rule: add Marco&apos;s worst case before you give a date.</p>
+              <p>{t.yourRule}</p>
             </div>
           </div>
         </div>
@@ -246,7 +222,7 @@ export function OverTime() {
             aria-pressed={choice === "ask"}
             onClick={() => setChoice("ask")}
           >
-            Ask Marco first
+            {t.askFirst}
           </button>
           <button
             type="button"
@@ -254,34 +230,34 @@ export function OverTime() {
             aria-pressed={choice === "commit"}
             onClick={() => setChoice("commit")}
           >
-            Commit anyway
+            {t.commitAnyway}
           </button>
           <p className="lm-ot-note" aria-live="polite">
             {choice === null
-              ? "Either way, Lumo records what you choose."
+              ? t.noteEither
               : choice === "ask"
-                ? "Recorded. Lumo will raise Marco's worst case before you commit, then ask how the date landed."
-                : "Recorded. Lumo flagged the date risk and will ask how March 14 landed."}
+                ? t.noteAsk
+                : t.noteCommit}
           </p>
         </div>
         {armed && !reduced ? (
           <button type="button" className="lm-ot-replay" onClick={replay}>
-            Replay
+            {t.replay}
           </button>
         ) : null}
         <div className={`lm-ot-evidence ${actionsIn ? "is-in" : ""}`}>
           <div
             className="lm-ot-record-strip"
             role="img"
-            aria-label="The 40 decisions in this record: 16 turned out better than expected, 15 as expected, and 9 worse."
+            aria-label={t.stripAria}
           >
             {RECORD_OUTCOMES.map((result, i) => (
               <span key={i} className={`lm-ot-tick is-${result}`} aria-hidden="true" />
             ))}
           </div>
           <p className="lm-ot-recordlink">
-            40 decisions in this record. Lumo read every one &mdash; that&apos;s how it spotted the date pattern.{" "}
-            <Link href="/app/demo#map">See the whole map</Link>
+            {t.recordLinkPre}{" "}
+            <Link href={lh("/app/demo") + "#map"}>{t.recordLinkCta}</Link>
           </p>
         </div>
       </div>
@@ -296,16 +272,19 @@ export function OverTime() {
  * parent on every beat, and this block has no dependency on that state.
  */
 const HowItLearns = memo(function HowItLearns() {
+  const d = useDict()
+  const t = d.overTime
+  const steps = STEP_META.map((m, i) => ({ ...m, ...t.steps[i] }))
   return (
     <div className="lm-wrap lm-section">
       <div className="lm-sec-head">
         <div className="lm-sec-copy">
-          <div className="lm-label">How it learns</div>
-          <h2 className="lm-h2">A pattern is only useful if it changes the next decision.</h2>
+          <div className="lm-label">{t.learnLabel}</div>
+          <h2 className="lm-h2">{t.learnTitle}</h2>
         </div>
       </div>
       <ol className="lm-ot-loop">
-        {STEPS.map((s) => (
+        {steps.map((s) => (
           <LoopStep key={s.n} step={s} />
         ))}
       </ol>

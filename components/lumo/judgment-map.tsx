@@ -2,6 +2,11 @@
 
 import { useMemo } from "react"
 import type { DecisionKind, ResultRating, Stakes } from "@/lib/demo/types"
+import { useDict } from "@/lib/i18n"
+import { fill } from "@/lib/i18n/get-dictionary"
+import type { Dictionary } from "@/lib/i18n/dictionaries/en"
+
+type MapDict = Dictionary["judgmentMap"]
 
 export type MapPoint = {
   number: number
@@ -15,15 +20,6 @@ export type MapPoint = {
   finalCall: string
   outcome: string
   lesson: string
-}
-
-const ROW_LABEL: Record<DecisionKind, string> = {
-  hiring: "Hiring",
-  vendor: "Vendors",
-  scope: "Scope cuts",
-  people: "Team calls",
-  strategy: "Strategy",
-  timing: "Dates you promise",
 }
 
 /** Drives verb agreement in the generated headline, so it reads correctly whichever row lands last. */
@@ -48,39 +44,6 @@ const HALF = 150
 /** Within this many px of center there is no direction worth claiming, so the bar reads neutral. */
 const NEUTRAL_BAND = 20
 
-const ACTIONS: Record<DecisionKind, { eyebrow: string; rule: string; trigger: string }> = {
-  timing: {
-    eyebrow: "What to do about dates",
-    rule: "Ask Marco for his worst case before you give anyone a date.",
-    trigger: "Next time you put a date into Lumo, it stops you and asks whether you did.",
-  },
-  hiring: {
-    eyebrow: "What to do about hiring",
-    rule: "Have the person they will work with interview them first.",
-    trigger: "Lumo raises this the next time you open a role.",
-  },
-  vendor: {
-    eyebrow: "What to do about vendors",
-    rule: "Get the exit terms in writing before you sign.",
-    trigger: "Lumo raises this the next time you add a vendor.",
-  },
-  scope: {
-    eyebrow: "What to do about scope cuts",
-    rule: "Name what you are not shipping before you cut it.",
-    trigger: "Lumo raises this the next time you cut scope.",
-  },
-  people: {
-    eyebrow: "What to do about team calls",
-    rule: "Ask the person affected before you decide for them.",
-    trigger: "Lumo raises this the next time you make a team call.",
-  },
-  strategy: {
-    eyebrow: "What to do about strategy",
-    rule: "Write down what would change your mind before you commit.",
-    trigger: "Lumo raises this the next time you commit to a strategy.",
-  },
-}
-
 type Row = {
   kind: DecisionKind
   label: string
@@ -96,13 +59,13 @@ type Row = {
   outcome: string
 }
 
-function outcomeText(kind: DecisionKind, worse: number, n: number) {
-  if (worse === 0) return "None went worse"
-  if (kind === "timing") return `${worse} of ${n} ran late`
-  return `${worse} of ${n} went worse`
+function outcomeText(kind: DecisionKind, worse: number, n: number, t: MapDict) {
+  if (worse === 0) return t.outcomes.none
+  if (kind === "timing") return fill(t.outcomes.ranLate, { worse, n })
+  return fill(t.outcomes.wentWorse, { worse, n })
 }
 
-function buildRows(points: MapPoint[]): Row[] {
+function buildRows(points: MapPoint[], t: MapDict): Row[] {
   return ORDER.map((kind) => {
     const set = points.filter((p) => p.kind === kind)
     const better = set.filter((p) => p.result === "better").length
@@ -114,7 +77,7 @@ function buildRows(points: MapPoint[]): Row[] {
     const color = Math.abs(end - CENTER) < NEUTRAL_BAND ? GRAY : end < CENTER ? GREEN : RED
     return {
       kind,
-      label: ROW_LABEL[kind],
+      label: t.rowLabels[kind],
       plural: PLURAL[kind],
       n,
       better,
@@ -123,7 +86,7 @@ function buildRows(points: MapPoint[]): Row[] {
       net,
       end,
       color,
-      outcome: outcomeText(kind, worse, n),
+      outcome: outcomeText(kind, worse, n, t),
     }
   })
     .filter((r) => r.n > 0)
@@ -131,7 +94,8 @@ function buildRows(points: MapPoint[]): Row[] {
 }
 
 export function JudgmentMap({ points }: { points: MapPoint[] }) {
-  const rows = useMemo(() => buildRows(points), [points])
+  const t = useDict().judgmentMap
+  const rows = useMemo(() => buildRows(points, t), [points, t])
 
   if (rows.length === 0) return null
 
@@ -139,31 +103,32 @@ export function JudgmentMap({ points }: { points: MapPoint[] }) {
   const weakest = rows[rows.length - 1]
   const headline =
     rows.length < 2
-      ? "Your decisions, grouped by type."
-      : `${strongest.label} went well. ${weakest.label} ${weakest.plural ? "are" : "is"} where you keep getting it wrong.`
-  const action = ACTIONS[weakest.kind]
+      ? t.headlineSingle
+      : fill(t.headline, {
+          strongest: strongest.label,
+          weakest: weakest.label,
+          verb: weakest.plural ? t.headlineVerb.plural : t.headlineVerb.singular,
+        })
+  const action = t.actions[weakest.kind]
 
   return (
     <div className="lm-cal">
       <div className="lm-cal-head">
-        <div className="lm-cal-label">The map</div>
+        <div className="lm-cal-label">{t.label}</div>
         <h2 className="lm-cal-h2">{headline}</h2>
-        <p className="lm-cal-intro">
-          Your {points.length} decisions, grouped by type. The further a bar runs right, the more often that kind of
-          decision turned out worse than you thought it would.
-        </p>
+        <p className="lm-cal-intro">{fill(t.intro, { count: points.length })}</p>
       </div>
 
-      <p className="lm-cal-legend">Left means better than you thought. Right means worse.</p>
+      <p className="lm-cal-legend">{t.legend}</p>
 
       <div className="lm-cal-table">
         <div className="lm-cal-row is-head" aria-hidden="true">
-          <div className="lm-cal-type">Type</div>
+          <div className="lm-cal-type">{t.colType}</div>
           <div className="lm-cal-head-bar">
-            <span>Better than you thought</span>
-            <span>Worse</span>
+            <span>{t.colBetter}</span>
+            <span>{t.colWorse}</span>
           </div>
-          <div className="lm-cal-outcome">What happened</div>
+          <div className="lm-cal-outcome">{t.colOutcome}</div>
         </div>
 
         {rows.map((row) => (
