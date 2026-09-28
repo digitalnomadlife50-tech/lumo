@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { DEFAULT_LOCALE, LOCALES, detectLocale, isLocale } from "@/lib/i18n/locales";
+import { DEFAULT_LOCALE, detectLocale, isLocale } from "@/lib/i18n/locales";
+import { isRetiredStorePath, retiredStoreResponse } from "@/lib/seo";
 
 const PUBLIC_FILE = /\.[^/]+$/;
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Skip API routes, Next internals, and files (images, icons, etc.).
+  if (isRetiredStorePath(pathname)) {
+    return retiredStoreResponse();
+  }
+
   if (
     pathname.startsWith("/api") ||
     pathname.startsWith("/_next") ||
@@ -16,31 +20,28 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Already locale-prefixed: carry on.
-  const firstSegment = pathname.split("/")[1];
+  const [, firstSegment, section] = pathname.split("/");
   if (isLocale(firstSegment)) {
+    const expectedSection = firstSegment === "en" ? "guides" : "guias";
+    if ((section === "guides" || section === "guias") && section !== expectedSection) {
+      const url = request.nextUrl.clone();
+      url.pathname = pathname.replace(`/${firstSegment}/${section}`, `/${firstSegment}/${expectedSection}`);
+      return NextResponse.redirect(url, 308);
+    }
     return NextResponse.next();
   }
 
-  // Keep the canonical root and legacy app URLs on the English entry point.
   const url = request.nextUrl.clone();
-  if (pathname === "/") {
-    url.pathname = "/en";
-    return NextResponse.redirect(url, 308);
-  }
-  if (pathname === "/app" || pathname.startsWith("/app/")) {
-    url.pathname = `/en${pathname}`;
+  if (pathname === "/" || pathname === "/app" || pathname.startsWith("/app/")) {
+    url.pathname = `/en${pathname === "/" ? "" : pathname}`;
     return NextResponse.redirect(url, 308);
   }
 
-  // Other unprefixed URLs follow the browser's preferred locale.
   const locale = detectLocale(request.headers.get("accept-language")) ?? DEFAULT_LOCALE;
   url.pathname = `/${locale}${pathname}`;
   return NextResponse.redirect(url, 308);
 }
 
 export const config = {
-  // Run on everything except the paths handled above; the matcher keeps
-  // static assets out before the function even runs.
-  matcher: ["/((?!api|_next|_vercel|.*\\..*).*)"],
+  matcher: ["/((?!api|_next|_vercel).*)"],
 };

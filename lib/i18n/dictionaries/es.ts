@@ -7,10 +7,10 @@ import type { Dictionary } from "./en";
  */
 export const es: Dictionary = {
   metadata: {
-    title: "Lumo | Una herramienta de decisiones para product managers",
+    title: "Lumo: La herramienta de decisiones para product managers",
     description:
-      "Toma decisiones de producto difíciles más rápido y aprende de cada una. Anota tu primer instinto, mira la evidencia, envía la actualización correcta y aprende de cómo resultó.",
-    ogAlt: "Lumo: toma decisiones de producto difíciles más rápido y aprende de cada una.",
+      "Analiza una decisión difícil de producto con Lumo, compara opciones con evidencia, conserva tu razonamiento y prepara mensajes claros para cada equipo afectado.",
+    ogAlt: "Lumo, la herramienta de decisiones para product managers.",
   },
 
   common: {
@@ -48,6 +48,7 @@ export const es: Dictionary = {
     overTime: "Con el tiempo",
     whyLumo: "Por qué Lumo",
     about: "Acerca de",
+    guides: "Guías",
   },
 
   landing: {
@@ -90,6 +91,7 @@ export const es: Dictionary = {
 
     footerTagline: "Toma decisiones de producto difíciles más rápido y aprende de cada una.",
     footerBuiltBy: "Creado por Terrance Range",
+    footerGuides: "Guías de decisiones de producto",
   },
 
   overTime: {
@@ -157,7 +159,7 @@ export const es: Dictionary = {
     mapLead: "Esta decisión se suma a otras 40. El mapa es donde aparecen los patrones.",
     phases: [
       { name: "Antes de decidir", desc: "Anota tu primer instinto antes de ver nada." },
-      { name: "Mientras decides", desc: "La investigación, los riesgos y cómo se desarrolla cada opción." },
+      { name: "Mientras decides", desc: "La investigación, los riesgos y cómo se desarrolla cada opci��n." },
       { name: "Después de decidir", desc: "Una decisión, una actualización a medida para cada persona o equipo." },
       {
         name: "Semanas después",

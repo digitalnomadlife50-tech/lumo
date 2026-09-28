@@ -4,6 +4,7 @@ import { Analytics } from "@vercel/analytics/next"
 import { notFound } from "next/navigation"
 import { LocaleProvider } from "@/lib/i18n"
 import { getDictionary, resolveLocale } from "@/lib/i18n/get-dictionary"
+import { homepageMetadata } from "@/lib/seo"
 import { LOCALES, isLocale } from "@/lib/i18n/locales"
 import "../globals.css"
 import "../lumo.css"
@@ -39,36 +40,15 @@ export async function generateMetadata({
   const { lang } = await params
   const locale = resolveLocale(lang)
   const d = getDictionary(locale)
-  const isEs = locale === "es"
-  const canonical = isEs ? "https://www.trylumo.co/es" : "https://www.trylumo.co"
+  const metadata = homepageMetadata(locale)
 
   return {
-    title: d.metadata.title,
-    description: d.metadata.description,
-    metadataBase: new URL("https://www.trylumo.co"),
+    ...metadata,
     openGraph: {
-      title: d.metadata.title,
-      description: d.metadata.description,
-      url: canonical,
-      siteName: "Lumo",
+      ...metadata.openGraph,
       images: [{ url: "/og-image.png", width: 1200, height: 630, alt: d.metadata.ogAlt }],
-      locale: isEs ? "es_ES" : "en_US",
-      type: "website",
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: d.metadata.title,
-      description: d.metadata.description,
-      images: ["/og-image.png"],
     },
     icons: { icon: "/favicon.jpg" },
-    alternates: {
-      canonical,
-      languages: {
-        en: "https://www.trylumo.co",
-        es: "https://www.trylumo.co/es",
-      },
-    },
   }
 }
 

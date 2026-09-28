@@ -1,11 +1,17 @@
 import type { Metadata } from "next"
+import { notFound } from "next/navigation"
 import DemoHome from "@/components/lumo/demo-home"
+import { demoMetadata } from "@/lib/seo"
+import { isLocale } from "@/lib/i18n/locales"
 
-export const metadata: Metadata = {
-  title: "Lumo, demo mode",
-  description: "See Lumo after 40 decisions: the judgment map, the monthly brief, and a real call played out end to end.",
+export async function generateMetadata({ params }: { params: Promise<{ lang: string }> }): Promise<Metadata> {
+  const { lang } = await params
+  if (!isLocale(lang)) return {}
+  return demoMetadata(lang)
 }
 
-export default function DemoPage() {
+export default async function DemoPage({ params }: { params: Promise<{ lang: string }> }) {
+  const { lang } = await params
+  if (!isLocale(lang)) notFound()
   return <DemoHome />
 }
