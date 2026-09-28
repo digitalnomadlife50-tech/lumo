@@ -11,7 +11,7 @@ export const PERSONA_ES: DemoPersona = {
     { name: "Marco Diaz", role: "Líder de ingeniería", note: "Estimador honesto, pero sus estimaciones se alargan en todo lo que toca pagos." },
     { name: "Dana Brooks", role: "Líder de ventas", note: "Comparte las fechas con los clientes el mismo día que las escucha." },
     { name: "Priya Shah", role: "Líder de soporte", note: "Suele enterarse de los cambios al final. No debería." },
-    { name: "Jordan Lee", role: "Líder de diseño", note: "Necesita un aviso antes de los cambios de alcance, no después." },
+    { name: "Jordan Lee", role: "Líder de diseño", note: "Necesita un aviso antes de los cambios de scope, no después." },
   ],
   sources: [
     { id: "slack", label: "Slack" },

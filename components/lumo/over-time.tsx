@@ -119,7 +119,9 @@ export function OverTime() {
     t(3900, () => setRuleIn(true))
     t(4300, () => setActionsIn(true))
   }
-  runRef.current = run
+  useIsoLayoutEffect(() => {
+    runRef.current = run
+  }, [run])
 
   // Arm before the first paint so the hidden start state never flashes. The
   // media query is read directly: usePrefersReducedMotion only resolves in an

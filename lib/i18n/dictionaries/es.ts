@@ -1,7 +1,7 @@
 import type { Dictionary } from "./en";
 
 /**
- * Spanish. Must mirror the English dictionary's shape exactly — the
+ * Spanish. Must mirror the English dictionary's shape exactly, the
  * `Dictionary` type enforces it at build time. Neutral Latin American Spanish;
  * "product manager" stays in English, as is standard in Spanish-speaking tech.
  */
@@ -228,7 +228,7 @@ export const es: Dictionary = {
     rowLabels: {
       hiring: "Contratación",
       vendor: "Proveedores",
-      scope: "Recortes de alcance",
+      scope: "Recortes de scope",
       people: "Decisiones de equipo",
       strategy: "Estrategia",
       timing: "Fechas que prometes",
@@ -255,9 +255,9 @@ export const es: Dictionary = {
         trigger: "Lumo lo mencionará la próxima vez que añadas un proveedor.",
       },
       scope: {
-        eyebrow: "Qué hacer con los recortes de alcance",
+        eyebrow: "Qué hacer con los recortes de scope",
         rule: "Nombra lo que no vas a lanzar antes de recortarlo.",
-        trigger: "Lumo lo mencionará la próxima vez que recortes alcance.",
+        trigger: "Lumo lo mencionará la próxima vez que recortes scope.",
       },
       people: {
         eyebrow: "Qué hacer con las decisiones de equipo",
@@ -334,20 +334,20 @@ export const es: Dictionary = {
       sub: "Piénsala bien. Encuentra las palabras correctas. Sigue adelante.",
       inOneLine: "En una línea",
       placeholders: [
-        "El lanzamiento se retrasa y ventas ya prometió una fecha",
+        "El launch se retrasa y ventas ya prometió una fecha",
         "Contratar al ingeniero sénior ahora o esperar al presupuesto del T1",
         "Recortar el rediseño de incorporación para cumplir el trimestre",
         "Decirle a la líder de diseño que su proyecto está en pausa",
       ],
       chips: [
-        { label: "Lanzamiento retrasado", text: "El lanzamiento se retrasa y " },
+        { label: "Launch retrasado", text: "El launch se retrasa y " },
         { label: "Contratar o esperar", text: "Contratar ahora o esperar: " },
-        { label: "Recorte de alcance", text: "Recortar alcance en " },
+        { label: "Recorte de scope", text: "Recortar scope en " },
         { label: "Conversación difícil", text: "Necesito decirle a " },
       ],
       start: "Empezar",
       orSample: "O empieza con un ejemplo",
-      sampleChip: "Fecha de lanzamiento vs. acuerdo empresarial",
+      sampleChip: "Fecha de launch vs. acuerdo empresarial",
       inProgress: "En curso",
       stepOf: "N.º {number}, paso {step} de 6",
       resume: "Continuar",
@@ -377,7 +377,7 @@ export const es: Dictionary = {
       heading: "¿Qué está pasando?",
       sub: "Pega la situación tal como está. Hilos, tickets, notas. No necesita estar ordenada.",
       textareaLabel: "Pega la situación",
-      placeholder: "#lanzamiento-v2 dana: ventas necesita v2 para re:Invent...",
+      placeholder: "#launch-v2 dana: ventas necesita v2 para re:Invent...",
       pickedUp: "detectado",
       person: "persona",
       people: "personas",
@@ -504,7 +504,7 @@ export const es: Dictionary = {
   appPage: {
     urgencyNotSpecified: "No especificado",
     exampleSituation:
-      "#lanzamiento-v2 dana: ventas necesita v2 listo para re:Invent, tres acuerdos empresariales en juego\n#ing marco: SSO son dos sprints mínimo, no se puede paralelizar con la corrección de incorporación\nLUM-812: bloqueante, SSO empresarial sin definir\nmd del vp: necesito una decisión para el viernes\n#soporte: la corrección de incorporación sale en v2, unos 40 tickets esperando",
+      "#launch-v2 dana: ventas necesita v2 listo para re:Invent, tres acuerdos empresariales en juego\n#ing marco: SSO son dos sprints mínimo, no se puede paralelizar con la corrección de incorporación\nLUM-812: bloqueante, SSO empresarial sin definir\nmd del vp: necesito una decisión para el viernes\n#soporte: la corrección de incorporación sale en v2, unos 40 tickets esperando",
     costNotAssessed: "Aún no evaluado para esta opción.",
     whoNotAssessed: "No evaluado.",
     riskManual: "Esta opción se añadió a mano, así que Lumo no ha opinado sobre ella.",
@@ -515,7 +515,7 @@ export const es: Dictionary = {
     errorRewrite: "No se pudo reescribir el borrador. Inténtalo de nuevo.",
     errorAddAudience: "No se pudo redactar una actualización para esa persona o equipo.",
     record: {
-      title: "N.º {number} — {call}",
+      title: "N.º {number} · {call}",
       question: "La pregunta: {question}",
       why: "Por qué: {reasoning}",
       confidence: "Confianza: {confidence} de 5",

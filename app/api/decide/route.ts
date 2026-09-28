@@ -30,6 +30,7 @@ interface Pushback {
   response: string
 }
 interface AudienceDraft {
+  audienceId: string
   audience: string
   channel: Channel
   subject: string
@@ -57,7 +58,8 @@ const decideTool: Anthropic.Tool = {
           items: {
             type: "object",
             properties: {
-              audience: { type: "string" },
+              audienceId: { type: "string", description: "A stable lowercase slug for this audience. Use exactly vp for the VP audience." },
+              audience: { type: "string", description: "Human-readable audience label in the requested locale." },
               channel: { type: "string", enum: ["email", "slack", "dm"] },
               subject: { type: "string" },
               body: { type: "string" },
@@ -76,7 +78,7 @@ const decideTool: Anthropic.Tool = {
                 },
               },
             },
-            required: ["audience", "channel", "subject", "body", "pushback"],
+            required: ["audienceId", "audience", "channel", "subject", "body", "pushback"],
             additionalProperties: false,
           },
         },
@@ -95,19 +97,23 @@ function isPushback(value: unknown): value is Pushback {
 function isAudienceDraft(value: unknown): value is AudienceDraft {
   if (!value || typeof value !== "object") return false
   const draft = value as Record<string, unknown>
-  return typeof draft.audience === "string" && draft.audience.trim().length > 0 &&
+  return typeof draft.audienceId === "string" && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(draft.audienceId) &&
+    typeof draft.audience === "string" && draft.audience.trim().length > 0 &&
     (draft.channel === "email" || draft.channel === "slack" || draft.channel === "dm") &&
     typeof draft.subject === "string" && typeof draft.body === "string" && draft.body.trim().length > 0 &&
     (draft.pushback === undefined || (Array.isArray(draft.pushback) && draft.pushback.length <= 2 && draft.pushback.every(isPushback)))
 }
 
-function isDecideResult(value: unknown, vpAudience: string): value is DecideResult {
+function isDecideResult(value: unknown, vpAudienceId: string): value is DecideResult {
   if (!value || typeof value !== "object") return false
   const result = value as Record<string, unknown>
   if (typeof result.claritySummary !== "string" || typeof result.executionTeam !== "string" || !result.executionTeam.trim()) return false
   if (!Array.isArray(result.drafts) || result.drafts.length < 2 || result.drafts.length > 8 || !result.drafts.every(isAudienceDraft)) return false
+  const audienceIds = result.drafts.map((draft) => draft.audienceId)
+  if (new Set(audienceIds).size !== audienceIds.length) return false
+  const vpDraft = result.drafts.find((draft) => draft.audienceId === vpAudienceId)
   const audiences = result.drafts.map((draft) => draft.audience.trim().toLowerCase())
-  return audiences.includes(vpAudience.toLowerCase()) && audiences.includes(result.executionTeam.trim().toLowerCase())
+  return Boolean(vpDraft) && audiences.includes(result.executionTeam.trim().toLowerCase())
 }
 
 function getDiagnosticsResponse(
@@ -180,6 +186,7 @@ export async function POST(req: Request) {
     const hardship = typeof body.hardship === "string" ? body.hardship.trim().slice(0, 500) : ""
     const confidence = body.confidence
     const locale = resolveAiLocale(body.locale)
+    const vpAudienceId = "vp"
     const vpAudience = locale === "es" ? "Tu VP" : "Your VP"
     if ([situation, urgency, chosenDirection, reasoning, whatGivingUp].some((value) => !value || value.length > 6000) || typeof confidence !== "number" || !Number.isInteger(confidence) || confidence < 1 || confidence > 5) {
       return Response.json({ success: false, errorCode: "INVALID_INPUT", error: "Complete the decision details before drafting messages." }, { status: 400 })
@@ -193,7 +200,7 @@ export async function POST(req: Request) {
       urgencyRead: typeof analysis.howPressing === "string" ? analysis.howPressing.slice(0, 2000) : "",
     }
 
-    const systemPrompt = `You are Lumo, a thoughtful senior product manager writing real messages to colleagues. Return a short first-person decision summary and one message draft for each affected person or team named in the analysis. Always include an audience named exactly "${vpAudience}" and the execution team that owns the chosen work. Set executionTeam to that team's actual name from the input. If no specific team can be identified, use "Execution team" rather than inventing one. Do not add unrelated audiences. Keep each message under 100 words. Choose the channel that best fits the audience: email, slack, or dm. Email drafts need a concise subject. Slack and DM drafts must have an empty subject. Lead with the decision. Include one clear ask when there is one. Executives get the call, cost, risk being watched, and confidence. Engineering gets scope changes and owners. Sales and support get what to say to customers. Use the real names, teams, dates, and numbers from the input. Do not fabricate details. No bold, markdown, or headers inside draft bodies. For every draft, also return a pushback array of up to two realistic objections that specific audience would likely raise back in their own voice, each paired with a specific one or two sentence response the PM could give. Only include genuine, realistic objections; an empty array is fine if none apply. If what is making this hard is provided, let it shape the tone of the draft toward the person it names, but never quote it directly. ${aiLanguageInstruction(locale)} ${HUMAN_WRITING_RULES}`
+    const systemPrompt = `You are Lumo, a thoughtful senior product manager writing real messages to colleagues. Return a short first-person decision summary and one message draft for each affected person or team named in the analysis. Always include one VP draft with audienceId exactly "${vpAudienceId}" and the human-readable audience label "${vpAudience}", plus the execution team that owns the chosen work. Give every draft a stable, unique lowercase audienceId slug. Set executionTeam to that team's actual name from the input. If no specific team can be identified, use "Execution team" rather than inventing one. Do not add unrelated audiences. Keep each message under 100 words. Choose the channel that best fits the audience: email, slack, or dm. Email drafts need a concise subject. Slack and DM drafts must have an empty subject. Lead with the decision. Include one clear ask when there is one. Executives get the call, cost, risk being watched, and confidence. Engineering gets scope changes and owners. Sales and support get what to say to customers. Use the real names, teams, dates, and numbers from the input. Do not fabricate details. No bold, markdown, or headers inside draft bodies. For every draft, also return a pushback array of up to two realistic objections that specific audience would likely raise back in their own voice, each paired with a specific one or two sentence response the PM could give. Only include genuine, realistic objections; an empty array is fine if none apply. If what is making this hard is provided, let it shape the tone of the draft toward the person it names, but never quote it directly. ${aiLanguageInstruction(locale)} ${HUMAN_WRITING_RULES}`
 
     const userPrompt = `USER'S DECISION CONTEXT
 Situation: ${situation}
@@ -210,7 +217,7 @@ What matters: ${analysisContext.whatMatters || "Not provided"}
 Affected people and teams: ${analysisContext.affectedAudiences || "Not provided"}
 Urgency read: ${analysisContext.urgencyRead || "Not provided"}
 
-Draft for every affected audience, plus Your VP and the team responsible for execution. Preserve the supplied facts and do not make up names, commitments, dates, or numbers.`
+Draft for every affected audience, plus the VP audience and the team responsible for execution. Preserve the supplied facts and do not make up names, commitments, dates, or numbers.`
 
     const attempts: AIAttemptDiagnostic[] = []
     let result: DecideResult | null = null
@@ -235,7 +242,7 @@ Draft for every affected audience, plus Your VP and the team responsible for exe
           attempts.push({ attempt, ...lastFailure })
           continue
         }
-        if (!isDecideResult(toolResult.input, vpAudience)) {
+        if (!isDecideResult(toolResult.input, vpAudienceId)) {
           lastFailure = { stage: "output didn't match the expected shape", httpStatus: 200, requestId, errorMessage: "The structured draft output was missing a required audience or had incorrect fields.", rawModelOutput: safeRawModelOutput(toolResult.input), result: "Tool output did not match expected shape" }
           attempts.push({ attempt, ...lastFailure })
           continue
@@ -249,8 +256,15 @@ Draft for every affected audience, plus Your VP and the team responsible for exe
     }
 
     if (!result && lastFailure) return getDiagnosticsResponse(requestStartedAt, attempts, lastFailure)
-    const cleanedResult = cleanAIValue(result!)
-    return Response.json({ success: true, ...cleanedResult })
+    const cleanedResult = cleanAIValue(result!, locale)
+    const drafts = cleanedResult.drafts.map((draft) => ({
+      audience: draft.audience,
+      channel: draft.channel,
+      subject: draft.subject,
+      body: draft.body,
+      pushback: draft.pushback,
+    }))
+    return Response.json({ success: true, ...cleanedResult, drafts })
   } catch (error: unknown) {
     console.error("[lumo/decide] Error:", error)
     return Response.json({ success: false, errorCode: "SERVER_ERROR", error: "Something went wrong on our end. Try again." }, { status: 500 })
