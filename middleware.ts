@@ -1,17 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { DEFAULT_LOCALE, detectLocale, isLocale } from "@/lib/i18n/locales";
-import { isRetiredStorePath, retiredStoreResponse, shouldRedirectHost } from "@/lib/seo";
+import { isRetiredStorePath, retiredStoreResponse } from "@/lib/seo";
 
 const PUBLIC_FILE = /\.[^/]+$/;
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-
-  if (shouldRedirectHost(request.nextUrl.hostname)) {
-    const url = request.nextUrl.clone();
-    url.hostname = "trylumo.co";
-    return NextResponse.redirect(url, 301);
-  }
 
   if (isRetiredStorePath(pathname)) {
     return retiredStoreResponse();

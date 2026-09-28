@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import type { Locale } from "@/lib/i18n/locales";
 
-export const SITE_URL = "https://trylumo.co";
+export const SITE_URL = "https://www.trylumo.co";
 export const ARTICLE_PUBLISHED_AT = "2026-09-28";
 export const ARTICLE_AUTHOR = "Terry, product director and three-time founder";
 export const GUIDE_PATHS = { en: "/guides", es: "/guias" } as const;
