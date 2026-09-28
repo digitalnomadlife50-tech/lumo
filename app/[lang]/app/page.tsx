@@ -21,7 +21,7 @@ import {
   type DraftInProgress,
 } from "@/components/lumo/screens"
 import type { AiStatus } from "@/components/lumo/ui"
-import { useDict } from "@/lib/i18n"
+import { useDict, useLocale } from "@/lib/i18n"
 import { fill } from "@/lib/i18n/get-dictionary"
 
 /* ─── TYPES ─── */
@@ -132,6 +132,7 @@ interface DecisionOutcome {
 /* ─── MAIN COMPONENT ─── */
 export default function ProductApp() {
   const t = useDict().appPage
+  const locale = useLocale()
   const EXAMPLE_SITUATION = t.exampleSituation
   const [view, setView] = useState<View>("home")
   const [homeInput, setHomeInput] = useState("")
@@ -329,7 +330,7 @@ export default function ProductApp() {
       const response = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ situation, urgency, hardship }),
+        body: JSON.stringify({ situation, urgency, hardship, locale }),
       })
       const data = await response.json()
 
@@ -398,6 +399,7 @@ export default function ProductApp() {
       confidence,
       whatGivingUp,
       hardship,
+      locale,
       analysis: readBack
         ? { realQuestion: readBack.question, whatMatters: readBack.matters, whoIsAffected: readBack.affected, howPressing: readBack.pressing }
         : undefined,
@@ -487,6 +489,7 @@ export default function ProductApp() {
           draft: sourceDraft,
           context: { situation, urgency, chosenDirection, reasoning, confidence, whatGivingUp, claritySummary: aiOutput.claritySummary, affectedAudiences: readBack?.affected ?? "" },
           instruction,
+          locale,
         }),
       })
       const data = await response.json()
@@ -524,6 +527,7 @@ export default function ProductApp() {
           context: { situation, urgency, chosenDirection, reasoning, confidence, whatGivingUp, claritySummary: aiOutput.claritySummary, affectedAudiences: readBack?.affected ?? "" },
           instruction: "add-audience",
           audience: audienceName.trim(),
+          locale,
         }),
       })
       const data = await response.json()
