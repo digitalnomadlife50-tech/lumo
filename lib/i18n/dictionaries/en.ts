@@ -268,6 +268,62 @@ export const en = {
       },
     },
   },
+
+  demoHome: {
+    navHome: "Home",
+    bringOwn: "Bring your own decision",
+    demoMode: "Demo mode",
+    heroTitle: "You're looking at {name}'s Lumo.",
+    heroLede:
+      "{role} at {company}, {months} months and 40 decisions in. This is what Lumo looks like once it knows you. Nothing here calls an API. It already happened.",
+    onYourMind: "On your mind right now",
+    noticedLead:
+      "Your first instinct says {option}, confidence {confidence}. Here's what you might not have noticed: {gap}",
+    watchHow: "Watch how it played out",
+    recentLabel: "Recent calls",
+    recentTitle: "The last few, and how they landed.",
+    walkthroughLabel: "The open decision, start to finish",
+    walkthroughTitle: "No.{number}, played out.",
+    ctaTitle: "This is what 40 decisions later looks like.",
+    receipts: {
+      pattern: {
+        lead: "One pattern found.",
+        body: "{worse} of the {total} calls went worse than expected. {dates} of them were dates.",
+      },
+      rule: {
+        lead: "One rule that stuck.",
+        body: "When you give a customer a date, add your engineering lead's worst case first.",
+      },
+      nothing: {
+        lead: "Nothing dropped.",
+        body: "All {total} revisited and rated, including the ones that stung.",
+      },
+    },
+    ctaPivot: "Yours starts with one.",
+    bringReal: "Bring a real decision",
+    whereStarted: "Where {name} started",
+    results: {
+      better: "Better than expected",
+      worse: "Worse than expected",
+      asExpected: "As expected",
+    },
+    stampResults: {
+      better: "Turned out better",
+      worse: "Turned out worse",
+      asExpected: "Went as expected",
+    },
+  },
+
+  brief: {
+    title: "Your {month} summary",
+    stamp: "Delivered Sunday, 8:00 am",
+    strong: "Where your instinct is strong",
+    off: "Where your instinct is off",
+    oneThing: "One thing to try",
+    remindSet: "Reminder set",
+    remindMe: "Remind me before my next decision about a date",
+    didntNotice: "Something you might not have noticed",
+  },
 };
 
 export type Dictionary = typeof en;

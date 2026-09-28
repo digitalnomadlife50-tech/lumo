@@ -1,8 +1,11 @@
 "use client";
 
-import { createContext, useContext, type ReactNode } from "react";
+import { createContext, useContext, useMemo, type ReactNode } from "react";
 import type { Locale } from "./locales";
 import type { Dictionary } from "./dictionaries/en";
+import { getCurrentDecision, getDecisions, getPersona } from "@/lib/demo/localized";
+import { computeBriefLocalized } from "@/lib/demo/brief-localized";
+import type { CurrentDecision, DemoDecision, DemoPersona, MonthlyBrief } from "@/lib/demo/types";
 
 interface LocaleContextValue {
   locale: Locale;
@@ -44,4 +47,26 @@ export function useLocaleHref() {
     if (href.startsWith(`/${locale}/`) || href === `/${locale}`) return href;
     return `/${locale}${href}`;
   };
+}
+
+export interface DemoData {
+  persona: DemoPersona;
+  decisions: DemoDecision[];
+  current: CurrentDecision;
+  brief: MonthlyBrief;
+}
+
+/** The demo dataset in the active locale. Numbers/metadata are identical across
+ * locales; only the human-written text is translated. */
+export function useDemoData(month = "October"): DemoData {
+  const locale = useLocale();
+  return useMemo(
+    () => ({
+      persona: getPersona(locale),
+      decisions: getDecisions(locale),
+      current: getCurrentDecision(locale),
+      brief: computeBriefLocalized(locale, month),
+    }),
+    [locale, month]
+  );
 }

@@ -1,16 +1,15 @@
 "use client"
 
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react"
-import { CURRENT_DECISION } from "@/lib/demo/current"
-import { DEMO_DECISIONS } from "@/lib/demo/decisions"
+import type { CurrentDecision, DemoDecision } from "@/lib/demo/types"
 import { usePrefersReducedMotion } from "./ui"
 import { JudgmentMap, type MapPoint } from "./judgment-map"
 import { ChevronLeft, ChevronRight, PenLine, Send, Telescope, TrendingUp, type LucideIcon } from "lucide-react"
-import { useDict } from "@/lib/i18n"
+import { useDemoData, useDict } from "@/lib/i18n"
 import { fill } from "@/lib/i18n/get-dictionary"
 
-export function demoMapPoints(): MapPoint[] {
-  return DEMO_DECISIONS.filter((d) => d.outcome).map((d) => ({
+export function demoMapPoints(decisions: DemoDecision[]): MapPoint[] {
+  return decisions.filter((d) => d.outcome).map((d) => ({
     number: d.number,
     title: d.title,
     kind: d.kind,
@@ -68,8 +67,8 @@ export function LiveDemo() {
   const dict = useDict()
   const t = dict.liveDemo
   const chapters = CHAPTER_META.map((m, i) => ({ ...m, label: t.chapters[i] }))
-  const d = CURRENT_DECISION
-  const points = useMemo(() => demoMapPoints(), [])
+  const { current: d, decisions } = useDemoData()
+  const points = useMemo(() => demoMapPoints(decisions), [decisions])
   const [chapter, setChapter] = useState(0)
   const [playing, setPlaying] = useState(!reduced)
   const [progress, setProgress] = useState(0)
@@ -215,7 +214,7 @@ export function LiveDemo() {
   )
 }
 
-type D = typeof CURRENT_DECISION
+type D = CurrentDecision
 
 function SituationScene({ d }: { d: D }) {
   const dict = useDict()

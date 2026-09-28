@@ -270,4 +270,60 @@ export const es: Dictionary = {
       },
     },
   },
+
+  demoHome: {
+    navHome: "Inicio",
+    bringOwn: "Trae tu propia decisión",
+    demoMode: "Modo demo",
+    heroTitle: "Estás viendo el Lumo de {name}.",
+    heroLede:
+      "{role} en {company}, {months} meses y 40 decisiones después. Así se ve Lumo cuando ya te conoce. Nada aquí llama a una API. Ya sucedió.",
+    onYourMind: "Lo que tienes en mente ahora",
+    noticedLead:
+      "Tu primer instinto dice {option}, confianza {confidence}. Esto es lo que quizá no hayas notado: {gap}",
+    watchHow: "Mira cómo se desarrolló",
+    recentLabel: "Decisiones recientes",
+    recentTitle: "Las últimas, y cómo resultaron.",
+    walkthroughLabel: "La decisión abierta, de principio a fin",
+    walkthroughTitle: "N.º {number}, desarrollada.",
+    ctaTitle: "Así se ve después de 40 decisiones.",
+    receipts: {
+      pattern: {
+        lead: "Un patrón encontrado.",
+        body: "{worse} de las {total} decisiones salieron peor de lo esperado. {dates} de ellas fueron fechas.",
+      },
+      rule: {
+        lead: "Una regla que se quedó.",
+        body: "Cuando le des una fecha a un cliente, suma primero el peor caso de tu líder de ingeniería.",
+      },
+      nothing: {
+        lead: "Nada se cayó.",
+        body: "Las {total} revisadas y calificadas, incluidas las que dolieron.",
+      },
+    },
+    ctaPivot: "La tuya empieza con una.",
+    bringReal: "Trae una decisión real",
+    whereStarted: "Dónde empezó {name}",
+    results: {
+      better: "Mejor de lo esperado",
+      worse: "Peor de lo esperado",
+      asExpected: "Como se esperaba",
+    },
+    stampResults: {
+      better: "Salió mejor",
+      worse: "Salió peor",
+      asExpected: "Salió como se esperaba",
+    },
+  },
+
+  brief: {
+    title: "Tu resumen de {month}",
+    stamp: "Entregado el domingo, 8:00 a. m.",
+    strong: "Dónde tu instinto es fuerte",
+    off: "Dónde tu instinto falla",
+    oneThing: "Una cosa para probar",
+    remindSet: "Recordatorio activado",
+    remindMe: "Recuérdamelo antes de mi próxima decisión sobre una fecha",
+    didntNotice: "Algo que quizá no hayas notado",
+  },
 };
