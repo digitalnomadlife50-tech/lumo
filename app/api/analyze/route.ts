@@ -235,7 +235,7 @@ Analyze this situation specifically.`
           continue
         }
 
-        result = cleanAIValue(toolResult.input)
+        result = cleanAIValue(toolResult.input, locale)
       } catch (error) {
         const metadata = getAnthropicErrorMetadata(error)
         lastFailure = {

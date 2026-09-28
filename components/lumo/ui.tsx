@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useDict, useLocale } from "@/lib/i18n";
 import { fill } from "@/lib/i18n/get-dictionary";
@@ -118,9 +119,9 @@ export function AppHeader({ aiStatus, initials = "" }: { aiStatus: AiStatus; ini
   return (
     <header className="lm-header">
       <Wordmark href="/" />
-      <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+      <div className="lm-header-actions">
         <LanguageSwitcher />
-        <a href="/" className="lm-backlink">{d.common.backToSite}</a>
+        <Link href="/" className="lm-backlink">{d.common.backToSite}</Link>
         <span className="lm-status" role="status">
           <i className={aiStatus === "ok" ? "lm-pulse" : ""} style={{ background: color }} aria-hidden="true" />
           <span>{label}</span>

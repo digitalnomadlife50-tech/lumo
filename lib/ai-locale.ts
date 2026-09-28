@@ -16,7 +16,7 @@ export function resolveAiLocale(value: unknown): Locale {
  */
 export function aiLanguageInstruction(locale: Locale): string {
   if (locale === "es") {
-    return "Write every human-readable field (names, descriptions, summaries, questions, observations, drafts, subjects, pushback, risks, costs) in natural, professional Spanish (es-ES, neutral). Keep enum fields (kind, costLevel, reversible) and any verbatim source quotes exactly as they appear in the user's text — do not translate those."
+    return "Write every human-readable field (names, descriptions, summaries, questions, observations, drafts, subjects, pushback, risks, costs) in natural, professional, neutral Latin American Spanish (es-419). Address the reader consistently with tú, never vos or usted. Do not use em dashes, en dashes, or dash punctuation. Do not use inverted or closing exclamation marks. Never use the phrases \"vamos a\" or \"hagamos\". Keep PM terms in English, including roadmap, launch, scope, stakeholder, and sprint. Keep enum fields (kind, costLevel, reversible) and any verbatim source quotes exactly as they appear in the user's text."
   }
   return "Write every human-readable field in natural, professional English. Keep enum fields (kind, costLevel, reversible) and any verbatim source quotes exactly as they appear in the user's text."
 }

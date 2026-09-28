@@ -22,11 +22,21 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // No locale: detect from the browser and redirect to /en/... or /es/....
-  const locale = detectLocale(request.headers.get("accept-language")) ?? DEFAULT_LOCALE;
+  // Keep the canonical root and legacy app URLs on the English entry point.
   const url = request.nextUrl.clone();
-  url.pathname = `/${locale}${pathname === "/" ? "" : pathname}`;
-  return NextResponse.redirect(url);
+  if (pathname === "/") {
+    url.pathname = "/en";
+    return NextResponse.redirect(url, 308);
+  }
+  if (pathname === "/app" || pathname.startsWith("/app/")) {
+    url.pathname = `/en${pathname}`;
+    return NextResponse.redirect(url, 308);
+  }
+
+  // Other unprefixed URLs follow the browser's preferred locale.
+  const locale = detectLocale(request.headers.get("accept-language")) ?? DEFAULT_LOCALE;
+  url.pathname = `/${locale}${pathname}`;
+  return NextResponse.redirect(url, 308);
 }
 
 export const config = {

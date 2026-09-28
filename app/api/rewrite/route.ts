@@ -202,7 +202,7 @@ Return one rewritten draft for the same audience. For add-audience, use the requ
       }
     }
     if (!result && lastFailure) return failureResponse(requestStartedAt, attempts, lastFailure)
-    return Response.json({ success: true, draft: cleanAIValue(result!) })
+    return Response.json({ success: true, draft: cleanAIValue(result!, locale) })
   } catch (error: unknown) {
     console.error("[lumo/rewrite] Error:", error)
     return Response.json({ success: false, errorCode: "SERVER_ERROR", error: "Something went wrong on our end. Try again." }, { status: 500 })

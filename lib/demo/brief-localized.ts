@@ -19,7 +19,7 @@ const KIND_LABEL: Record<Locale, Record<DecisionKind, string>> = {
   },
   es: {
     timing: "fechas y plazos",
-    scope: "alcance",
+    scope: "scope",
     hiring: "contratación",
     people: "personas",
     vendor: "proveedores",

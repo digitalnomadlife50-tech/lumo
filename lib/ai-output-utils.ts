@@ -1,4 +1,5 @@
 import "server-only"
+import type { Locale } from "@/lib/i18n/locales"
 
 export const HUMAN_WRITING_RULES = `
 Write like a sharp senior product manager talking to colleagues. Use plain, direct, specific language and short sentences. Use actual names, teams, dates, and numbers from the user's situation instead of general statements.
@@ -9,23 +10,24 @@ Drafted messages should read like something a senior PM would send after a light
 
 Open with the decision or the ask, not a preamble. Name the specific people, teams, tickets, and dates from the situation instead of "the team" or "stakeholders." State what is being given up when there is a real tradeoff, and say when you will revisit it if a date is involved. When you have a private note about what is making the decision hard, let it shape the tone toward the person it names, but never quote or restate it. One clear ask per message. Do not soften a hard message into vagueness; be direct and human at the same time.`
 
-export function cleanAIText(text: string): string {
+export function cleanAIText(text: string, locale?: Locale): string {
   return text
     .replace(/\s*([—–])\s*/g, (dashWithSpacing, _dash, index, source: string) => {
       const before = source.slice(0, index).trimEnd().slice(-1)
       const after = source.slice(index + dashWithSpacing.length).trimStart().charAt(0)
-      if (/\d/.test(before) && /\d/.test(after)) return dashWithSpacing
+      if (locale === "es" && /\d/.test(before) && /\d/.test(after)) return " a "
+      if (locale !== "es" && /\d/.test(before) && /\d/.test(after)) return dashWithSpacing
       return ", "
     })
-    .replace(/!/g, "")
+    .replace(locale === "es" ? /[¡!]/g : /!/g, "")
 }
 
-export function cleanAIValue<T>(value: T): T {
-  if (typeof value === "string") return cleanAIText(value) as T
-  if (Array.isArray(value)) return value.map((item) => cleanAIValue(item)) as T
+export function cleanAIValue<T>(value: T, locale?: Locale): T {
+  if (typeof value === "string") return cleanAIText(value, locale) as T
+  if (Array.isArray(value)) return value.map((item) => cleanAIValue(item, locale)) as T
   if (value && typeof value === "object") {
     return Object.fromEntries(
-      Object.entries(value).map(([key, item]) => [key, cleanAIValue(item)])
+      Object.entries(value).map(([key, item]) => [key, cleanAIValue(item, locale)])
     ) as T
   }
   return value

@@ -33,7 +33,7 @@
 @keyframes lmMark { from { background-size: 0% 40% } to { background-size: 100% 40% } }
 
 /* Base */
-.lm-page { background: var(--lm-canvas); color: var(--lm-text); font-family: var(--lm-sans); -webkit-font-smoothing: antialiased; min-height: 100vh; }
+.lm-page { background: var(--lm-canvas); color: var(--lm-text); font-family: var(--lm-sans); -webkit-font-smoothing: antialiased; min-height: 100vh; overflow-x: clip; }
 .lm-page *, .lm-page *::before, .lm-page *::after { box-sizing: border-box; }
 .lm-page a { color: var(--lm-accent); }
 .lm-page button { font-family: var(--lm-sans); }
@@ -154,7 +154,9 @@
 .lm-reveal.is-in .lm-spot-img { clip-path: inset(0 0 0 0); }
 
 /* ================= APP ================= */
-.lm-header { height: 64px; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; border-bottom: 1px solid var(--lm-border); background: var(--lm-canvas); }
+.lm-header { height: 64px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 32px; border-bottom: 1px solid var(--lm-border); background: var(--lm-canvas); }
+.lm-header-actions { display: flex; align-items: center; gap: 20px; min-width: 0; }
+.lm-header-actions > * { flex-shrink: 0; }
 .lm-header .lm-wordmark { font-size: 20px; }
 .lm-header .lm-wordmark i { width: 6px; height: 6px; margin-top: 12px; }
 .lm-status { display: inline-flex; align-items: center; gap: 7px; font-family: var(--lm-mono); font-size: 12px; color: var(--lm-text-2); }
@@ -479,6 +481,7 @@
   .lm-demo-q { font-size: 21px; }
   .lm-demo-gap { font-size: 22px; }
   .lm-demo-controls { flex-wrap: wrap; row-gap: 10px; }
+  .lm-demo-dot::after { display: none; }
   .lm-demo-transport { order: 1; }
   .lm-demo-chlabel { order: 2; flex: 1; }
   .lm-demo-dots { order: 3; flex: 1 1 100%; }
@@ -530,7 +533,9 @@
   .lm-section-tight { padding-top: 32px; }
   .lm-hero { padding-top: 48px; padding-bottom: 0; }
   .lm-hero-copy { gap: 20px; }
+  .lm-nav-links { gap: 12px; }
   .lm-nav-links a.lm-navlink { display: none; }
+  .lm-nav-links .lm-btn { padding: 10px !important; font-size: 12px; white-space: nowrap; }
   .lm-h1 { font-size: 40px; }
   .lm-h2 { font-size: 32px; }
   .lm-lede { font-size: 17px; }
@@ -538,7 +543,10 @@
   .lm-ctaband .lm-h2 { font-size: 32px; }
   .lm-ctaband-note { max-width: 300px; }
   .lm-footer { margin-top: 48px; }
-  .lm-header { padding: 0 20px; }
+  .lm-header { padding: 0 12px; }
+  .lm-header-actions { gap: 8px; }
+  .lm-langswitch { gap: 6px; font-size: 12px; }
+  .lm-backlink { font-size: 12px; }
   .lm-status span { display: none; }
   .lm-main { padding: 40px 20px 64px; }
   .lm-display { font-size: 36px; }
