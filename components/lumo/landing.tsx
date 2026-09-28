@@ -22,6 +22,7 @@ export default function Landing() {
             <a className="lm-navlink" href="#record">{d.nav.overTime}</a>
             <a className="lm-navlink" href="#why">{d.nav.whyLumo}</a>
             <a className="lm-navlink" href="#about">{d.nav.about}</a>
+            <a className="lm-navlink" href={lh(d.nav.guides === "Guías" ? "/guias" : "/guides")}>{d.nav.guides}</a>
             <LanguageSwitcher />
             <a className="lm-btn" href={lh("/app")} style={{ padding: "11px 22px" }}>{d.common.tryDemo}</a>
           </div>
@@ -162,6 +163,8 @@ export default function Landing() {
             <div style={{ fontSize: 15, color: "#C9C3B8" }}>{t.footerTagline}</div>
           </div>
           <div style={{ fontSize: 14, color: "var(--lm-text-3)", lineHeight: 1.8 }}>
+            <a href={lh(d.nav.guides === "Guías" ? "/guias" : "/guides")} style={{ color: "var(--lm-text-3)" }}>{t.footerGuides}</a>
+            <br />
             <a href="https://linkedin.com/in/terrancerange" style={{ color: "var(--lm-text-3)" }}>{t.footerBuiltBy}</a>
             <br />
             2026

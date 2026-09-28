@@ -676,3 +676,74 @@
   .lm-reveal { opacity: 1; }
   .lm-ot-art { clip-path: none; }
 }
+
+/* ================= PRODUCT DECISION GUIDES ================= */
+.lm-guide-page { display: flex; flex-direction: column; }
+.lm-guide-nav { min-height: 72px; height: auto; gap: 24px; }
+.lm-guide-links { display: flex; align-items: center; gap: 24px; }
+.lm-guide-links a:not(.lm-btn) { color: var(--lm-text-2); text-decoration: none; font-size: 14px; }
+.lm-guide-links a:not(.lm-btn):hover { color: var(--lm-text); text-decoration: underline; text-underline-offset: 4px; }
+.lm-guide-main { width: min(100% - 40px, 820px); margin: 0 auto; padding: 80px 0 32px; }
+.lm-guide-eyebrow { color: var(--lm-accent); font: 600 11px/1.4 var(--lm-mono); letter-spacing: .08em; text-transform: uppercase; }
+.lm-guide-index h1, .lm-guide-article h1 { margin: 14px 0 0; color: var(--lm-text); font-size: clamp(38px, 6vw, 60px); font-weight: 600; line-height: 1.04; letter-spacing: -.04em; }
+.lm-guide-intro { max-width: 640px; margin: 22px 0 0; color: var(--lm-text-2); font-size: 19px; line-height: 1.6; }
+.lm-guide-list { display: grid; gap: 18px; margin-top: 48px; }
+.lm-guide-card { padding: 28px 30px; border: 1px solid var(--lm-border); border-radius: 12px; background: var(--lm-surface); }
+.lm-guide-card-meta { display: flex; flex-wrap: wrap; gap: 9px; color: var(--lm-text-3); font: 12px/1.5 var(--lm-mono); }
+.lm-guide-card h2 { margin: 15px 0 0; font-size: 25px; line-height: 1.25; letter-spacing: -.02em; }
+.lm-guide-card h2 a { color: var(--lm-text); text-decoration-color: var(--lm-border-hover); text-underline-offset: 4px; }
+.lm-guide-card h2 a:hover { color: var(--lm-accent); text-decoration-color: currentColor; }
+.lm-guide-card p { max-width: 68ch; margin: 12px 0 0; color: var(--lm-text-2); font-size: 15px; line-height: 1.65; }
+.lm-guide-read-link { display: inline-flex; align-items: center; min-height: 44px; margin-top: 10px; color: var(--lm-accent); font-size: 14px; font-weight: 600; text-decoration: none; }
+.lm-guide-read-link:hover { text-decoration: underline; text-underline-offset: 4px; }
+.lm-guide-breadcrumb { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 0 0 32px; color: var(--lm-text-3); font-size: 13px; line-height: 1.5; }
+.lm-guide-breadcrumb a { color: var(--lm-text-2); text-decoration: none; }
+.lm-guide-breadcrumb a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.lm-guide-breadcrumb [aria-current="page"] { overflow-wrap: anywhere; }
+.lm-guide-article-header { padding-bottom: 32px; border-bottom: 1px solid var(--lm-border); }
+.lm-guide-dek { max-width: 680px; margin: 20px 0 0; color: var(--lm-text-2); font-size: 20px; line-height: 1.55; }
+.lm-guide-byline { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 22px; color: var(--lm-text-3); font-size: 13px; }
+.lm-guide-prose { padding-top: 12px; }
+.lm-guide-prose > p, .lm-guide-prose section > p, .lm-guide-takeaway p { color: var(--lm-text-2); font-size: 17px; line-height: 1.78; }
+.lm-guide-prose > p { margin: 20px 0; }
+.lm-guide-prose section { margin-top: 40px; }
+.lm-guide-prose h2 { margin: 0 0 14px; color: var(--lm-text); font-size: 28px; font-weight: 600; line-height: 1.25; letter-spacing: -.025em; }
+.lm-guide-prose section > p { margin: 14px 0; }
+.lm-guide-message { margin: 30px 0; overflow: hidden; border: 1px solid var(--lm-border); border-radius: 12px; background: var(--lm-surface); }
+.lm-guide-message figcaption { padding: 17px 20px; color: var(--lm-text-2); font-size: 13px; font-weight: 600; }
+.lm-guide-message-bar { display: flex; align-items: center; gap: 9px; padding: 11px 20px; border-block: 1px solid var(--lm-border); background: var(--lm-muted); color: var(--lm-text-2); font-size: 12px; }
+.lm-guide-message-dot { width: 8px; height: 8px; flex: 0 0 auto; border-radius: 50%; background: var(--lm-positive); }
+.lm-guide-message blockquote { margin: 0; padding: 18px 20px 22px; color: var(--lm-text); font-size: 15px; line-height: 1.7; white-space: pre-line; }
+.lm-guide-takeaway { margin-top: 42px; padding: 24px 26px; border-left: 3px solid var(--lm-accent); border-radius: 0 10px 10px 0; background: var(--lm-accent-tint); }
+.lm-guide-takeaway h2 { font-size: 20px; }
+.lm-guide-takeaway p { margin: 0; }
+.lm-guide-cta { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin-top: 34px; padding: 24px; border-radius: 12px; background: var(--lm-dark); color: var(--lm-on-dark); }
+.lm-guide-cta .lm-guide-eyebrow { color: #F2B7A4; }
+.lm-guide-cta p { max-width: 42ch; margin: 7px 0 0; color: rgba(255,255,255,.8); font-size: 15px; line-height: 1.5; }
+.lm-guide-cta .lm-btn { flex: 0 0 auto; background: var(--lm-on-dark); color: var(--lm-dark) !important; }
+.lm-guide-cta .lm-btn:hover { background: var(--lm-muted); }
+.lm-guide-footer { margin-top: auto; }
+.lm-guide-footer-inner { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto; gap: 28px; align-items: center; padding-top: 28px; padding-bottom: 28px; }
+.lm-guide-footer-inner p { max-width: 42ch; margin: 8px 0 0; color: var(--lm-text-3); font-size: 13px; line-height: 1.5; }
+.lm-guide-footer-inner nav { display: flex; flex-direction: column; gap: 8px; }
+.lm-guide-footer-inner nav a { color: var(--lm-text-3); font-size: 13px; text-decoration: none; }
+.lm-guide-footer-inner nav a:hover { color: var(--lm-on-dark); text-decoration: underline; }
+.lm-guide-footer-inner > span { color: var(--lm-text-3); font-size: 12px; white-space: nowrap; }
+@media (max-width: 767px) {
+  .lm-guide-nav { min-height: 64px; gap: 12px; }
+  .lm-guide-links { gap: 12px; }
+  .lm-guide-links > a:first-child, .lm-guide-links > a:nth-child(2) { display: none; }
+  .lm-guide-links .lm-btn { min-height: 40px; padding: 8px 11px; font-size: 12px; white-space: nowrap; }
+  .lm-guide-main { width: min(100% - 40px, 820px); padding-top: 48px; }
+  .lm-guide-intro { font-size: 17px; }
+  .lm-guide-list { gap: 12px; margin-top: 32px; }
+  .lm-guide-card { padding: 22px 20px; }
+  .lm-guide-card h2 { font-size: 21px; }
+  .lm-guide-prose > p, .lm-guide-prose section > p, .lm-guide-takeaway p { font-size: 16px; line-height: 1.7; }
+  .lm-guide-prose h2 { font-size: 24px; }
+  .lm-guide-dek { font-size: 18px; }
+  .lm-guide-cta { align-items: flex-start; flex-direction: column; padding: 22px; }
+  .lm-guide-footer-inner { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  .lm-guide-footer-inner nav { gap: 10px; }
+}
+

@@ -5,10 +5,10 @@
  */
 export const en = {
   metadata: {
-    title: "Lumo | A decision tool for product managers",
+    title: "Lumo: The decision tool for product managers",
     description:
-      "Make hard product decisions faster, and learn from every one. Write down your first instinct, see the evidence, send the right update, and learn from how it turned out.",
-    ogAlt: "Lumo: make hard product decisions faster, and learn from every one.",
+      "Work through a hard product decision with Lumo, compare options with evidence, save your reasoning, and prepare updates for each team affected by the outcome.",
+    ogAlt: "Lumo, the decision tool for product managers.",
   },
 
   common: {
@@ -46,6 +46,7 @@ export const en = {
     overTime: "Over time",
     whyLumo: "Why Lumo",
     about: "About",
+    guides: "Guides",
   },
 
   landing: {
@@ -88,6 +89,7 @@ export const en = {
 
     footerTagline: "Make hard product decisions faster, and learn from every one.",
     footerBuiltBy: "Built by Terrance Range",
+    footerGuides: "Product decision guides",
   },
 
   overTime: {
