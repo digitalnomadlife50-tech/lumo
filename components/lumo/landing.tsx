@@ -1,6 +1,6 @@
 "use client";
 
-import { Reveal, Wordmark, delay } from "./ui";
+import { LanguageSwitcher, Reveal, Wordmark, delay } from "./ui";
 import { LiveDemo } from "./live-demo";
 import { OverTime } from "./over-time";
 import { ClipboardPaste, Forward, Mic, Scan, Video, type LucideIcon } from "lucide-react";
@@ -22,6 +22,7 @@ export default function Landing() {
             <a className="lm-navlink" href="#record">{d.nav.overTime}</a>
             <a className="lm-navlink" href="#why">{d.nav.whyLumo}</a>
             <a className="lm-navlink" href="#about">{d.nav.about}</a>
+            <LanguageSwitcher />
             <a className="lm-btn" href={lh("/app")} style={{ padding: "11px 22px" }}>{d.common.tryDemo}</a>
           </div>
         </nav>

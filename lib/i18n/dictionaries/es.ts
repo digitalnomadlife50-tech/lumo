@@ -17,6 +17,7 @@ export const es: Dictionary = {
     wordmarkAria: "Inicio de Lumo",
     tryDemo: "Probar la demo",
     backToSite: "Volver al sitio",
+    languageSwitcherAria: "Elige el idioma",
     confidence: "Confianza",
     gaveUp: "Dejaste de lado",
     of5: "de 5",

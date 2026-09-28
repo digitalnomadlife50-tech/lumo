@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
-import { useDict } from "@/lib/i18n";
+import { usePathname } from "next/navigation";
+import { useDict, useLocale } from "@/lib/i18n";
 import { fill } from "@/lib/i18n/get-dictionary";
+import { LOCALES, LOCALE_LABELS, type Locale } from "@/lib/i18n/locales";
 
 export type AiStatus = "idle" | "ok" | "error";
 
@@ -76,6 +78,39 @@ export function Wordmark({ href = "/" }: { href?: string }) {
   );
 }
 
+/**
+ * Switch between locales while staying on the same page. The current path
+ * always carries a locale prefix ("/en/app", "/es/app"), so swapping the
+ * first segment preserves the rest of the route.
+ */
+export function LanguageSwitcher() {
+  const locale = useLocale();
+  const pathname = usePathname() || `/${locale}`;
+  const d = useDict();
+
+  const hrefFor = (target: Locale) => {
+    const segments = pathname.split("/");
+    segments[1] = target;
+    return segments.join("/") || `/${target}`;
+  };
+
+  return (
+    <nav className="lm-langswitch" aria-label={d.common.languageSwitcherAria}>
+      {LOCALES.map((l) =>
+        l === locale ? (
+          <span key={l} className="is-active" aria-current="true">
+            {LOCALE_LABELS[l]}
+          </span>
+        ) : (
+          <a key={l} href={hrefFor(l)} hrefLang={l}>
+            {LOCALE_LABELS[l]}
+          </a>
+        )
+      )}
+    </nav>
+  );
+}
+
 export function AppHeader({ aiStatus, initials = "" }: { aiStatus: AiStatus; initials?: string }) {
   const d = useDict();
   const label = aiStatus === "ok" ? d.status.connected : aiStatus === "error" ? d.status.notConnected : d.status.checking;
@@ -84,6 +119,7 @@ export function AppHeader({ aiStatus, initials = "" }: { aiStatus: AiStatus; ini
     <header className="lm-header">
       <Wordmark href="/" />
       <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+        <LanguageSwitcher />
         <a href="/" className="lm-backlink">{d.common.backToSite}</a>
         <span className="lm-status" role="status">
           <i className={aiStatus === "ok" ? "lm-pulse" : ""} style={{ background: color }} aria-hidden="true" />

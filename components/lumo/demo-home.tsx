@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Wordmark } from "./ui"
+import { LanguageSwitcher, Wordmark } from "./ui"
 import { JudgmentMap } from "./judgment-map"
 import { MonthlyBriefCard } from "./monthly-brief"
 import { LiveDemo, demoMapPoints } from "./live-demo"
@@ -43,6 +43,7 @@ export default function DemoHome() {
           <Wordmark />
           <div className="lm-nav-links">
             <Link className="lm-navlink" href={lh("/")}>{t.navHome}</Link>
+            <LanguageSwitcher />
             <Link className="lm-btn" href={lh("/app")} style={{ padding: "11px 22px" }}>{t.bringOwn}</Link>
           </div>
         </nav>

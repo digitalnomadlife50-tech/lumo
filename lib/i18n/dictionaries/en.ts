@@ -15,6 +15,7 @@ export const en = {
     wordmarkAria: "Lumo home",
     tryDemo: "Try the demo",
     backToSite: "Back to site",
+    languageSwitcherAria: "Choose language",
     confidence: "Confidence",
     gaveUp: "Gave up",
     of5: "of 5",
