@@ -77,7 +77,7 @@ export const en = {
 
     aboutLabel: "Why I built this",
     aboutBody:
-      "I'm a product leader and three-time founder. I kept watching product manager friends make a hard decision, then spend days explaining it to every team that needed to hear it. AI made the drafts faster. It didn't make the decisions better, and it never remembered how last quarter's decisions turned out. Lumo is my attempt at that part. It's a working prototype, built end to end.",
+      "I'm a product manager for fundraising at a national digital advocacy platform with 8M+ members, and a three-time founder. Before product, my doctoral coursework was in behavioral science and organizational change — the field that studies how people make decisions. I kept watching product managers make a hard call, then spend days explaining it to every team that needed to hear it. AI made the drafts faster. It didn't make the decisions better, and it never remembered how last quarter's decisions turned out. Lumo is my attempt at that part. It's a working prototype, built end to end.",
     aboutName: "Terrance Range",
     aboutImgAlt: "Terrance Range",
 
