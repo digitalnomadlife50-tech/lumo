@@ -170,6 +170,8 @@ export default function Landing() {
             <br />
             <a href="https://terrance.company" style={{ color: "var(--lm-text-3)" }}>{t.footerBuiltBy}</a>
             <br />
+            <a href="https://linkedin.com/in/terrancerange" style={{ color: "var(--lm-text-3)" }}>LinkedIn</a>
+            <br />
             2026
           </div>
         </div>
