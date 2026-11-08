@@ -79,7 +79,7 @@ export const es: Dictionary = {
 
     aboutLabel: "Por qué construí esto",
     aboutBody:
-      "Soy líder de producto y fundador en tres ocasiones. Veía una y otra vez a amigos product managers tomar una decisión difícil y luego pasar días explicándosela a cada equipo que necesitaba escucharla. La IA hizo los borradores más rápidos. No hizo las decisiones mejores, y nunca recordaba cómo habían resultado las decisiones del trimestre pasado. Lumo es mi intento de resolver esa parte. Es un prototipo funcional, construido de principio a fin.",
+      "Soy product manager de fundraising en una plataforma nacional de activismo digital con más de 8 millones de miembros, y fundador en tres ocasiones. Antes de producto, mi formación doctoral fue en ciencias del comportamiento y cambio organizacional, el campo que estudia cómo toman decisiones las personas. Veía una y otra vez a product managers tomar una decisión difícil y luego pasar días explicándosela a cada equipo que necesitaba escucharla. La IA hizo los borradores más rápidos. No hizo las decisiones mejores, y nunca recordaba cómo habían resultado las decisiones del trimestre pasado. Lumo es mi intento de resolver esa parte. Es un prototipo funcional, construido de principio a fin.",
     aboutName: "Terrance Range",
     aboutImgAlt: "Terrance Range",
 

@@ -1,257 +1,572 @@
-%PDF-1.4
-%���� ReportLab Generated PDF document (opensource)
-1 0 obj
-<<
-/F1 2 0 R /F2 3 0 R /F3 4 0 R /F4 11 0 R
->>
-endobj
-2 0 obj
-<<
-/BaseFont /Helvetica /Encoding /WinAnsiEncoding /Name /F1 /Subtype /Type1 /Type /Font
->>
-endobj
-3 0 obj
-<<
-/BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding /Name /F2 /Subtype /Type1 /Type /Font
->>
-endobj
-4 0 obj
-<<
-/BaseFont /Times-Italic /Encoding /WinAnsiEncoding /Name /F3 /Subtype /Type1 /Type /Font
->>
-endobj
-5 0 obj
-<<
-/Contents 19 0 R /MediaBox [ 0 0 612 792 ] /Parent 18 0 R /Resources <<
-/Font 1 0 R /ProcSet [ /PDF /Text /ImageB /ImageC /ImageI ]
->> /Rotate 0 /Trans <<
 
->> 
-  /Type /Page
->>
-endobj
-6 0 obj
-<<
-/Contents 20 0 R /MediaBox [ 0 0 612 792 ] /Parent 18 0 R /Resources <<
-/Font 1 0 R /ProcSet [ /PDF /Text /ImageB /ImageC /ImageI ]
->> /Rotate 0 /Trans <<
 
->> 
-  /Type /Page
->>
-endobj
-7 0 obj
-<<
-/Contents 21 0 R /MediaBox [ 0 0 612 792 ] /Parent 18 0 R /Resources <<
-/Font 1 0 R /ProcSet [ /PDF /Text /ImageB /ImageC /ImageI ]
->> /Rotate 0 /Trans <<
+CASE STUDY
+Lumo
+A feedback loop for product judgment.
+Make hard product decisions clearer, and keep a record of how they turned out.
+ROLEBUILT WITHSTATUS
+Solo build: product, design, and
+engineering
+Next.js 16, React 19, TypeScript, Claude
+API
+Live at www.trylumo.co. Case study
+updated November 2026.
+THE SHORT VERSION
+AI made the work of product management cheap: the options, the analysis, the docs, the updates. What's left is the call itself,
+and the call is the one part of the job that gets almost no feedback. Outcomes show up months later, mixed in with everything
+else, and nobody connects them back to what was believed at the time. AI makes this worse in a way that's easy to miss. It can
+write a convincing case for any choice in seconds, so the written reasoning no longer shows what anyone actually thought.
+Lumo is a feedback loop for product judgment. You write down your instinct and how sure you are before the model says
+anything. Lumo reads the situation back in your own words, names one thing you may have missed, and lays out options without
+making the call for you. Then it drafts the update every audience needs. Because the record comes out of work you already
+have to do, keeping it takes no extra effort, and over time it shows you where your instincts hold up and where they don't.
+I built it end to end and ran a small closed beta with about 15 product managers at early-stage startups. What they valued first
+was memory: in chaotic weeks, the record gave them back the context that even AI search tools missed. Next, I want Lumo to
+run as a layer inside the AI tools PMs already use, not just as one more app to open.
+AT A GLANCE
+~15
+product managers in a closed
+beta
+3
+industries: health, sports,
+edtech
+6
+steps, and the instinct and the
+choice stay yours
+0
+sign-ups needed to try it
+Lumo  |  Case study  |  Terrance Range1 / 12
 
->> 
-  /Type /Page
->>
-endobj
-8 0 obj
-<<
-/Contents 22 0 R /MediaBox [ 0 0 612 792 ] /Parent 18 0 R /Resources <<
-/Font 1 0 R /ProcSet [ /PDF /Text /ImageB /ImageC /ImageI ]
->> /Rotate 0 /Trans <<
+01
+Why this needs to exist
+At my day job, I watched one decision, delaying a release past an election code freeze, get explained four different ways
+to four audiences. Two months later, nobody could say why we'd made it. The reasoning had disappeared, and with it any
+way to learn whether the call had been right. That's the problem in one story. The rest of this section is why it's getting
+bigger, and why now.
+THE WORK GOT CHEAP. THE JUDGMENT DIDN'T.
+AI now produces the options, the analysis, the spec, and the stakeholder update in minutes. That moves the value of a
+product manager toward the one thing a model can't produce for you: the call, and owning it.
+AI gave you more options.
+It did not give you more judgment.
+PRODUCT JUDGMENT GETS ALMOST NO FEEDBACK
+Daniel Kahneman and Gary Klein come from opposing schools of thought on intuition, and they still agree on when you
+can trust it: when the situation has some structure and the person gets feedback on their judgments. Klein is blunt about
+business: "Most corporate decisions aren't going to meet the test of high validity." Product calls are a clear case. The
+outcome shows up months later, tangled up with other causes, and nobody links it back to what was believed at the time.
+So years of experience don't automatically turn into better judgment. Most of us make every hard call from first principles,
+with no record of how our judgment has held up, and we fill the gap with a story about ourselves: I'm a good decision
+maker. Kahneman's warning is that people "will feel confident regardless of how well grounded it is in reality." That's a
+shaky thing to build long-term strategy on.
+AI MAKES THIS WORSE IN TWO WAYS THAT ARE EASY TO MISS
+It makes it easier to stop thinking.
+In a 2025 Microsoft Research survey of 319 knowledge
+workers, higher confidence in generative AI was associated
+with less critical thinking. I saw the same thing in my own first
+version of Lumo. When it recommended a decision, I
+stopped reasoning and started reacting.
+It makes every rationale look good.
+Kahneman traces overconfidence to how coherent a story
+feels, not whether it's true. A model will write a persuasive
+case for whichever option you already lean toward, in
+seconds. Once that's possible, a written rationale stops being
+evidence of what anyone actually thought.
+WHY NOW
+Producing the work keeps getting cheaper, so judgment is what sets a product manager apart. The same tools make it
+easier to hand off the thinking. And as more of the work is produced by AI, the record of what you decided, and why,
+becomes the one thing that's unmistakably yours. That makes judgment easier to show and harder to fake. Meanwhile,
+models are now reliable enough at structured output that one person could build a tool like this end to end. I know,
+because I did.
+The point of Lumo
+Lumo is a feedback loop for product judgment. It isn't about writing faster, and it isn't another tool that hands you an answer. It
+records what you believed before the model said anything, keeps the decision in your hands, and holds onto the record so it can be
+checked against what happened. The goal is for experience to turn into better judgment instead of just more confidence.
+Sources: Daniel Kahneman and Gary Klein, "Strategic decisions: When can you trust your gut?", McKinsey Quarterly, March 2010. Hao-Ping Lee et al., "The
+Impact of Generative AI on Critical Thinking," CHI 2025.
+Lumo  |  Case study  |  Terrance Range2 / 12
 
->> 
-  /Type /Page
->>
-endobj
-9 0 obj
-<<
-/Contents 23 0 R /MediaBox [ 0 0 612 792 ] /Parent 18 0 R /Resources <<
-/Font 1 0 R /ProcSet [ /PDF /Text /ImageB /ImageC /ImageI ]
->> /Rotate 0 /Trans <<
+02
+Why today's tools don't fix it
+The tools PMs already use split into two groups. Some help in the moment but never see what you believed before they
+answered. Others keep the history but make you do all the work.
+TOOLGOOD ATWHERE IT FALLS SHORT
+Chat assistantThinking through one decision
+quickly
+Even with memory turned on, it never captures your instinct
+before it answers, and it never connects the outcome back to
+the call.
+Decision journalKeeping an honest historyYou do all the work by hand, so it's the first habit to go in a busy
+week.
+Docs and SlackSharing with the teamThe reasoning gets lost in threads, and nobody links the
+outcome back to the call.
+Frameworks like RICEScoring options consistentlyThey score the options. They say nothing about the judgment of
+the person choosing.
+The insight that makes the record stick
+Decision journals fail because they're homework. So in Lumo, the record isn't a separate chore. It comes out of work a PM already
+has to do: getting to a decision and telling people about it. The update is why you open Lumo. The record is what you get without
+extra effort.
+Lumo  |  Case study  |  Terrance Range3 / 12
 
->> 
-  /Type /Page
->>
-endobj
-10 0 obj
-<<
-/Contents 24 0 R /MediaBox [ 0 0 612 792 ] /Parent 18 0 R /Resources <<
-/Font 1 0 R /ProcSet [ /PDF /Text /ImageB /ImageC /ImageI ]
->> /Rotate 0 /Trans <<
+03
+What the beta showed
+I ran a small closed beta with about 15 product managers at early-stage startups in health, sports, and edtech. They used
+Lumo on real decisions from their own work, and I watched for three things.
+•Did people change their first instinct after seeing the options, or did they just confirm what they already believed?
+•Did the confidence rating make people stop and think, or did they treat it as a box to tick?
+•Where did the model offer options that sounded reasonable but turned out shallow or framed wrong?
+The feedback centered on memory. In chaotic stretches, the record helped people remember what had happened and get
+the context back. Their point was that even with all the retrieval tools AI offers now, details still get missed, and a
+reflection record filled that gap.
+On the model itself, the same pattern kept showing up. It's good at widening the set of options and writing clear
+messages. It's less reliable at spotting the downside nobody has mentioned, or the political constraint a person already
+feels but hasn't put into words. When Lumo helped most, it was usually because it made someone write the trade-off
+down, not because it had a better idea. That finding is why I added the "I noticed" line and the "What's making this hard"
+field.
+One record, three timelines
+This week, the update is what gets a PM to open Lumo. In the weeks after, the record is a memory of what happened and why,
+which is what the beta valued. Over months, the same record is what makes calibration possible. The first two are working today.
+The third is the bet.
+This was a small, informal beta, not a controlled study. I read it as direction, not proof.
+Lumo  |  Case study  |  Terrance Range4 / 12
 
->> 
-  /Type /Page
->>
-endobj
-11 0 obj
-<<
-/BaseFont /Courier /Encoding /WinAnsiEncoding /Name /F4 /Subtype /Type1 /Type /Font
->>
-endobj
-12 0 obj
-<<
-/Contents 25 0 R /MediaBox [ 0 0 612 792 ] /Parent 18 0 R /Resources <<
-/Font 1 0 R /ProcSet [ /PDF /Text /ImageB /ImageC /ImageI ]
->> /Rotate 0 /Trans <<
+04
+Who it's for, and why I built it
+It's for the working product manager who keeps facing calls with real trade-offs: what to build first, which date to promise,
+what to cut. They're short on time, they answer to leadership, and they end up rewriting the same decision for every group
+that needs to hear about it.
+I'm one of them. My day job is product manager for fundraising at a national digital advocacy platform with 8M+ members,
+where a lot of calls have to fit around release freezes during elections. Before product, my doctoral coursework was in
+behavioral science and organizational change, the field that studies how people make decisions and how organizations
+act on them. And I've founded three companies.
+A decision Lumo is built for (illustrative example)
+Your largest customer wants single sign-on (SSO) by the end of Q3. Engineering says Q4 at the earliest. Sales has already hinted
+yes. Your VP wants an answer by Friday, and whatever you decide, several groups will need to hear it differently. I made this
+scenario up to show how Lumo works. It isn't a recorded session, and I use it throughout this document.
+05
+How the design follows from the problem
+These are the rules I set before writing any code. Each one answers a problem from section 01 or 02.
+THE PROBLEMTHE RULEWHAT LUMO DOES
+Once a model has spoken, you
+can't recover what you believed
+before it.
+Get the instinct down
+first.
+Step 1 saves your instinct and confidence before any analysis, the
+way a researcher registers a prediction before running the study.
+Otherwise the model's framing quietly replaces what you actually
+thought.
+People think less when they trust
+the AI more.
+You decide, not the
+model.
+Lumo never recommends. It can structure the decision, test it, and
+draft the follow-up. The choice is always yours.
+Confidence means little until it's
+checked against results.
+Make confidence
+explicit.
+Every decision carries a confidence rating, so it can be compared
+with the outcome later.
+Judgment is uneven. You can be
+good at hiring calls and bad at
+dates.
+Compare like with
+like.
+Every decision is tagged by type (timing, scope, hiring, people,
+vendor, or strategy), so patterns can show up by kind of call.
+If a model paraphrases you, you
+end up reasoning about its
+version of your problem.
+Never fake it.Every part of the framing is tied to a direct quote from your own
+words. Anything that's a sample says so.
+Records that take extra work don't
+get kept.
+Make it easy to start.No account, nothing to install, nothing for IT to approve. The record
+comes out of the update you already have to send.
+A pattern you see after the fact
+doesn't change anything.
+Catch the next
+mistake.
+Planned: bring the pattern up right before your next similar call
+(section 09).
+A tool that hides its failures can't
+be trusted with decisions.
+Be honest when
+things break.
+If the model or a service fails, Lumo says so plainly and never fills
+the gap with a made-up result.
+Lumo  |  Case study  |  Terrance Range5 / 12
 
->> 
-  /Type /Page
->>
-endobj
-13 0 obj
-<<
-/Contents 26 0 R /MediaBox [ 0 0 612 792 ] /Parent 18 0 R /Resources <<
-/Font 1 0 R /ProcSet [ /PDF /Text /ImageB /ImageC /ImageI ]
->> /Rotate 0 /Trans <<
+06
+What exists today
+Lumo is one path with six steps. The model helps with four of them. The first step and the fifth, your instinct and your
+choice, belong to you.
+1
+What's
+happening
+in your own words
+HUMAN
+2
+What I'm reading
+Lumo reads it back,
+with sources
+MODEL
+3
+Your options
+yours, plus ones
+Lumo adds
+MODEL
+4
+Side by side
+cost, risk, who it
+hurts, reversibility
+MODEL
+5
+Your choice
+commit, with the
+trade-off and your
+confidence
+HUMAN
+6
+Tell people
+a draft for each
+audience
+MODEL
+THE SSO DECISION, STEP BY STEP (ILLUSTRATIVE)
+STEPWHAT THE PM DOESWHAT LUMO GIVES BACK
+1 What's
+happening
+Types out the situation and a gut call:
+"Promise Q3, we can make it work." Can
+also note what's making it hard, like a
+stakeholder who pushed back last time.
+Nothing yet. Lumo saves the instinct and the confidence level
+before it analyzes anything.
+2 What I'm
+reading
+Reads Lumo's framing, corrects it, and
+clicks "Show source" to see where each
+point came from.
+The real question, what matters, who's affected, and how
+urgent it is, each tied to a direct quote from what the PM wrote.
+Plus one "I noticed" line about something the PM may have
+missed.
+3 Your optionsAdds an option of their own.Two or three more options, marked "Added by Lumo," such as
+a phased SSO beta in Q3 with the full rollout in Q4.
+4 Side by sideCompares the options.For each option, the cost, the risk, who it hurts, and whether it
+can be undone: yes, partly, or no.
+5 Your choiceChooses the phased beta, writes down
+the trade-off, and rates confidence 3 out of
+5. Commits by pressing and holding.
+Nothing. This step belongs to the PM.
+6 Tell peopleEdits the drafts, asks for a shorter or more
+direct version, adds an audience, and
+sends.
+A draft for the VP every time, plus one for each other group the
+decision affects. Each comes in the right channel, with the
+pushback that group is likely to raise and a suggested reply.
+Lumo also tags each decision by type and saves it in your browser. You don't need an account.
+OTHER CHOICES I MADE ON PURPOSE
+Committing takes intent.
+You choose by pressing and holding,
+so it never happens by accident.
+Keyboard and assistive-technology
+users get an instant option instead.
+One decision, many audiences.
+There's always a draft for the VP, plus
+one for each other group the decision
+touches, and you can add your own.
+Each comes in the right channel,
+whether email, Slack, or a DM.
+Edit without starting over.
+You can ask for any draft to be
+shorter or more direct, and undo back
+to the last version, without redoing the
+decision.
+Lumo  |  Case study  |  Terrance Range6 / 12
 
->> 
-  /Type /Page
->>
-endobj
-14 0 obj
-<<
-/Contents 27 0 R /MediaBox [ 0 0 612 792 ] /Parent 18 0 R /Resources <<
-/Font 1 0 R /ProcSet [ /PDF /Text /ImageB /ImageC /ImageI ]
->> /Rotate 0 /Trans <<
+Restraint over polish.
+The tone is calm and the motion is
+minimal. There's one serif signature
+line, used sparingly, and no
+exclamation points anywhere. People
+open Lumo when they're under
+pressure, and it shouldn't add to the
+noise.
+Built to be found.
+I wrote four practical guides, each in
+English and Spanish: what to do
+when a launch is slipping, how to cut
+scope, how to write an update for a
+VP, and whether to hire now or wait.
+Two languages from the start.
+Lumo works in English and Spanish,
+and the model answers in the visitor's
+language with its own writing rules.
+07
+How it got here
+I started building in July 2026. Most of what makes Lumo work today exists because something I believed turned out to
+be wrong once real decisions went through it. Here are the beliefs that changed the product, what actually happened, and
+what I did about it.
+WHAT I BELIEVEDWHAT HAPPENEDWHAT I CHANGED
+The most useful feature
+would be a
+recommendation.
+Within a couple of weeks I hated it. As soon
+as the model told me what it would do, I
+stopped thinking and started reacting.
+I took the recommendation out completely. The
+model helps structure the decision, and the PM
+makes it.
+Good options from the
+model would be enough.
+In testing, the model was good at widening
+the options. It was weak at naming the
+political constraint a person already feels
+but hasn't said out loud.
+I added an optional "What's making this hard" field
+and an "I noticed" line in step 2. The field shapes that
+line and the tone of the drafts, but Lumo never
+quotes it back.
+A schema would keep the
+model true to what people
+wrote.
+When the model played the situation back,
+it invented or paraphrased the user's words.
+Now every part of the framing points to a direct quote
+from the user's own text, behind "Show source." The
+prompt forbids made-up or paraphrased quotes.
+A schema would
+guarantee usable output.
+Schemas cut down on bad output, but they
+don't eliminate it. Broken screens still
+slipped through now and then.
+I added a second, separate shape check on the
+server and one retry. If both attempts fail, the user
+gets a plain error and can try again.
+Saving decisions would be
+enough to learn from
+them.
+You can't find patterns in decisions you
+can't compare.
+Every decision now gets a type: timing, scope, hiring,
+people, vendor, or strategy. That gives pattern
+detection something to group by.
+If it worked in preview, it
+would work live.
+Three bugs showed up only on the live site
+(appendix C).
+I test the deployed product now, not the preview, and
+the app shows whether the AI is up.
+The most important decision I made was taking a capability away.
+The trade-off I accepted
+Taking out the recommendation made Lumo less impressive in a quick demo. A tool that hands you an answer looks smarter in the
+first thirty seconds. I chose the version that's more useful on your fifth decision over the one that's more impressive on your first.
+Lumo  |  Case study  |  Terrance Range7 / 12
 
->> 
-  /Type /Page
->>
-endobj
-15 0 obj
-<<
-/Contents 28 0 R /MediaBox [ 0 0 612 792 ] /Parent 18 0 R /Resources <<
-/Font 1 0 R /ProcSet [ /PDF /Text /ImageB /ImageC /ImageI ]
->> /Rotate 0 /Trans <<
+08
+Why I built it in this order
+If outcome data is what calibration depends on, why ship audience drafts first and outcome check-ins later? Because
+nobody records outcomes in a tool they don't open. The update is the reason a PM opens Lumo this week. The record
+builds up as a side effect, and the beta showed it's useful as memory long before it's useful for calibration. Outcome
+check-ins only pay off once people are coming back, so they come next.
+09
+Where it's going
+Today Lumo is an app you open. Where I want to take it is a decision layer that runs inside the tools product managers
+already use. Through plugins and connectors to a PM's AI stack, Lumo could capture the instinct and the call wherever
+the decision happens, in a chat, a doc, or a ticket, and pull the outcome back from the same tools once it lands. That's the
+version that solves calibration for real, because neither the record nor the outcome depends on someone remembering to
+write it down.
+It's also why the record matters as a business. It gets more useful the longer you keep it, so the value grows with every
+decision instead of resetting with every session.
+You have been this sure about a date ten times. Seven of them slipped.
+That line comes from the demo on trylumo.co, which runs on a labeled sample record of 40 decisions for a made-up product manager. It
+shows the direction, not results. And it's the point of the product. Not a better answer in the moment, but a clearer picture of your own
+judgment, built up over real decisions.
+#NEXT STEPWHAT IT ADDS
+1Outcome check-insAt a set date, ask how the decision actually turned out: as expected, better, or worse,
+plus a one-line lesson. Calibration depends on this data.
+2Learning from your own historyGroup your past decisions by type, show where your instinct runs better or worse than
+you expected, let you set a rule, and bring that rule up the next time a similar call
+comes along.
+3Connectors into the PM's AI stackPlugins and connectors that bring in context from the tools PMs already use, including
+screenshots, voice notes, video clips, and forwarded messages, and pull outcomes
+back automatically.
+4Research across that contextShow where your instinct and the evidence disagree. The call still stays with you.
+5A headless decision layerCapture, record, and calibration running underneath other tools, so a decision is
+recorded the same way wherever it's made.
+6Better handling of weak optionsMake it quick to flag and dismiss a shallow suggestion, and learn from what gets
+dismissed.
+7Accounts, then Slack and emailKeep your record across devices, and send drafts straight to where people already
+work.
+Lumo  |  Case study  |  Terrance Range8 / 12
 
->> 
-  /Type /Page
->>
-endobj
-16 0 obj
-<<
-/PageMode /UseNone /Pages 18 0 R /Type /Catalog
->>
-endobj
-17 0 obj
-<<
-/Author (Terrance Range) /CreationDate (D:20261003221342+00'00') /Creator (\(unspecified\)) /Keywords () /ModDate (D:20261003221342+00'00') /Producer (ReportLab PDF Library - \(opensource\)) 
-  /Subject (\(unspecified\)) /Title (Lumo \204 Case Study) /Trapped /False
->>
-endobj
-18 0 obj
-<<
-/Count 10 /Kids [ 5 0 R 6 0 R 7 0 R 8 0 R 9 0 R 10 0 R 12 0 R 13 0 R 14 0 R 15 0 R ] /Type /Pages
->>
-endobj
-19 0 obj
-<<
-/Filter [ /ASCII85Decode /FlateDecode ] /Length 1985
->>
-stream
-Gatm<gMYb*&:O:SbY*MoE)_t2pFXXeD&1e=NR]TfoL4mU>E(8<7+F0!+2<T,,c>Tdf=T=f1caX@S/Ik8Koq@5VZ3M>dHd0+^1"r>`H,Lkj\gIn=7PA+`+#6^IRFsX]eJMXfoaN'T:3`pd`6bU$6i6)T_XM&'o"m_4L/3R#[N3:Xp-e?#D%lHeIg(X^H^0t&!cPgX%'MY\WI>L*fjR'7\s-m"F8SQn%2UkN]pFjfhGQ!7/mg(-EWqAG1f?7N()2@<@[2bW>=JR`Et'CTl`E.al@rk6?dboUR/pc8&??u`ZP^L6Ll?IS!Hk:K\YpARln;!MnC7%g_U%kVNT@O?NH)ki[+Ca"DoV:@$VUR>[c]%agGsQL1VK(C*oX;;\R0Q8-of^=C<buQpMc[1#.;i4j)Nh,/rFFqt;/[&%8npV'UP96.P%aW3RGEEJs8iN3(CH=+HDpLsHW<kgJUa@q%c?CK+!OFFr1,_>'C(")ItondK!B8>/QDZAGV9]mR^lii&>b."j8+MDI<*]U3!P/H5Fbk95TCgKbgp't+YOpiH3eQqmq;*Wp1HU$WukXiOT;@WWIqr#IT\_+``dG5D'_d]*(ADXFCn_L4mu:3`iPJ59D.W#3>XDQNU`Gn@>VRZ(9ASTP3Z-ITQOl`*Ch7FI!(8dQ-h6&67%.MHP&f5k-HCQ_>q)14E->uM&GFj`>/(\91ra"dN8]>37g4o=Wj5pA][(r*s*&4`Jf+UQY?aITZLpGZ0#D9'1-UCDPk&I.A.\f$m\k]X?$=^BO!hrR<#C5BhC_.`F/2'"Ce'rXNV-Ee23m:<p4q,EHgrcii)e#2O,h'%J6i0a2$!H]i@8F(%!M(.8;"KBP<.E.dAR&*NkP$=/'MknP7?@*\uGtnOi/A?p)c42;X!QV:Z[H!k<IGioAhh=ZA=\A`]M59fjD96BgJ7bnT.AlnS^L&?(kCMrMd((n3(,07?h-85[XYm/k&aGU=MWUpQ6*mI\dm`BZ:\'d/d`RX2G%Z_WfR'Wjr3Q/=8H%BA]9rT3\sm!?^\p%C\87d7%X1C;+r^Q%Bf%FF"DenRd+dR+m+s:CUiX[_Rb,eTV.EON$dl>g?Ig6%6qGm2"QLh`F46p51qS?1.hY'I7=n8XQV(##(X8h["?p]P[dMS?BJ''cGI27..4D7K'lE6=Tm>M%P4GW<H'PB9RHk3e4<<dm8DDdQ,\rZ3C3/&S&l_[$8bt-;[VP"s.b[a*]oor<Ho]*(7@/RJ#Ssg?+8jbf<D2@R$F)],NQAgr2t^W/MNncIl`u1:lWc($\$B2S=kP'g33VN:;4BV3W12qZ8bHg-N2m^0>t]fGeg,=i6DbH6$\pRi+9GdUg[l)g7-9+EQ%sl0oh0Wme?lJ7S]+]"<(q5*.N1Y*_NTr4=s&lL>p)<<4t.Cb<Ol&bXI&G)!'W[()@YPD7bp[^5H6HdW_=<K!-Y"pE]dr(AgNgT?WLM!MBZ%ml#*ZT6_ZhNf?FD&/m!bR&EdeJA<85M8mUnL6H/j;'oHGB3YR3BgNGWR3H-#;c,?W\2l3HL]<8/&OgduS%C9&4@=H:AO6pY+\.ai2ci5;QMjQ-\mENW;jo/G%Pk$35HekPQf/qX@LUt*A"8+.?g3Yaad4BA3_,)Qh$pa@FKBgV($qnRDLfYmF@QYR?rIpW73.mnAmKqFg_[0OQPNm&#0N]`cI^$4s#Pri!(F!Ik,;[lTDtB57g;7pTNpQ?Tc5p*r`]bJU<4/m&NhaA(+T]+3:,h14T;*GYp5&-dcCn8GYT)T)#TAp2*pDm,bFGV$0)(ju\Ea%\,TuRY>+WMqYFc:3]F'2H9"\u8+=oV(4M'E4+p?H3mPU/S*n]m;:cJ]elp>.3:C"kX2)TXW&`?,4jG6*[RU%9'pN<sI%(gp3hODCr+^lJ>ZAXB=kPfHl3-u_X`;I9c';A+(cufTXdE)@;L&/@gA_bl:-Rnq\VS3p+\B?G+2p?*nE-u78&iR(F_mHR'q%l_=JY<~>endstream
-endobj
-20 0 obj
-<<
-/Filter [ /ASCII85Decode /FlateDecode ] /Length 2515
->>
-stream
-Gb!#]?$"c/&q/B8fU'mn)$_>$:\Dt,lm+N-gfh:QktGDs$Bc6iKM#/4W7)i<cN5@\ac[Ylm`\BP,!Z4AM`m!)$cF=rIpMZ8(.>o4l.(J\Y,(<P>[R7_]qk8akc^*ca,W*E,fX74ap:f#Feb%u`MbWB6VN@kTMdUr0bQ4%$:sqe'`/pXaUbj"*lXh7^6oW?QI8M`8k?m_'>uVsX<O>'[j)L4*G1&?Lad:3lr-3$*spWoEghqjj(#NG/Aft[&boi@FpAWqo@%^"TeQ]1h0/`dY%K'rFE4oE1snNUYEN-eh5k6.e"*M=9$1,\F]'jAcSYSedhf)q+=WD7E+)Qr9[YG3S\a5Ki6<:UiE5(u/b%UOn#^F2#fcogHPkNZYgC[?^sN7b*0P-^Ws_L<4%)^$SeK0#0l1Nlmu,Q][CFWo66P;D0^temAiJSqiceS]aCoRQQK_;pWmWi:.LrES&,q!&&Gt*fcT2F(@u7.+%,cX%R2e6Rc.K;X]`0;K7(E99,2`SJHm/W0#bRP7],kqD"eHV3lG@>mIGB<oEqZ(?a]CnM]r",+-g4Qol*;)E=7!#PpC5BQ)3qe,75c.^ANa63WbfTUIQ\Ymn>d8>^p/]oppaB-CtSNe>6?>/:P]Z;A2PVpb7;D,Y92SYPJDfg'.W?WDU7"0*%\j+HF?Qf.ZuPiW2dl:bOQY/>=H`2RSfO7Gte`WW_NmiGKGS$)bP--CQ/(hI\FO-=aHQU:2+"Z</'O7FhOs-.4+)Wo@6F+lR(eO\l=7mV59GVY>dNW),"bLiTiU?Z>tM78Ro-V>Z[/j"Hr(^[Q5^70!\BS$DU@)<NbUm7HqC$FFhhkhPsIRO9ZI#HiY*s.C1Ll)^Y*ODH%oq!4c7D)5P]^k0Tb?eR4V=6<Q[PqPpQ%>GV[,go*iiBW:GKLICn^WA*A=Pd50iR&%tF%<uesPo-RR#K(5*Zl]KJ7bWc\,5iJ9:Q<pc@gqsB?Km(@<g>"<%h-VgMp$j@.UUS/egu"b6!;<nb(fQDC^Tl+_`.^kKkfP8IRu15iHTecK9GX2-#KSQ.Y[PnaU0XS];hTN<l(f;7+@KX_AbAqIE"kkO85Zuf_Iee,2>U.8!6;ldTkCI6E^!]e*\'TJF-+J\iYot[eE8Q).q-P/G"%QX:Tepp)"KpF)4);83K+.+fB%YWO.&*e7>l[4d8"a2TaFU[/K7Ffp$scD*n8nSC@,qc.S_eFS>56I<p*dI897/o]u2Gfn[[H6OgHG_!eE$a`ri7"IT6=+7;kpC]t$#/[\)t9C77$`):Wrnic1\6BKk1UpVd5Ed;c]%YW/LqT3V3DImi=`B8V3SM9IkgM)\1QK$"Ck]ETRLLY-oBh=q':c\B/$"AB)@a$pL7Ht6M#:38!4]EG-c""sPVS8:$>Of4n8GW?Q\&+KeZm3:J+5nT3cN*k7lK[pgVQM?TT1@;`X/e1$2Ee'5U9p-1V!I%,no@'\G?<D:os"b8&/=ec--s(I2j;sgnhk@KU]t<c8_H5g;1ulOGh!i(lFuBgB)H8/Q+*8\5a)N)B]XZaHI<DhA%mFnWsg<+S?J;#$dFB`Bjr;ig-gDfW-LmIjEWoWbrrkda8$<$Nh^5SnP,?b^;'q`J4FPuB`:Jfq8`F+6)bU)FGV8L.]e#S5gn3F&]gX8fap4uS'5D6e7'g@:tfSP0=02q`FG=ki74pW86[mqa%;?Gc+;aCo%i\c=9\6d@AVH,AC=&@UplC-2:25Q89&2QqmNXe:U&tN;iO[TD$uY!-,iV.E!/?(M'bB=hR,sj>quMLD0N=h15eu8XAHN<Y?e9"'YCU+Wuk8GQCQHBi'^lZ07Z^8#@W#>6#g]8I2FUeeFe$s\ug=C5+c)pIsm>D]1L!)T-*+An[%W!f-n)4m?jheO:n)ZaS$"6&&/Db._F6b'B,oN%e,DEgrFOjpK'=YCt\_3?#%WCs3S%?k],@rTb+,1HSWOorm8o,4s8PeSGmXFpMV4ZHg?[g_rNal/P37c\24R^(mmr;:IK3HQ!;HU(%QL0m>p"J/fiGd>WH8jlcQ[2Mn;_GgQ/U@=`CPf*DNtggIJF^pA069Z7>s2ASS9ifrD>VH9JCK_clD/Y7j.IPIBRdDP!G]>L?][RdRnnXH%_RN/&nb?@8fpiY)_^a"$@TEA+$;IFsScc7'B]&][+\l/G1<rU_b5%"`K6N6p<@(SEUo!n#q)5o=GL"_^!r%#;h"aGF<&]P"X\\ju(c`BDG3:LdLF9<eB*gMa:U:m`ku<L:e]X#VreSp\7XB/qHn9!?DCNhJ'=_@tTT^<^uRUlXFkHh5YBKQ&@G/&6C&]M6QF%M*p6,3[8+)g""ok4i9;o6XO\U0)-0F_\\\.]Y0BT(Y"_V*]B/;Ob92Y"efJ&6&$7Tfq3U?*;g3[F'UXaoi+^W\Ki!-K!RiMlsqrIL88fETc<PpCSo6hCc!di=;t611RpJqAh>a3O<^/T'I`s9[JXqs!:X^$2bk[6TP[i*B)_Z`=J-rOG)CP.Lj'S-66iM"T*[qi>c&YqB$]52;8~>endstream
-endobj
-21 0 obj
-<<
-/Filter [ /ASCII85Decode /FlateDecode ] /Length 2280
->>
-stream
-Gb"/)lYkN9&HD15ik>iBMM;ip=d&N]c'#n1QF*p+UAMsO[&$2(4\D_e@"8+B:(OsnqZqpf#[e@O.$=8^4at&-.`'#PP(/Ysi6<6J>tC%ak"Cee#[i)fkO[)n,;G$<J"f2%_DkL,?3;XO&DV#"13n[D&MA#,Q7k]OVH%+;JJZ:V%mnZ4p<03j'ImLZYokY>&ISUO8)?4cnOb"FE:_OL7'Ju"0G#stV2,4%?lVR$Fa#ji7\0*)kro\fVn*]M'+aaW/(BrhSt(J8#d0NMrgBt96j9)c2MD>0)rOCk#-,7;D#&6lSC;%Yi's%`o0(=tJGBS9Z,^R[+sBgWJXI%P5^Id8hk;nlOW.%0r[%e4p\9$7)`toH8#X65Ec>.5;LH=-HWk]f8=<Nq$IJ.\;R(LB4S=P?ql0gN#_PF#<,rtQB-]JAXlrL#N";]e]bD?h'Zj80V\ZQVZ3loK*>&!%rr)@Un&OdCP#=OV.u[,^?2j8`dZI&nN4mf6%qkgVd_ZO:?m,A*NeNP/61ePTIO)r#VT9]57XqebHOUq[m]pj:CM+GX;F@-N]eU'U\7'#N9s.d9`M[pWJjedI"e2SgED#Cj42!>GG.F]'_"G9ng-TBMC^^O#972mKBlC#8Krtm0URWO/Ge,1lRTdKX[B9^<6CeiNVorgbSA*79,W@-k<GAn=R0?$#EebQL>ZR'RFc$d6$aZ%.P,uff)u9mWflCes.;R;T+sYVfn_&_49e7Y&NR)#S9Or)>mr$B"6[`*/B@(ZjSupDXZ?($8]/YTj0i9ZZ(:tS1.8nt=(FT/X`jE5r.j's<*_7T<gDQ5OA2M@h?BVkn6lr[,kXsjJ?6K8oXaUSPnGWTUU[JU0o_p0K(`@6=*Sto6f`<0F_ePdkYf4:oc?`GaHEmq:O:W8X7('"MW5AW6+Fs?RA6bA)$f)oNc_e&5obCa2qTC`iBCP'8l/`m;Y&?Mi?PMX`+,L52/)A7`KE8o!nK2T-!0^o(.^WAXe[D-Pd:HV"Cj$8s>E2?3Y?f",?bgrD!Fq(`OKJ/`Jp.5l$D^&ISpJ9F<"PeS2K3+Zo.oBefqEK2^/S1,F%e]Lnh_k4Z[aXI19`+?^$T@rZHF<;i50%5^#c?[AU)FgP0\No79eLHV98qHDFodfc8Otq:sfI.?A_o?n<ND5/t4c/L!M+Z)B)E(HT=L.%m'$+bE4]5Z%NF1hIk<`;hSTNQS-i'[7set%8lFkaqf3^&2\Z,WtmU-$IndCU'G*cLj\/%`a/4/2t\iap?g,sl>6=jnpCX?R%;R^brJ8[3P<+pcDO`._<\-4E-D3?q3Nfc(^C:&AWTg4+#JDa@4]=S/'&J^YUL:p`PAA?-jl4`PZ'a]6\+qFiAoEE&-TD9nUq_-0_@e!'E`%dFUW8O+:VZJSe$jpJ\iWi"DTZ$>.:<>Gc]Yd5tt5Wp)$8.=eSb64VkjF_U[[#`:"4E[6&oL/j25Dlaf@c-uuZ"_Xe3/?"U6#&@-Wi8GTb.5fUDK@.K-UYH'`K-965@#0h=(i7?g2K<VW"5Fl_nXEk2<V+#9Gb[Q$$LjGG%LhLWkJB,2Pes^8RReD@F=W;Qu041iK,Sj(G.h-LPa6?+a.RB2b6HYI1biQ;eU)4]$+ZV6P3hC8b2@u'XBN"bS!c>$mcr&W/,?2B1@Ue#s:.DR\]^@P26Tp'p(Y4B0ITglW]Ub^]A.[404=m=7lhBc?j<SRXjkT,,[:>.e`cq.ceFC:$'d:@7$_R.K$0flcs5n:oG<uQ261,onIDts\ou95@3BWRH"%S=J5;3]X*.jG"X'\2-\RL0-/kl74&33Oc%C%qe5:&30%bi7^m$HAIR&\$NBoOE/gR9[`?=L`/X`qI7`R9aQ:/YjXF%!ki&jC4Z6nZk!"J6Y:YIIkB;K\9g<GctJ2'!nnfVVt6oS+^M;Er=+=(8E@/bu5FP#Jj$*DeE@[jK-*P$1n42hT;7aEL%dkDak+%<t:UrrN(I2pT:gAP#V"Fm1c)Xkcpli0=J:,do/4ro>tCk;eUrHL:&h7*2:3"\e(\Y1KNj@#ukg[9a`R%67aT.!S.rkDb)k"lY8f:Q9m'XL4R6ent:gR_NScZARMi4V8%H)Rn3&65^tNNOkA1`sXF0km]_h$FD*[VptcsqA.7D6>L5b#$:O.49gd7ZEd6s/^;td:k$@%,;)/%>jU;Y*jP8"Z11.n3MZpE<K6D1e%jr>e<IR(O^K1e]#K0B&0dI>%t-.Z>P`$=c?31Uou9rq)U4n.X42%NisDG'rD/;_9j]QCr.p(t1jl06fR?kVd6F!7`,k~>endstream
-endobj
-22 0 obj
-<<
-/Filter [ /ASCII85Decode /FlateDecode ] /Length 3580
->>
-stream
-Gb"/*gN)%.&q0LUoZL3Z;`97IDgBMOSkZYV3/Nnp:"?u)'GW?r8;3kZUT4:fmDajUY-r.H2EU4rN<)oW]%Pp'K*-]F)#iRlD`S!qFTbKij1khW-GYnE@.XXU7OR(h]Js@U(?!.t'Sm;n`H`:crT0j)h#m!X@Y6^oacdAkU/jI&MM71Ui!CmCCE>rr-^=&ZHSgWIUkO=8L!5T%/4kL*+9-fLKlDZ-"6Du0F"^EF"(-bRYZD!5SQOtudQR:*X1IJpR%`BN5`MaR4:\_BfUgj\fAfKZBa1JR(:+A+hZ,<m-A/1$N0jB]PgsnSVAXbTatMH*@.Y1':IrK5,[Z3G7tnOj'KcQE#)tj?2-8iCZ,"-=%.?!#hrppX_6bFTk6Bd'/206\(j_hi"$t'lrCm9\*JY?_4JtlU-oP%!.5+Mg'J?m;TP$5E#-GsU1?4*'jeVBB9As'sBSoj7s#b5RC^uZ']%J;"+8Glf]b(h?#Tu\p:m&QGAD6DmeeAW4fed0XVOP?!aB@8]!>u>/Bk#bZpfE0=[c<rt*fN3JFnA8P4kdQO`f%3X]Rd*,+K`dE0,N05JU,[=4eO^>C7H"mc&-cKGmQ(Yb/`Nd1I"\+\nN<:a&nh<;]n^jpbu>:;k6Z"Z_[5:]$!4*LqQWd5IM%W'heGQ!Dt2cK=]5Zf@^tg41Qt!S?;RnBp$`h+-H7e&6O.<)F@7`V!K6f5=EES3Z?gR3")^^Y&`qZC@D"=m[M%kP%#L_$TAQ$YeCe"6`!mSfS6q;[U<:J'W1Bq$'ZgPA8'eArGP8+,Z!`O:,S62mVKNAU<pp5mbG@$N`'iTR#qk5^=26n@Dgcc*i$WK@[d%^i7J7CI[\a3e"lr/&>JEA0U^7n1,$E/d7Gf8T-b5l3?6t,-pJ=WPOPGsg!?hBau=U@8X>II1gcR!U@+8EDG%F<l>a.##n^tlL9k)n3S(Gd;$iqK=\2E.\rK=6V=L!MOhHQ*ZqQIRg!h]0j,b25Np&th)HKc&JOSNeiIMImdfHA)NoO6^Z'/Z)VY.MHNWX;Sk"B.R1.%)r]o1pd.X96k6c3#%id8\M#(`.r%(oC@1jMT$3.:JamIPPIH0<);3_t4W!/BkS'nLo\/f`BN"@3otdY[Gp?`tb03CXTl)at;Sd&P#hq_e\UI9J*3?+^/!S,C',h0'6]a(Wh;o^q4EQYD@Q+sNUV:7Os[>rm+[==;+qG;AMugEi5adLA@$OkS;fkVDj"5;FNdICX5?,@aI;$pom_H>4s"B1m_NhjX5/8CtBc]%(t>EuX;n?QGGO3l991kg5%C$4)LcK$YMSNr)*J?5!al3WuCfA:-lY]$'Ag*sQF3:hPsnSV'SE[aX1r8\[Ci:^97jZ#aaKCkM,rpiAB,DLnEVa.\3Z\!Ja$hK86Cr+Q]>m,TJIi+Hug8,2meL*%I-mg_/L55<$j:.$2Un-@F!#lr*u'GDZ-i/c5`fl^bMW8lit#TWi"K4f**EHDWeftC14''*Z)7E@J%rqsJs4m$TfQ2?BXJ\WM[0&Rnqe%iUuo^&V.Zc6f%cu)0o]33XI,g@Cpcm'Gl"HA(>7jHurU(KjlA2@&KN!<r`H,?8;le5oL2u6=-7bje30%^LL@7jfkUXc8e!#c;f4^18u-ZlEV<bJj;aqGoZn^/cYSUtjoL.+d>pL?X%&XGQqi<AQD0H0,!8;(JW,f89O8/1p@5U*T`c%bTD9M"LOU8r[3_=\EZ/:Rfo8ZS^OK0!qbS\`RXlJO"-+dl#[%Qsm=,N(ZaE#;da*%"\e#A8<mdnH*J#(T)*^]BJ]g*KHPqTfI-3k\u7%cJap=4(XQ&ak]<K3TJ#@Z?S]eS;.+>2iGFVTeRUO6EiFY4E_!G`T5E7h0g*e8nac]LP)CpY>I'89RZthLc,SG2SjXm/Z598\9;OXQSE,+"2:S'nUO2jlr<9k`5+]<3R<mB!WI3kU(5G*W-KKC$T<"SQD"HGF)X,-J_[*PnQR-ZIe]T:>5Y.LAu1Jp%ZPj5&ZD@#"atn,Y81u9r3:#)ISjNO<hA3P2sq`P(Y,QEg7ol23K5G7?WD@YYLAB3_>Jr8WmQ^,=VHk'Iifq;5@&i'JRk5H1=6=;?Gl>RC"ZIC<2RFa/EN'cA1WT#WIeIl&d+e71%Dno7ne`)l]qE&67ZCT>'buKrp$0F<MS4da..-"^G>=_TRiRYHM8>^,ptJdD^J-olj^0bWYe^+:ifFDS\`;%AVBH(cbPP#;@`%R1$<tWJOHL&Q=aX_7?_TLm/pDC4qU6+5jPZd08jJ0g46C8DS/);JJeGWd69;@]htr^_GcH:c:<b4`MA_4G(':qNNcs$@Nm[T3j`'!QEXe\+&tZibGAf&]D^)qW?8]9DE`dqXj=6DQ./CETlYME-'!k;4W_K_L7G)>(c.mL'O7q`^Q+t9<9X!>0cO$]d@Y6$,($%-\<"Q3k4's/K:LkC&8<8C&,KGApKTV#DkQ'K/>$hL9orF7cu.;Wqr3?D0PGR>>L+YcUIS?h0bZ8<BEVO_D5oO&SJ""*KtB(5I*"KB=Mp'n/7Pp)P7_e-?"("F660Z0)p.s+Q,FRN(a6@-pGjcC6uUtU:`tm40@dO+#]iiR+04de_"^Lj#S6;UP7ZkP%R\.pI3Y0&3cikmOb86;CG,cC/MEi93uslAS7mCP4:)kHYClc4DiphA7H-V<B&PTCDr(f_)\OMS1T@\SZR'\>(YVI]'UfXFmVH`6_4+%XF4k16T$#ck,?DHSeM(RZU,^O;I5e>LLuZD+[MB$5"urcMR8>PcJ!rs>(;X7)fCiCP,c)CMJAj2@Xh4$*>XE#o9Y%j^%4#YMU_1_oV.f!'9#rThgs2)*$g;(ZF\/]o-/+>[s@J1MEOIh8@?)b@773G7b&CQ-7p!tZrUMb-.bjk?^kjuO0dG`IWRF0q/D\f@cKOmi'c=4UA&s0X`8>T0o`\FkH0<d5$,98AFscfC/;Gn@pG\"Ac:B=3\])Odt>V3K9O;_PWQusn)*Dq#p_r>B)<6QHo0FYE0lOuRjR0jRGhVF[fumQ>fZ;a"lk-kGVSfQ[W*5!O$cD:kPI'V9&rBC<hj$IE4o.[7^GAhSMQ<q!A4C]F9AH*U1pZ2<hGd?8Jr5"r**2Q@D6EPFB[>"k3?bhoLX[4mmFgAUFcO#Yi!;(7T&B`LGN$(9q:'>nUp6GWd"2_f\bk#G<_%tgL8Uf74$_p)0aum*PRpb,/1LR+X4J&R6a4lZCJ/^LP;VRH>gV2a2hQ=h?o[FU&@a'i>W\&MAs&WND>`&d`]3$VM686<(=cB%3iF%I>tW^=dMh]i%$l.`]sIl@L!irK"DUUg"Yo(ASZo'gg_:-)eN.P-Q,hfIUkt[I,P!B?m`/^DE_ZDAp&a!$uJ2O%#J.GD)NV*"S<^;K9Ob<&t5*3k_h3`+q6hoaQRtE@O2Ck,M0<H8RRLUd%^b%_1<O9Xq:Hc$>p&BOX!dEDbF*>^0%+8m/DoDN&S0AF&k?-]P2Hc;oCb]h`2E@S#K6;`IH;ska>LtM;/QV$-e#dg7i_RZFRfgIDLe!/TH2\XY#hS)6TBh(?B1&Q:)ZDolBr,KWg=((Y:Pu>$0"B6>m=d<WV53bo9iYY+$)"rW?OM\@_~>endstream
-endobj
-23 0 obj
-<<
-/Filter [ /ASCII85Decode /FlateDecode ] /Length 2795
->>
-stream
-Gb"/(?$"aY(4Gq\\1aCm1H%Tur6f*+8[d=:DH]QZ9P<o_;inqb,Zk,T=$-<>pKR]o-sKHINK^4qSkKPX`;SW5]a"dM5X,/Nk&4*1rG=jH?O%9uZrg0:GnDWWUfWJ<hbLh0k0N05H1N:S_A$i$"DL3YqP5k*$%u2MkQJ#ZSTl$uMTLeS1lGu,L"lgKoJB4R0JYDga',!p0g]34qJhgpAJ6e(rr'c.kn]FRjCK#1?5?C4EKkdC)ccOu`&XHpmrL.%Y'Y.FpYg<9_IIK^@%J3*0L'OFDtM>6:ediPp9c1B0@<4k"=`.[[q<,]?'dL(TZauNMskBMOVZ9q`^E`FVHs7X7V+;;VneourYa,=Z^]0+r%2[]m[N+9De:/?ZOl**%)KG]M3[j(TI4(A'XBO@?\a<=6Y0rJF6Z8BN_Nf;+tndB.mY#j$!&D2Kg?FO3J[-rQ"[B7UrH#7X=Q8]QD,d-.3$^)>Z72//NU/4=t4s9Kn&%\a%thbB(CN?eeD[=1=\<TnFN4&8:?M;k1^1!IhF"om(HQ=+XCu<1Y\DXDj9+*a*?acp,.,D\;qB1iI&BP%DAH8fdTWsI9C:D>WSWX,K1$nf:lF-Xn+7e*\B>m8r+D#=66hTJ-<upRo8s;H6lU?74XMd^(]?7WRLU<hNSKA'XDX-b[8c"&D%9/4-<V+J"Z-;5r74mZOqab_n%bkCUk,oBj"jF"Pp?gnF0KPpgFJQhi*;SQ>I!UD!nlNes&*d<(,TJAsb&)I^JsZPSHkEl*nA@]%W>$PUi?6l=<U.;7.qcHOs,G#a3d#%=T7UiE;2-C=KBLi-o,4abrKmRUcZ6O.suR@^inRO_S+"8o6o1j0k.QQ)GjDAoq68$<'Pt2nK(HbB=7EOZt,/G?875!:(WIGj.%"<S8SV17N8tj>&>[1G9,'*nW;;G,32#4+K6@Ms!4UFH`+/Z,A&ZUeW'o"_>tZK-'[`;8Qs'"e#i5r*bIuI,eEs)g_OCRZm3%CA7Wr`mP.0Ct:RfNh/\t5E%f-g^fI`L9YR3?.kVDjn,*#H!AH2PA+K-/%K95^]6s/7C@Pg!MLtKN[s05gD0:,c_67Hn!AV5A>@RY?Z>NQa,k#Kn`c!3hlZI$'9L7>H$-[SBN2bV$ER3!/C."t/A$:@bAJW,9&?06Xn(\8B(_/5]BmjLnJ?INH1XIQj&3A=8;VbnZjGX4&llTfp*JKU'UIX1ci=@Jd-cJ*1H[in=$n-$4Q0I9@^AGJ]JROE,iRNLGcNd@eE2"\bBg=d`(L/BROO!8opoInr:X:TTXm+.\$P7dd2`(CU;>JY("8%_QMd9s.l*Q5)@p&WF(^.%M4ML!BP#hX([`!4Ia.(OJ?8a^<d?n;5Z?ZQ0]EXS3]IO!cKHZ@fKC(dhc]h0rSe'jl$*ti6#q1A2UEF41\^)HfGlk3OG;dnVqsP[7VkO$UnR)ZrYWLo(W%^);9VMGD!nZAN4TYCbZ(>A?%871ZOW!^i0u,S6ftRjrVA?)K2*AO3d3.*Xc5\_G/GL]HH.3eC2H6$KLn64,d[gdU1u[d4es-<g/.%LOglK>dGj`9b?*kF?bZg!]stRsp!_pNbD-Zi@lQUYOg4lr+S$iI%L*I4D\%!)'N6gk>lqX;KMke#D25P&,TF;tC/S;hI+?Z?(RD<C5.UbkWtC2tZC_\j8kKXF<AWh&=H.lP6h.sL3XqecIj"27BA"t<o8FX9mJ&<<]9ZPYa62NVA>M5[eWD"b)sf,bBuIa\jE9P%O8JErO9J,t&i)LM?H<3BkYF0j`*_O5neTX<G^7FuR*D(`#!m)&%Ko[Wq(p)#)#QYkK@KpNU)sO.+!RaoR!GBF/OY.9Q:Q`dSA5BpBEsLVY*YU!gmn\9HB+`kfI94DaXWaAXJ50E&jE@A1pY89NC2mm*D]^7s09Z1YHhdT:cS6cdBuA#+ncGriFfCD.!Z(+heCJI8s-U,9,/Q)Y/H4f_-C6DI&hd'><]?ppQ(9=f+q1"5s)ul4$tR86T:$B<[-uNF(Q@[/"@hG94l5nj+f;s'rL(MbLrYc48=eU$tQgf+3r#IN1pCAp*o8hg7tUfZ-4QiR-Rug-rX_6-5T&$GCndik%1W7:jkGpS^sdHjR3L[OjVBc:fLBL9Ico5D'&$u[6&;Ha!rcS(43@o7CBN@:Bq-`A2$'eO*2&Qmu]'aYqNgu_dUJ:n-$=P#3]BDn!0@1RM`.,5NS0oJ4a/TEA.(iDX\6NFFYkZ)KlTU4Q"3ekBnQnKc:'.)prSf\#j<X?#BBIX'CP%?Gp!b"i'+m,]@iB!-na8D89k(po:!^CU(R93FJ;,2[A_Kr9.CD@aiCjY'3,=>1ol&KRH2>^G`rtPO]BsIVj%Pg[%,MSDdl*D!AqZPJ.[@o#HAiIQB:?;N&1O,A@X'gfF^XMI("""62kh'7$jV[F"h#`S@Z.F*VEd?jiLf)c>"<;c2^hF[ki"]XZhgdZ.Z5o>C<8e5j8p<:/5u$<)0L\Ai:QVjM5BKXf4Kh>-Qi?nmtJ4a\.G"Lq6XqptjR952<-$\<1V)hXBPG<e(pS3h<7FO?&?S$@HqK[4BS%<U:)"^Ub\#Mo0r];UKNpJNCKADp<EI,3DsW`5HX"l+kd;_R^A#-p,G$o"T%`CG7O;2]?4_'R8>WH-g^O3X-@LageXP%sRuC`!FKs,nZ,>uZ)dY@>bs.5ftaK#LL!,Vs)qgJ@\i>*7O+>D#BH`L#?]B>6#ljj-;@R%!htR$n1:F,O<V:QWl_RY/1;E5[Dqos]jYVL$Y.;eSHs:8-dp>C7Kh:>mD2K;kX%6h,M69Ki*gVcW;.niu>CTt^~>endstream
-endobj
-24 0 obj
-<<
-/Filter [ /ASCII85Decode /FlateDecode ] /Length 3537
->>
-stream
-Gb"/*h/h=/&qBX_JX=[W3]9<T+:6noj&'PuduW-R3k=J_9u.GUMH!.sNc4?H^Kl?i.7G>EX\1d9RO09c@!B.'5@C02,9HbkqVQBeaNG`PnVRpuambTM5m8.?-A1:)?Ulr=Sf`#?j%tImJu`91$;!*=.eN?E-:KV];WRPl,:[\45cF/r.==HB?C2`SacLP:k6)Ku[$*<[6=o3];Sj/O"Q\jG,8u\+Ql-5\8\h8=A4cn8;;Sa%EdcFE02_G1L99Yr&?uI\#95#/X2j3r$Nf?kqu3%eY:!&dna$"X,il^nS0t]gFYb,qlfM#D<DoWM>U@?krIYMCOPu8AUIQck&S3)H,8QFYKR(8IDa9d"I)D>h^ZcH(Hht:89cLsuL>^>cbS_rg1H$Ym-^@1]$M36l-_PW*agHGT]l69A^1]j[:cL(dZQKCo0Jj2Od>Lk]?Z6UC$]?hXVR]rrG9gtF?!2TW=7H)'r;EkIpei%QR7rI!*8Juk(4WY9F6'#UV.\<RAWMpRdF8\(?\J9qNN!HgMWd^@0cHF'6=\q:R)A.Uf<UfT`L*UMAWrsT$n$q2gY9#c2cW:6ZD&ei2#2r;)X'8p,dU+&ZF!2@EqN6,Cg)iu:6M?c;cO9&WcC:pOG)-J6qrjYX/t?W)!URuW]mD>5]?M(-4920+a3-R=b*:(-t'2Se!3O588Y6"Pu7ckCM0C[5?Og>/tC3RN-VW92oZ(ef9!5<1Z(6EN^RK,@.8&QocA6p20e_9E'5JaZ_%KSA9]gOf4Vi,aR<cZMmY=/Ya=\g@1lBXQq9NtW,YiLXaSPmg5n/;AdBm?Y6%Hd/qZ^,<Y,8F"[4gGffk1?l1;%eU!`0ohoL.]+8e'^*?cK@!67I9;BVZOE_BWG4?(qLA5aN93B#W#k2L*s;_fMGr()^?*u$cXdbB=jLdPGmK,*oU2\#=A=J:>fh%5.lpp'7[KBP/m[*LienI:3tEr<3mn%cK9#FmDimfF75Y[XNH"^s4p6:=9]$"&9;!$2N(EXkCO_8-;L6u/jMg2><(@!Y+)hUl!MQ8R-+B`oT`kNE1'Qh9LQA)1H2B,X72[!]!H(Hp9Ro/^2iQK-I-?-UHLD:s2_<iPaRm;\Z%!--EqpM#Gc-&!3HbBtJ/+rU\`'Nm?>oic5D%&I!XN`msP8sM"1LEj[_%j/8gp1"++pOh%.s5^o_r3b.]$=So*#:t1m=;3>rd8eUCP%W7FETW5jE--W*Vo',,0gJ"B^*t$V_2Jr^=26#)PFh2iOD=lRi."6=mLb02i\3nZZBIBr[Q"+Mc458qnc-TMk-*GB`KBAWk?X6`,CgkOaFFJgB`#)E2X_366'i+Ur&#&mOp&LL8:F,.*[:EBZ!Y(Me/gTBdOdN4\Lq\Lok07Pg7R?@:!B*Ci1[6-6]3V'0-"/QUfIIcbK@%eSP&qoa+-5.GZ2Nu1I?J-.(&)HCi?hjrk.YB\E!b'oPj%p=euJ^V(?\'>lZ#0agOE.o"9T%OC.Jdd'QsWCS5D%hubh7]qC3LXqWRoo/D@Mac-khH+p]jWV2ds4V4aHAT0JZ]oYU^F$(Kiod#s9NRXr:0]_PMdNO8?gLY?>L,&dFgU@;65OaXDh`3qbgB/aq2aH2MP%q"D;AQ7sRC>E?E1h<'UIW-4XHGDtR/!Ot,X>`h_uYmi-QF9`oQEa88d\JAS,RDj[kQrp7gD01$'/+&@K_h.VPjJFGH>^IUcc]Hod$CA,M&IRS&1>)4NZQ#UIM%sP-M#Y!^Uug;&.Y_e.!jFFV.$<ngq>nnuTALBfUle[oGGbjRSVlPg+k,9r"Sl"s,-pI\NaaCK6L#+\=H4PH6agP@?XM]#((L<E3U!Ci)X%CU+R,Y9]_qFU,8Dj@85RRJNFIB7L\!;)]sBD(3F0I'<i_XYps(>u*#k\/q64s1Gnr!]+hWDaAHDd9K)6XiM*:K]qIK0P*:/"V1sp#$AOOj*mYLcF.1#j"*-[$^fSp2>8QD2Ku\XC78Hfh.u7a5Y6#4@RddB:Wp?rkDc_TL]M+An/m=n"IcRD[]"'Hdpeqi^I@c`i7IL0LZla<\Bg7-kgo@')#EpYqn^fd6d("7HXh2In_<1$?nF#a4>c2lR/M$pIOupHT>r!U[hcG!?G9Q&O3_FEc0AdoEc:TcRPGY$2.au/IT<!ZqOo5e4<[cU!OlTZ<sCRqT;h.`b%Am64muOR=%V5<!.Kn-atR.6#&4N6h'rLM)\<Fn'@>+UUn(dPR:jWi?>`(mYSR]C^?g!Q`E\GP"4\UHl/Xs&js*uD10?_X]Amm_8)^MK*#HgDj?Ch0h,O!QR9(M_g"&HlRGXWu!f[42SPl6a^XB14gIj:nC(So5BKT?R(phn3+TT.Q=QlZ.;N3/.B%JQT=NZQrWZte0H!4igZVT^b<a;cSLWcDrdOS#A[oq&Aii,-613")QC02fH^cJ8\@(<Kcoq]7T:ppZg!RCQsa`UN_a[/;b$@=aM:O["Vl=YOP,]u!t:?Uq_enBJMr;Wn!&qU0m$QS(mHb`1K=UhJOGEI,Jj*#s&EmAIas-0?pUG7?QU7Z7^jAn/(SPWN8fGQs*lJq7??Fl`DE\g$0FN%$Y1#?@PZ,cY#YVf=.!>N?sHj8F^.Hcu1W?=G?q5De:n&4BJH'U)\&:'dRdIdb]VTfYfn'+2/1/G?of?WTfej+jsS7c4Po[N20;W'^JkW8s+:;4\8iVkAbFS4paRcPEgpR-l%:CoU<+=:'(P%5?J%'0ahk"Ko!BtkkB4BM2*CH^ka!Rto!#@J1foBeI;VM3n2kWZi[ICeP:4MTe:q7XL5\rK=mV]^qH$Ff``K,r6"G^H<=^E3UTo+dle;IW\EC$5^DIL'H;.#i=o:Ho6($nJ+sA)*nOdPb;Z6:0O`$lgX9>%%/qMrP:f$Xm2m"KA$?[HtPdQ'p(j0bd]10k5W)^;hUDl'ag0n08io`%e+;c"4!p0$CoT115EUrK`_R<7#QbcTYRaNeZT.>*ga[FrkT@M3U(_:6!15;P)jdeR1YfI_R.0^V(WtXuE9I9F/[^LT`#V[V?eGnM:bTk52md&JdWl)sCce('sNEc+%$uQ1#WRY@lNh6j72kNf7KhIE?Tn03OY899dn#nrVL&o)49l*B@?/:8+q.hMt*:]<*c9G@KmP0%/Y4*PY-Wfo)Xso)&HghjEB=5MHY+IJtP0$bN?sg/!I/Ao>&t2bEiXf:=Ns:kcb<6JW],eHY3c&e`-#':m["(+9afgi[3=hB!.#O$d*(Ws,/M?tMQlQ-;3g]&7G9cHU_;>8ur=?@1STAH>2?bT]Q*GApiH*Qu[mGaV]pdhD4N#9$hKauaEnd,@-$?$qcGXq9lL:Ur,gbJXQTYghMDiiN3@QBbmT3gX)6Cl'.)kug:cVG*bgKM9:/<T*"(/Z4\si*jApfQt;>H#Y)s==WdD;S"=I,Kfh(RT0#"M%VSDP1p1:C?up9O#?*#aaB>P@WdQP^o.?)D8mur9?QeVJceJ*.u^JBk*o^pqkTW':=YHcJsm,-F<G_]*cU<p;`VnEZq"^)Fa05r:J./2inFKp%X@Vb4>O[gPGA-YGtk*Z~>endstream
-endobj
-25 0 obj
-<<
-/Filter [ /ASCII85Decode /FlateDecode ] /Length 2295
->>
-stream
-Gb!kt>BAQ='n4c<38mOlPft`\&-P8/H#S1Ge8^pFAgYt51R]Vo,[o^K?t#IeqS2bd]-'Y5Ot1gHLJFZXGF,r)ZKM(d>]T?"Ra3r@qWjZkY?Z*2R]jg*Khq<loQ#ESgR4Etc=H("Qj$@FKc#6i%0NW^B8%K>5SW3CX_;is-6bW2-/gpojA/<k4Li#`@2'!n2`+IL>WO&RKL?M8djW)S,,TJ\[keWE/LU^.6o9$TjASfP587G5b37)QVgQFocU?-Z/uJWlJ_j<9)Y<1&ZbRu@o58c%_foRGEZ2Z0o9/<E7*fG>W6oIf29WP1CK\T5Y%=k=k;7Z]o*^k(^hN(f_M(<>Z]N2f3X:FiKJehO"u?d^EK9K.o=`]!35RD1n9R%']u'nEnJO\9B]Y>rb)B\Q"LE`WB?W/R_B[#0<V(VNpq7BnF/K%$j0E0&7;'VP4H\XlUq!+\iYj8l.*ft)eWc?\4-H')7T!D;l42d&a5>Xt7RCW0JL0I>7il-h1%,)3P7*$RgGX)RD,5BRBP2HB$.sJJ-8qa?"J:-fC-u&rm020!4GRjV+m6<\W=Q86/)ARP/ou*S\nndk$s-2=\\aYKP>lN-jf3%U=uCoo)mpuK%+'-ck:30*#tq7,XZ*V'p!-%E&fg5l'G2c5\ueo5<?^dQT=s814MAFb3T$ANGKfHh?E/-OOI"&u)QQuX>A46S8(PVPhjN+-@56*gKsgeG9LG2j/g.']H*C#YkI]8D3)%kdHZ"LbbLb$L:to-]@qq@UT%rT*`gB1SkNkreK4FP5BgY*l:iZ3:.[#uWI3sm\,JY^>eGcd[fY[:=Zug_:B:SdYc"?,HZe6$Sk)1((rr%bApVt)rk[clP+SI#W,8%5]`j/4WM2KbMND4d.K_8g,`#Fub&]nUT->Sktc;.F81dTes>mqcGFp$@I:?-8KmBmK]#B^'(\hd9<QK5@OBGd()K/>BAc-%lSUh>D<e7FobK%KW(rSH]M;'C"'8V=#qhh0j!Q^9Wh:C!YIUM3T5qSlk2P("dlXdHJ#^-uE=7KactWcb>1b9IUPTTdIGm@-#[A\C7"D34)&H9`QB8*@#DK6%Y7B+#;s>$Pd,A';bVIcqQpLf-;rQ:lGfe=1C!6&!^qAn:L1pG3l>i-dJUZpF'Yett;3;H';2a[F\(-EVNj;"(r`X-KQfX&,F.c%0'J(Vm*45F]QXE$L9-AZ(;RUl%(FUgF=F9:B9PBJLI?j%5CEI_CYBdi+k7.@HK5nc0IDj0m3E#uPn,WqVKCisW.IP*Q87JN9cI9,HVeN[J2T,Y=CrAj7:1E@%q\*?Y6)9RF/EG^jr1][3:^W%JMC:]am[mC9b4?$CF(S:nKaCKG_&=c8doJ(IC9;=iQ`\-NpEU<.bj)Xl2OZm&5)Mk7m'5C`Q+\sh)lcfXhcf5L(/Ih>%!kAfnG%JT7=eogirO503Oh/a^+N+0_<WB9RCO035O<j"W"5qe?H>?[jQ9+2g8kmGH<c6H(.PU_n&UfUbT@OUl)'297<nk*ipD8/P:A\\EW%8;=\@L7(7cnZ%?YS=!MaT-n>7Y,E@_c>G6JuOU#d2bd:::rCiB(mDPY0,-6KbteBNu&d4+6*MPg7\ZtZ<4r"%Zl:[@XBlNE;LkW!isdY"AHQ1+[i[:5C?9XNEj7$T_e+b"I-+1+p>p9Md`J>SfjJc%$88Qg+SC;_nXj_)r/cbrcC!D=1)es9_W'nSh/0J]!''r3)sC]+@=r-'I%lXdNa8&V:9674RV%&WW9^0A,blgpHMnG^\J@WH[T/m2=M"m_Cp8CoBYV69cacC<E[Ab<$X<22V'H]+m/TbW_@GFUO8In?aAZj<nrWTgub$R9tVq(=<2KSrY>skii]uSK"j9Y>7XP;#gmH-=J&G#>VMn<+.'SC>4@M(hl3>qTZ/)JES1/L[CnJiL'MqJ'\L<u98ceR,`?*b]]cQh;koA_Uaq,P=*lP>,[=g$)MEa;1]eLV!EosKk>,6^:5]mbGaKdbLGoF"g2=].9f32L]tkU+nN5T8+0SmO,PmXNTK0+=]?>?^&,0-;"qQb'9O+)0?Yh0B(,rNspY6)Al^_$?j`h,;L/sRcB0k%/[Ou6qoSZ\OMmC`Egg#'K=U_p$CdsZ27_]!Q6t"nL@ibf+,'OQL0Y\D*\R+b/s2=_?L-RZppmI5N-n"A-)peFh$VF#i4]Ia,m=I*KLPha;e0%YH"O@k!TSg!NTt=tA7RjcYY"(q`4lLCG[12i>5GNdgLa)oMWf1H@(kbT+RZkF;3C$W!/qJ^k2*s6'Z3Df%jAKP31,u8D%ggY:^B&\H>[%~>endstream
-endobj
-26 0 obj
-<<
-/Filter [ /ASCII85Decode /FlateDecode ] /Length 2174
->>
-stream
-Gb!#[BlD`s')et?;)!.n-'6ktMO+`&(>]pAi^N!M1^FlW!JVe&;J.DdL29=hAGtE[<V);_7lbaD`?Ge]8([G!<E2\TLO[`XZOP=>kB-5\P4WJ&,T2Dgk-*up55Jb7Ar/I;q'9QL')=955fu'\C,IK3GQa]W)_+;"k9H,YY)l'0`CVa0iU\8jm;WaF5B&BO?nIq21I<:B]eE$^ZAFZ\^E&/uG*%XaO\dGp'$uBM+;TG#<7'r.kBt.\cU?9n0#D#Y_=,a+a1Q_=(-+mh?Zts$]i-;cU%,0q@u1+QoQ==fWbmsW]>qI^WjKtah59:+4eqgWRQkF(#F[tD((q)daqD9.koFU>$#'%E@h3`m3Q3l10Zk!FMTG`6]1Gi\:d=[)UFE7XGi?-J9$+>uDm/<To]kSNS,(>'hpVGaeXTrNh7S&.5Q#d)rK.2;0"B8\frTDVX+aaAP&.]X'_7DiapPfcp'J0G.#=9+*WQ`16mTLm%mf48j]$mfEnNWA>Bf7WDKg:8BpKWiI4si,nm)G[?Ai,-5BqN0cY:S,nfG!leLdBa0r$V>Gu!Jb.ok_-iXjP)@0DT^VAT*d[7GM[FRD+ichY$2V<=LdF5Y3YF/\t'EV*AUJ7LENEVsXH[e;]VVebECq>PC)4dZ)MJ,&1&A<*S8@,l=.@5&95R4.^eU.VOK0D%_<@;EFnVi+11/!]!THXcoN7nt`tId=t8/K%0h-G?iu#HM=rTcF7m^lk?',\N"S\]T#s/u_f3'Ve[RUV$'nhMEs1Fh+Y&#;=jR<F,"r6s]"]Q`E'Vbg#Qnm!BC,PI*NcHZggIXjg8KGtDWPqSHgo94,,&SF*dL*6>Z,[^rA(T/'?rQJPQrA=9I`$(S)^V$HiIV7T^]hT,JZau!/t._<.^G)n<+kTu>ZFPK$3'&-A3e>>ZCFt16P>;_9ZNkfnPAXO=A@L(iOe^EDS/,5I_5F5CeG@TeS[-uO-:mTgO%GU*!VS]ec[NS]q1DXcQk)=@MFE'TJI;";LdZpP$"!gM3%W?1[]-=jf!8?KC$5LZ2BrC?eZum-J6A5MP9qau@g%`$`p-ekEDOCirX]>'Vimrh+Bk]%Xqoa<ko>B7"'C%p\-t\NJIJ?(@r<*)WNeHlA!GF'4mb[ri`d*Y7DNKGCM<&jFH4Ad'"FFB/D/XUL0C:2RkJ*W;DdNF,DW^TIeU2goqtaiM5n(l^@&=N[0+ub-Hm#;r#4W@R1)=;6;IWa`cKLKoR(]52ZRBob=#XZL.DQU^f9@K&+AJ_TJYJ^^U9T_:4gQt`WRI\I2//=OW&440<e>5)!J?5Hc&b;i".?8@0=e)dU>W4(/!X^^SfJKBUJcRu$H?.:eT_,OXO`X,I)/<RdU6$>YV7SL6h/91kQZMJ9SMeg:NJ.bn@psGd=4,G0Nb$sGO9V@,q&:("<n0W/#NX:Od2TK,%G8^A_'M\6TQb@75=5]$8<ZTQI<u8W4.+WX(&.#dhVS=ULMYOQoEN]pVH-83LJgeo-=S.QXnh5i,_I1mQ$8HermU5FbnS4i)3_i&!'nhCCrTB#B/4.8\0;Ib''8kG[Q-j\EA#U$cH!!.RF+2nmn1mmfQoZS[QVI4S3VhV:-U9ps/UYB8qu$T*5Cm4uRKg`jmHZ)2&UsYbU_I3iB)8>Fa,<E&^p?8SO9[e5cZ"NKL259SJ_/'S_i=oWIOqoOH7E@^rk4Z()@jHHVKUo3ePu%B,Q'-?.k;jZ0)MJL'/Q^VD8<%*JVD#r$erK4'H6,:lX^MU>ob>eIW,+",t[,Es?<X/N#JZ70Hil&6d+#iuW7q[/mQ2n?N[h?f'VdR)^c:Vbr8P5eH?hOp$rMiU0WQs:A3qc>pN\BleWVC?Qt#P$ECFMAE4SEs@j?Fu'?88WI^XO>?@$0!>SM(XBe/RR:%VB;cW3V<L-<mI4J>A@"MAJ`jbcRI@[&NOUATO9J*p./RTXc1@.>Lf?M1mao!'^m(SijP%PW&K)gY+)Lh.8[jk'5+fn'@j[fLM%`4BSRfodT"CHla<(V4?&1Bg,-3!g=7;q\S_WO%JZeVe@@X[=/df<`aM!5Rglr<?`cttMV@0+%DMCX00(tCOS7,%F/O^44ur[ImSB5-r3!$RdBZSOMGO30dN&E`Q)U'+>LWhFZo,4kE3*a'<b\_^c#W(HDbh-q/art3ie;NQOBeWCk<Ft*%0E#M/c~>endstream
-endobj
-27 0 obj
-<<
-/Filter [ /ASCII85Decode /FlateDecode ] /Length 2497
->>
-stream
-Gb"/(hf%:.&q8`Q@U9E&!h0cJMN[D0='Q7roH'GRXtTN99AEh'qGiCCg;X$\2a^KkC9r(uf+!=!&B%gGSG@mq_iN</6\,3HrL;C=J(qiPmlBkK[QEE!$/#4WJ)>-mh68F>U+?G5a]+!$[Y"*=6GMD7<a;@qJcg<.]=/`Fd\n"M#a/.T^d;f21d">U$\ak&)/8V-('Ia."EBl>9+Wh*prA+8E(!8H=:-cqWIPmrOg*4,.em`<NDI[iN(IqKMa\DSh/S5d;]G4">!m6kp[bk?,:ca2RifY]"o'adGA>JYR'Cn?h6$*le`7W4W+N75!o%'iqj&p21rWn?3#XV(bMXE1i+2><kfjjFbX25sfD%J4c^eo2&:k9Y3/<(2!L$:<#tLUi'gP=0]_akqF??K2XaAn-fugNtdtD+,bU>U7Z,F_&$4M58aN0>_Tnj#/-PhD?Pb/K/^eN_CC+(%bqR.5^;mspSm!n$p?_0rEe0Y4tef`BP;`(`+s7+>4,Tt^9JTL5!Dli9\j<@10!uAG3AeG"Wa[_PQ=mW"UEM;8,)<]$,U":3#`r,mlk1V`D"/rBOWn.FJn>V/B]Ye80NP5JE'QBk!>3-!:YJI/WIkX]7p1Q]rmK_taEeO`njI7+%`s<N);e]KX\UhCC4*5+Mh8t@]4Gk?K;'+a;j#A4P=LdN+M\C3Zgdb#'%M(?G2KbdNM%I"1<lCbDJY5bu$E1(=`K>kD,Qk)'a#:mk_)0:nJ[IOo"8r'4Ra!c0SU*IUoErg<A+:r<Y,UStkBB"N$cpcZ/I7qA8J<^J,CIo^HIX(aMEr10c(M,n'`Bt5=^2J,GE:nhWo<l$)4ZL/KsR%!h_m/HK6,oTbXquHqI):Zf6'/5#'61F3?S-)2[7@9GmGb-^=3#_N*W,*a,ae52L?((a,GZ=rtC.GJ2GW4L;A5hQ1nT8ia'eRnNheV\OO.6<E6PFmO]DMJi^/0<CAB.<.)ebT4AUqAF^Riip-kW5>,&[+iSse)<ircgJl+S1o3U,PUqtU4P*AVqWI0EJSRfPW("Wg@tUc@'l_t!P)Lar8A=n6JbI=sN$\oeTh^MX^!nFB?pSj31R(se)9@es-A3&2goo\Z/jIWJ:0Xr$NN:iXcTUDEcB46[@MFXHCj,$LPiK+Le#_ViR'k1^>^#E\ZK$!cj)!CA58>HbcTpbX?Fc,0kG0.g-g?O09Bt.^U`L0B//_Q\Y=Il2^Q:MMSknXNGV)h.%]g.k0LmD=pMasG>9l1Tm*U$R5$gP(RYe$G4,aXRY=eCAG`:d!cWSP#cm,NVog7#becf6Xn%5UD90A6AKs'RIH/%].rR`W`-1]?$([+k!r^J]6-hRZk91PGR;Ku0<UQ-g#lhpU^*(gPdH3ZAK1CeS%ea>/MpKnbqLVZ!/LZ+]@_oV"f^0V#A/8eC.@e!%+68oS!Qd+NU#cLHu`.cB\79o0#]Gc^#dnk)1ifbCLh>5hVrW6`6=*54S/<hpcb2QbNMd)XG0==u+BS[Q'k(LK;+?gHCs',6.Y0_cp,es/-ndU%IcGgQ8XXJ$i3$+-H8F-*(Ngin]@m"\a>m<MAMFnsfpf&E"r/Jj;fm6/7&%*mo<GANbRXMSOk,N-b1<60aTcM?Y`r=-5s3HXP?<=FD(a8ZRLA:slMa[=QPt4f=3pq*4.o2J66Y<o:0mt4TT@+NBAl7>;S3lJ?-h='X,&'9'F6OtLA!I^n&Qs,GPE`FM+at-ca,;<]1;oW+/RMCF_#s87\2nr!W[g4@(TWBGk%(&IH@j_#Z(tLcY%f&?6N)2`*pi85J'r!!06N2E;.VWYH2rH_A[(R01>nPS*I]A&`niE6S*?5&+g0`mk@u"+4:QpDI=;1P@+o<rDa[&AE7A*:_KL9-M$eg6/oWq[e#6Q/L_&nJAJ)C6YF!=Q\O7bsh=G1Yd#sPcddjg3,5&^aTLa)&,F.i=<KbhMl]Hc&aGJ+pIt4P/<tpasRXeY0"P0n=8#9BKB/.ZcK6T.3m9Jcj%m%m0\/5,<b-_*%M-h\$MicCV`EA2X?0J)PJ+`VU<mIjqrlgjs_3@rRI"E>*l^RYNNk27ir9KUr8M9ep]a>S5s'F99Osb-L[&Z[3d+4YC('CqUSaNcIW#jo9?KcXg<QLE5`8GQ?L9]W1[>:SY\+CZ>\'qmkA69%!.D67j[GS$^r6<eR'V3'?<LS]X3dh3hrQnT!-e9O<s/'Q&>JDuT8G-h@jf7EZ?'hFcK"4$Ds#QJ"<9m^H%Vc3sj*kB2/s,^R3>bujmW@2`g6Kqo8Fck8n#.(%BY'2!JkWKmm+eue*p@C4+,@bo?R[m"@1p:dKYBn<:7IK]#quUas5OkOR'q2r0`1\*b4X%?<SQk_Ir0:76`1@$%D'lq^c5KfD2mEjeT)[]O%+/VTc5k*%N#FmS%W"<do:b$nZpkA1DV9*YY[gJhL!VVM>#Z?2u;Bm&EZSJpq>F"^2Qod&tkQMZg1hS::[,q-8]Prg=qT&k6qR.9cm<SdMs7tPQJaJ$t/ZkQq0R<~>endstream
-endobj
-28 0 obj
-<<
-/Filter [ /ASCII85Decode /FlateDecode ] /Length 2815
->>
-stream
-Gb"/)>E@OK'n2c^EI_MLBe[G\'QnEQZ:23m2VlVi%&=('_NAM9)-slf*S8:0pcXD.A;r6`MplKnai0u"P2G6/Hp!0BLB.?pqjCFahbW5(%ii*0kmY(4&uP-UmI]b31H%gWE$Bg,i\VDW?7"c+%.3to[_lSpP[K8I_sGnk9;ttq9En'<6XYKu]^MGf0b_uqM&=Ls#?_UGBbEgJMH>Cci58pI=9<7X),$8^`*"R`Jk.4^pq%0Acb/`raZa.<(S+!8&tn$B5`+_Dn4@F"_>`5nhp*1p5o#p)>?)-JY5j&QSVGFknr:>RlF']8VW!0-kPC5nr<1SNKJAoE&qVE<]Uaudn/?O*lMWN=o+#_%&bqbopcPe,ST*-mJ[L.Jm(`ja`GWUWRN@;#J08Q4ru_=7N`-:cT6&<H#W<Gm8f#SNKaSs@BGsX35rAi[dc2C+lqr":;7K'j\53C4@,7p,*,\d\Ib+?[joG&2nGfD5*?hhN5^4$b<1o-Rf(qW"Ln=gGfedZ:h:&o.@MZP_I<VIL71D`BPSu\>1Q[m@&j]D#P"6*-PE_n1d#CC&=d5TR\f8TX/Q<.:W5$"Z6,4g(C)AQ)M=995Y+=Nbf.-Yhh/0A:*r(":Co,c;k^3/!@-,X@!?YZ7IJ057o=[#d8J94"UI&JgK2J.r&-J[<9.uYIqbi)2/C=i6Lg6PBD&7EVH9Ku'3DG[`6EF\96mQGTi>d_pa"t>f(&!Z!_j`a&qSQ1n%8kY'KDG')5GrH`IJa!l*%=XS%.E4`s)f$4Zkj)\'#kXW^d?)\/EC?u@mS5!'dF)"dZpR,!W>.p8F-BUZnbc_Buh&N]=fc\mNG<IFO9(nYrV(Ja?&4#[t"m_T[O*cAMbs,240)P>\?K,1c;5UXAi>?TN$':Es>S&XJ2Ir]s-ZZ<7t^G7>#TfCn#g+Tp=pi#$V=,c0i!/#Z"tinUTGe$++?SbCBa?$?:9XY2T;l1.J`10%V5>OOEW*X&TIaU,,NUl(n`cq_?9c9F2g5Z;e=OP<Cs,/KN4rD%>mK/F;CsVqZ\/+j`(3HE_O9YE^HV;a'TJK]2lAH8a3#I!r3?1pB7&/W4obbm`0,h*SFn4$=9pLjZL)qhMc5:`,S!c@BV:<iS0Q=HF>)<HK5bi;s)jj0)\3kIMl=05Q\IX0s'YD:UT[:3<\AU*m:c;-V0>D=q_@I9XB8jpP.J<Y].>D%>_pA+Rc?11?J+WuB73ZuB5J<1jYjBiS$"c3@%M1+l!?5>j1>Q)3kNl?o)mT&3pfHp?:Y:1fsY!Od>-d_9G.G.J&jNuG0`?Z)u]l:MfQ"(mEdB;N@Y]sIq)#u+uJK;"LpcUF]m.oAh$?/DS!R;JWP#@$Ht3H23a.Zp1)E*5-em3,+cQt^V8['>@*ff#/uAa;-iG=PfFI>>B4n-7YGo->=t-gC+7_>:(^lneB+92pNdbu0!A(lrJV(pYD].=ht3*(2NHPjY-KflTci`sHs($\4USIbJGpBn,G]O]X[J">Cs0B@eAUG8\b)DCKqr4r5<m%N[7T6Fe7D*&lnd'\>;1V]Xl.6Y0*J<m$TmjA\:pgKgpAP[/+2%&W[(Hk5<i'od-l'flHh0ZS]m=I07"2AsJmbJP'aOT*ch.$K^)>c03<%45#<=am*>Xi!79j8F^'R8VTd)pVg*DO+NI1P:e81..KmWn8(2A\q%d6G[,4pPLZELOEHEDo`/h.g^'*gJ"!AolWJUjaKO4:l10uTtX8nWd[?$dsO_qIA]O]==_`E[[pYCA$A,DRDOCt6$E\6:1=b%cEElsWl<ecE[f^<d'$:6l2p7jfEYE?lggX,S/D3=qcYEApGF>C'_--(US=e>k*UEF)ViVGXg#lE[k?LXe5G*:ARRLONGP^T</th]Xb+!u=]+K)DK(5L;5<*p'ttQ?d0a`^M7kSRc(!m7Jk)aA?\eFQH.s/&!I&]?A4So<]Me1q2;<F2\Ttt9nYu18iS/gS#Xap+Pl9*-hlauHkE1?JOP`o]QnR*pCs:lb@U_DR`hF=;<'./55t.XV,8Q:t.Mm*PpuX8%GgKmsJ9sh:&(pks075.nP]g%[9_qJNFAXT+k"S:np'_59l[&Op,1-(Urs4h`ncH%1e*Th?qLZen>#OVUk5CQXfSf.5Q!Td$VUDl_JEs[/\T5=(<*B-#\H4llD-Q4O(h"1sZ^NP'3YdmuB4UB6MkG\M>V@Z)_P7&p//f(2HlWEN-A-p0E/-a>`(u0u@aI*f1+9S`@73B0S;]`?ehJS]T$F!,S;om0X"dPj/.JYJ,o/>)pT82ZXu_1a>#F=TPO^+tO7DFV[a::+Wr.eYR!SmN[6Xk9LF\:[esuit[S8h;,,WeChRD6-FG:0,[CUGT[$i-UdfJ0M@1Jk`Ilj7?b3^fW`pk(@7,LP+@h([`@P@%7T"b&P6_*mLs*f7A7OA!u@8%ISD.C00=iH`tjHp/H%SmSEL\,e"Sp]h?%qV4`>kq+(;H5jd\\k&FW/AKgneLri$F@Pe3jh6oC"8LgJ&6"k2)q-o+n+)#"%<t0ZUEkF@`+0`mV<hIT=^_Ei8DrXaHnq@jS2'%^OL8dGZlR"Q>CoGV=#'o=CPW#k%n',B=#IIc0e9G-PI8OK1J,arm`Y`1rCcbUB#Q^VB6LHF*k@o%KerfkKh0dbPrE^kb-W0IK,?c-M[2@,onR<9kSN.dkkV@SLM\o]%^]i-QD%ZisF"sGi804pI4bQ<BbWW-o$C,8lna!Ts(T_PT+<>djdE8CIU>CAX&kZ9/k6>!BM6Sa42Eo5s:;*8`9@O8b_<dl&<YbB#J,mS@cNAKO80$?8L&J8lQ_PRR-SX_n>JXp)?(F1i!~>endstream
-endobj
-xref
-0 29
-0000000000 65535 f 
-0000000061 00000 n 
-0000000123 00000 n 
-0000000230 00000 n 
-0000000342 00000 n 
-0000000452 00000 n 
-0000000647 00000 n 
-0000000842 00000 n 
-0000001037 00000 n 
-0000001232 00000 n 
-0000001427 00000 n 
-0000001623 00000 n 
-0000001729 00000 n 
-0000001925 00000 n 
-0000002121 00000 n 
-0000002317 00000 n 
-0000002513 00000 n 
-0000002583 00000 n 
-0000002872 00000 n 
-0000002992 00000 n 
-0000005069 00000 n 
-0000007676 00000 n 
-0000010048 00000 n 
-0000013720 00000 n 
-0000016607 00000 n 
-0000020236 00000 n 
-0000022623 00000 n 
-0000024889 00000 n 
-0000027478 00000 n 
-trailer
-<<
-/ID 
-[<79d5a0d6ccecb91f571278b779584369><79d5a0d6ccecb91f571278b779584369>]
-% ReportLab generated PDF document -- digest (opensource)
+10
+How I'll know if it works, and what doesn't work yet
+The real test is calibration. If Lumo works, the calls you rate 4 or 5 out of 5 should turn out well more often than the ones
+you rate 1 or 2. Over time, the gap between how sure you felt and how things actually went should shrink. That's what
+better judgment looks like when you can measure it.
+There are earlier signs to watch for too. People change their first instinct after seeing the options, instead of just
+confirming it. They come back to the record when things get chaotic, which the beta already showed. They return to
+record how a decision turned out. The "I noticed" line changes how they frame the problem.
+Today Lumo can't measure calibration, because it doesn't yet ask how decisions turned out. That's why outcome
+check-ins are first on the roadmap.
+WHAT STILL DOES NOT WORK WELL
+The model sometimes offers options that look reasonable at first and fall apart when you look closer. It can miss how
+organizations really work: the stakeholder who'll block the decision, the promise someone made quietly, the constraint
+that only lives in people's heads. The "I noticed" line helps, but it doesn't fix this. And confidence ratings are easy to rush.
+Because everything is stored in the browser, your record lives on one device. Pattern detection over the long run is still a
+demonstration, not something proven on months of real decisions.
+11
+What this project shows about how I work
+I start from the problem, not the model.
+The most important design choice was taking a capability
+away. Lumo is defined by what the AI isn't allowed to do.
+I change the product when an assumption breaks.
+The recommendation, the source quotes, and the "I noticed"
+line all came from something that didn't work the first time.
+I treat AI output as untrusted input.
+Schemas, validation, retries, and honest error messages are
+product features to me, not cleanup work.
+I'm honest about limits.
+I can tell you where Lumo works, where it doesn't yet, and
+what it would take to prove the rest.
+Lumo is my attempt at the part most AI tools still skip: better judgment, and a memory
+of how it turned out.
+Terrance Range | www.trylumo.co
+Lumo  |  Case study  |  Terrance Range9 / 12
 
-/Info 17 0 R
-/Root 16 0 R
-/Size 29
->>
-startxref
-30385
-%%EOF
+A
+Appendix: How it works
+There's nothing exotic in the stack. Most of the effort went into making the AI predictable. The model can only answer
+through a fixed schema, and the server checks every response before anyone sees it.
+EVERY AI REQUEST FOLLOWS THE SAME PATH
+Browser
+›
+Rate limit
+›
+Validate input
+›
+Forced tool call
+›
+Check shape
+›
+Retry once
+›
+Clean output
+Most of the reliability comes from the two highlighted steps. If both attempts fail, the user sees a plain error and can try again.
+STACK
+LAYERCHOICEWHY
+AppNext.js 16, React 19, TypeScriptPages load fast and search engines can read them. AI responses
+are typed and checked at runtime.
+AIClaude API with forced tool callsThe model returns structured data, never free text the interface
+has to guess at. The model choice lives in one place.
+GuardrailsServer-side validation and one retryBad output gets rejected instead of shown.
+StorageBrowser only, no sign-upNothing to sign up for, and decisions stay on the user's device.
+SafetyUpstash Redis rate limiting20 requests per hour per route keeps a free public tool affordable
+to run.
+HardeningSecurity headersHSTS, nosniff, a referrer policy, same-origin framing, and a
+permissions policy.
+ReachEnglish and Spanish on VercelEach language has its own routes, and the model answers in the
+visitor's language with its own writing rules.
+THREE API ROUTES, EACH LOCKED TO A SCHEMA
+/api/analyze
+Reads the situation back with source
+quotes and an "I noticed" line, then
+generates options with cost, risk, and
+reversibility.
+/api/decide
+Turns a committed decision into a
+summary and a draft for each
+audience.
+/api/rewrite
+Rewrites one draft, shorter or more
+direct, without redoing the whole
+decision.
+Lumo  |  Case study  |  Terrance Range10 / 12
+
+B
+Appendix: A closer look at the code
+Here are three excerpts: two from the route that drafts audience messages, and one from the rate limiter. I trimmed them
+for length but didn't change the logic.
+CODE   app/api/decide/route.ts (schema, abridged)
+const decideTool: Anthropic.Tool = {
+  name: "provide_audience_drafts",
+  input_schema: { type: "object", properties: {
+    claritySummary: { type: "string" },
+    drafts: { type: "array", minItems: 2, maxItems: 8, items: {
+      properties: {
+        // "vp" is required so leadership is never left out
+        audienceId: { type: "string" },
+        channel: { type: "string", enum: ["email", "slack", "dm"] },
+        subject: { type: "string" }, body: { type: "string" },
+        pushback: { type: "array", maxItems: 2 /* objection + reply */ },
+      },
+      additionalProperties: false,
+    } },
+  } },
+}
+WHY IT MATTERS
+The model can't answer in free text. Every field the screen shows is declared ahead of time, so an empty or
+broken draft is an error the server can catch, not a confusing screen for the user.
+CODE   app/api/decide/route.ts (retry loop, abridged)
+for (let attempt = 1; attempt <= 2 && !result; attempt++) {
+  const response = await anthropic.messages.create({
+    model: ANTHROPIC_MODEL,
+    tools: [decideTool],
+    // Force the structured tool; plain text is not an option
+    tool_choice: { type: "tool", name: decideTool.name },
+    // ...system prompt, user prompt, max_tokens
+  })
+  const toolResult = response.content.find(isDecideToolUse)
+  if (!toolResult) { record("no tool output"); continue }
+  // Schema is a request; this check is the guarantee
+  if (!isDecideResult(toolResult.input, "vp")) { record("bad shape"); continue }
+  result = toolResult.input
+}
+if (!result && lastFailure)
+  return getDiagnosticsResponse(requestStartedAt, attempts, lastFailure)
+WHY IT MATTERS
+Schemas cut down on bad output but don't eliminate it. A second, independent check on the server and one
+retry turned occasional broken screens into rare errors that say clearly what went wrong.
+Lumo  |  Case study  |  Terrance Range11 / 12
+
+CODE   lib/rate-limit.ts (abridged)
+decide: new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(20, "1 h"),
+  prefix: "lumo:ratelimit:decide",
+}),
+try {
+  const { success, reset } = await limiters[route].limit(ip)
+  if (success) return { allowed: true }
+  return { allowed: false, retryAfter: secondsUntil(reset) }
+} catch (error) {
+  // A limiter outage must never take the product down with it
+  console.error(`[rate-limit] Redis check failed for "${route}"`, error)
+  return { allowed: true }
+}
+WHY IT MATTERS
+A free public AI tool needs a cost ceiling, but the limiter protects the product. It isn't the product. So I made it
+fail open. If Redis is down or not set up, the request goes through and the failure gets logged.
+C
+Appendix: What broke in production
+The flow reset itself mid-step.
+An unstable React key made the
+current step reload on every update,
+which wiped out what the user had
+typed. I fixed the key, then ran all six
+steps again in a real browser.
+The AI worked in preview, not
+live.
+Production needed the model
+configured explicitly. I moved that
+setting into one place and added a
+visible AI status and logging.
+The sitemap returned a 404.
+Vercel sent the bare domain to www,
+and my own code sent it back. I made
+www the one official address.
+What I took from it
+Test what's actually deployed, not the preview. Make failures visible. And treat domains and redirects as product work, because if a
+search engine can't read your sitemap, people can't find you.
+Lumo  |  Case study  |  Terrance Range12 / 12
