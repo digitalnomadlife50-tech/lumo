@@ -3,7 +3,9 @@ import type { Locale } from "@/lib/i18n/locales";
 
 export const SITE_URL = "https://www.trylumo.co";
 export const ARTICLE_PUBLISHED_AT = "2026-09-28";
-export const ARTICLE_AUTHOR = "Terry, product director and three-time founder";
+export const AUTHOR_NAME = "Terrance Range";
+export const AUTHOR_URL = "https://terrance.company";
+export const ARTICLE_AUTHOR = `${AUTHOR_NAME}, product director and three-time founder`;
 export const GUIDE_PATHS = { en: "/guides", es: "/guias" } as const;
 export const GUIDE_SLUGS = {
   launch: { en: "tell-stakeholders-launch-is-slipping", es: "avisar-que-el-launch-se-retrasa" },
@@ -46,7 +48,7 @@ export const safeJsonLd = (value: unknown) => JSON.stringify(value).replace(/</g
 
 export function articleSchema(title: string, locale: Locale, path: string) {
   return { "@context": "https://schema.org", "@type": "Article", headline: title,
-    author: { "@type": "Person", name: ARTICLE_AUTHOR }, datePublished: ARTICLE_PUBLISHED_AT,
+    author: { "@type": "Person", name: AUTHOR_NAME, jobTitle: "Product director", url: AUTHOR_URL }, datePublished: ARTICLE_PUBLISHED_AT,
     inLanguage: locale, mainEntityOfPage: localizedUrl(locale, path) };
 }
 
