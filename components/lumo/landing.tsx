@@ -121,7 +121,10 @@ export default function Landing() {
             <p className="lm-body-lg" style={{ fontSize: 19 }}>
               {t.aboutBody}
             </p>
-            <a className="lm-link" href="https://linkedin.com/in/terrancerange" style={{ fontWeight: 500 }}>{t.aboutName}</a>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 20 }}>
+              <a className="lm-link" href="https://terrance.company" style={{ fontWeight: 500 }}>{t.aboutName}</a>
+              <a className="lm-link" href="https://linkedin.com/in/terrancerange" style={{ fontWeight: 500 }}>LinkedIn</a>
+            </div>
           </div>
         </div>
       </section>
@@ -165,7 +168,7 @@ export default function Landing() {
           <div style={{ fontSize: 14, color: "var(--lm-text-3)", lineHeight: 1.8 }}>
             <a href={lh(d.nav.guides === "Guías" ? "/guias" : "/guides")} style={{ color: "var(--lm-text-3)" }}>{t.footerGuides}</a>
             <br />
-            <a href="https://linkedin.com/in/terrancerange" style={{ color: "var(--lm-text-3)" }}>{t.footerBuiltBy}</a>
+            <a href="https://terrance.company" style={{ color: "var(--lm-text-3)" }}>{t.footerBuiltBy}</a>
             <br />
             2026
           </div>
