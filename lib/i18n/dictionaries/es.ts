@@ -59,6 +59,12 @@ export const es: Dictionary = {
       "Anota tu primer instinto. Lumo investiga, te muestra dónde tu instinto y la evidencia no coinciden, y redacta una actualización para cada persona o equipo que necesite conocerla. Con el tiempo, ves dónde aciertas y dónde te equivocas.",
     watchItWork: "Mira cómo funciona",
     heroCaption: "Demo gratis. Sin registro. Tus decisiones se quedan en tu navegador.",
+    stats: [
+      { value: "~15", label: "product managers en una beta cerrada" },
+      { value: "3", label: "industrias: salud, deportes, edtech" },
+      { value: "6", label: "pasos del instinto al mensaje" },
+      { value: "0", label: "registros para empezar" },
+    ],
     howItWorksSr: "Cómo funciona",
 
     problemLabel: "El problema",
