@@ -46,6 +46,15 @@ export default function Landing() {
         </section>
       </div>
 
+      <div className="lm-wrap lm-stats">
+        {t.stats.map((s) => (
+          <div key={s.label} className="lm-stat">
+            <span className="lm-stat-value">{s.value}</span>
+            <span className="lm-stat-label">{s.label}</span>
+          </div>
+        ))}
+      </div>
+
       <section id="demo" className="lm-wrap lm-section lm-section-tight">
         <h2 className="sr-only">{t.howItWorksSr}</h2>
         <LiveDemo />

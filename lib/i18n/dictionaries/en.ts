@@ -57,6 +57,12 @@ export const en = {
       "Write down your first instinct. Lumo does the research, shows where your instinct and the evidence disagree, and drafts an update for each person or team who needs to know. Over time, you see where your instincts are right and where they're off.",
     watchItWork: "Watch it work",
     heroCaption: "Free demo. No sign-up. Your decisions stay in your browser.",
+    stats: [
+      { value: "~15", label: "product managers in a closed beta" },
+      { value: "3", label: "industries: health, sports, edtech" },
+      { value: "6", label: "steps from instinct to message" },
+      { value: "0", label: "sign-ups to start" },
+    ],
     howItWorksSr: "How it works",
 
     problemLabel: "The problem",
