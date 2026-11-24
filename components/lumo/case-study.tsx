@@ -1,5 +1,6 @@
 "use client";
 
+import { useId, useState } from "react";
 import { Wordmark, LanguageSwitcher } from "./ui";
 import { useDict, useLocaleHref } from "@/lib/i18n";
 
@@ -66,12 +67,124 @@ function Table({
   );
 }
 
-function Code({ label, children }: { label: string; children: string }) {
+type CodeNote = {
+  line: number;
+  title: string;
+  body: string;
+  footer: string;
+};
+
+function Code({
+  label,
+  children,
+  notes = [],
+}: {
+  label: string;
+  children: string;
+  notes?: CodeNote[];
+}) {
+  const codeId = useId();
+  const noteId = `cs-code-note-${codeId}`;
+  const [activeLine, setActiveLine] = useState<number | null>(notes[0]?.line ?? null);
+  const [isNoteOpen, setIsNoteOpen] = useState(notes.length > 0);
+  const activeNote = notes.find((note) => note.line === activeLine);
+  const showNote = Boolean(isNoteOpen && activeNote);
+  const lines = children.split("\n");
+
   return (
-    <figure className="cs-code">
-      <figcaption className="cs-code-label">{label}</figcaption>
-      <pre className="cs-code-pre">{children}</pre>
+    <figure className={`cs-code${notes.length > 0 ? " cs-code-annotated" : ""}`}>
+      <figcaption className="cs-code-label">
+        <span className="cs-code-file">
+          <span className="cs-code-badge">Code</span>
+          {label}
+        </span>
+        {notes.length > 0 && (
+          <span className="cs-code-hint">
+            Select <span className="cs-code-info-icon" aria-hidden="true">i</span> for plain English
+          </span>
+        )}
+      </figcaption>
+      {notes.length === 0 ? (
+        <pre className="cs-code-pre">{children}</pre>
+      ) : (
+        <div className={`cs-code-stage${showNote ? " has-note" : ""}`}>
+          <div className="cs-code-main">
+            <div className="cs-code-pre">
+              {lines.map((line, index) => {
+                const lineNumber = index + 1;
+                const note = notes.find((item) => item.line === lineNumber);
+                const isActive = showNote && activeLine === lineNumber;
+
+                return (
+                  <div
+                    className={`cs-code-line-row${isActive ? " is-highlighted" : ""}`}
+                    key={lineNumber}
+                  >
+                    <span className="cs-code-line-number" aria-hidden="true">
+                      {String(lineNumber).padStart(2, "0")}
+                    </span>
+                    <code className="cs-code-line">{line || " "}</code>
+                    {note ? (
+                      <button
+                        type="button"
+                        className={`cs-code-marker${isActive ? " is-active" : ""}`}
+                        aria-label={`Explain line ${lineNumber}: ${note.title}`}
+                        aria-expanded={isActive}
+                        aria-controls={noteId}
+                        onClick={() => {
+                          if (isActive) {
+                            setIsNoteOpen(false);
+                          } else {
+                            setActiveLine(lineNumber);
+                            setIsNoteOpen(true);
+                          }
+                        }}
+                      >
+                        i
+                      </button>
+                    ) : (
+                      <span className="cs-code-marker-spacer" aria-hidden="true" />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          {showNote && activeNote && (
+            <aside className="cs-code-popover" id={noteId} aria-live="polite">
+              <div className="cs-code-popover-top">
+                <span className="cs-code-popover-kicker">
+                  Plain English · {notes.findIndex((note) => note.line === activeNote.line) + 1} of {notes.length}
+                </span>
+                <button
+                  type="button"
+                  className="cs-code-popover-close"
+                  aria-label="Close plain-English explanation"
+                  onClick={() => setIsNoteOpen(false)}
+                >
+                  ×
+                </button>
+              </div>
+              <h3 className="cs-code-popover-title">{activeNote.title}</h3>
+              <p className="cs-code-popover-copy">{activeNote.body}</p>
+              <div className="cs-code-popover-footer">
+                <span className="cs-code-popover-dot" aria-hidden="true" />
+                <span>{activeNote.footer}</span>
+              </div>
+            </aside>
+          )}
+        </div>
+      )}
     </figure>
+  );
+}
+
+function Why({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="cs-why">
+      <div className="cs-why-label">Why it matters</div>
+      <P>{children}</P>
+    </div>
   );
 }
 
@@ -99,85 +212,87 @@ export default function CaseStudy() {
         </nav>
       </div>
 
-      {/* Cover */}
-      <header className="lm-wrap cs-cover">
-        <div className="cs-cover-kicker">Case study</div>
-        <h1 className="cs-cover-title">Lumo</h1>
-        <p className="cs-cover-tagline">A feedback loop for product judgment.</p>
-        <p className="cs-cover-sub">
-          Make hard product decisions clearer, and keep a record of how they turned out.
-        </p>
-        <div className="cs-meta">
-          <div className="cs-meta-item">
-            <div className="cs-meta-label">Role</div>
-            <div className="cs-meta-value">Solo build: product, design, and engineering</div>
-          </div>
-          <div className="cs-meta-item">
-            <div className="cs-meta-label">Built with</div>
-            <div className="cs-meta-value">Next.js 16, React 19, TypeScript, Claude API</div>
-          </div>
-          <div className="cs-meta-item">
-            <div className="cs-meta-label">Status</div>
-            <div className="cs-meta-value">
-              Live at{" "}
-              <a href="https://www.trylumo.co" target="_blank" rel="noreferrer">
-                www.trylumo.co
-              </a>
-              . Case study updated November 2026.
+      <div className="cs-hero">
+        {/* Cover */}
+        <header className="lm-wrap cs-cover">
+          <div className="cs-cover-kicker">Case study</div>
+          <h1 className="cs-cover-title">Lumo</h1>
+          <p className="cs-cover-tagline">A feedback loop for product judgment.</p>
+          <p className="cs-cover-sub">
+            Make hard product decisions clearer, and keep a record of how they turned out.
+          </p>
+          <div className="cs-meta">
+            <div className="cs-meta-item">
+              <div className="cs-meta-label">Role</div>
+              <div className="cs-meta-value">Solo build: product, design, and engineering</div>
+            </div>
+            <div className="cs-meta-item">
+              <div className="cs-meta-label">Built with</div>
+              <div className="cs-meta-value">Next.js 16, React 19, TypeScript, Claude API</div>
+            </div>
+            <div className="cs-meta-item">
+              <div className="cs-meta-label">Status</div>
+              <div className="cs-meta-value">
+                Live at{" "}
+                <a href="https://www.trylumo.co" target="_blank" rel="noreferrer">
+                  www.trylumo.co
+                </a>
+                . Case study updated November 2026.
+              </div>
             </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      {/* Short version + at a glance */}
-      <div className="lm-wrap cs-intro">
-        <div className="cs-short">
-          <Kicker>The short version</Kicker>
-          <P>
-            AI made the work of product management cheap: the options, the analysis, the docs,
-            the updates. What&apos;s left is the call itself, and the call is the one part of the
-            job that gets almost no feedback. Outcomes show up months later, mixed in with
-            everything else, and nobody connects them back to what was believed at the time. AI
-            makes this worse in a way that&apos;s easy to miss. It can write a convincing case for
-            any choice in seconds, so the written reasoning no longer shows what anyone actually
-            thought.
-          </P>
-          <P>
-            Lumo is a feedback loop for product judgment. You write down your instinct and how
-            sure you are before the model says anything. Lumo reads the situation back in your
-            own words, names one thing you may have missed, and lays out options without making
-            the call for you. Then it drafts the update every audience needs. Because the record
-            comes out of work you already have to do, keeping it takes no extra effort, and over
-            time it shows you where your instincts hold up and where they don&apos;t.
-          </P>
-          <P>
-            I built it end to end and ran a small closed beta with about 15 product managers at
-            early-stage startups. What they valued first was memory: in chaotic weeks, the record
-            gave them back the context that even AI search tools missed. Next, I want Lumo to run
-            as a layer inside the AI tools PMs already use, not just as one more app to open.
-          </P>
-        </div>
-        <aside className="cs-glance">
-          <Kicker>At a glance</Kicker>
-          <div className="cs-glance-grid">
-            <div className="cs-glance-item">
-              <div className="cs-glance-value">~15</div>
-              <div className="cs-glance-label">product managers in a closed beta</div>
-            </div>
-            <div className="cs-glance-item">
-              <div className="cs-glance-value">3</div>
-              <div className="cs-glance-label">industries: health, sports, edtech</div>
-            </div>
-            <div className="cs-glance-item">
-              <div className="cs-glance-value">6</div>
-              <div className="cs-glance-label">steps, and the instinct and the choice stay yours</div>
-            </div>
-            <div className="cs-glance-item">
-              <div className="cs-glance-value">0</div>
-              <div className="cs-glance-label">sign-ups needed to try it</div>
-            </div>
+        {/* Short version + at a glance */}
+        <div className="lm-wrap cs-intro">
+          <div className="cs-short">
+            <Kicker>The short version</Kicker>
+            <P>
+              AI made the work of product management cheap: the options, the analysis, the docs,
+              the updates. What&apos;s left is the call itself, and the call is the one part of the
+              job that gets almost no feedback. Outcomes show up months later, mixed in with
+              everything else, and nobody connects them back to what was believed at the time. AI
+              makes this worse in a way that&apos;s easy to miss. It can write a convincing case for
+              any choice in seconds, so the written reasoning no longer shows what anyone actually
+              thought.
+            </P>
+            <P>
+              Lumo is a feedback loop for product judgment. You write down your instinct and how
+              sure you are before the model says anything. Lumo reads the situation back in your
+              own words, names one thing you may have missed, and lays out options without making
+              the call for you. Then it drafts the update every audience needs. Because the record
+              comes out of work you already have to do, keeping it takes no extra effort, and over
+              time it shows you where your instincts hold up and where they don&apos;t.
+            </P>
+            <P>
+              I built it end to end and ran a small closed beta with about 15 product managers at
+              early-stage startups. What they valued first was memory: in chaotic weeks, the record
+              gave them back the context that even AI search tools missed. Next, I want Lumo to run
+              as a layer inside the AI tools PMs already use, not just as one more app to open.
+            </P>
           </div>
-        </aside>
+          <aside className="cs-glance">
+            <Kicker>At a glance</Kicker>
+            <div className="cs-glance-grid">
+              <div className="cs-glance-item">
+                <div className="cs-glance-value">~15</div>
+                <div className="cs-glance-label">product managers in a closed beta</div>
+              </div>
+              <div className="cs-glance-item">
+                <div className="cs-glance-value">3</div>
+                <div className="cs-glance-label">industries: health, sports, edtech</div>
+              </div>
+              <div className="cs-glance-item">
+                <div className="cs-glance-value">6</div>
+                <div className="cs-glance-label">steps, and the instinct and the choice stay yours</div>
+              </div>
+              <div className="cs-glance-item">
+                <div className="cs-glance-value">0</div>
+                <div className="cs-glance-label">sign-ups needed to try it</div>
+              </div>
+            </div>
+          </aside>
+        </div>
       </div>
 
       <div className="lm-wrap cs-body">
@@ -233,9 +348,10 @@ export default function CaseStudy() {
             <div className="cs-two-item">
               <div className="cs-two-title">It makes every rationale look good.</div>
               <P>
-                Kahneman traces overconfidence to a model that can write a convincing case for
-                whichever option you already lean toward, in seconds. Once that&apos;s possible, a
-                written rationale stops being evidence of what anyone actually thought.
+                Kahneman traces overconfidence to how coherent a story feels, not whether it&apos;s
+                true. A model will write a persuasive case for whichever option you already lean
+                toward, in seconds. Once that&apos;s possible, a written rationale stops being
+                evidence of what anyone actually thought.
               </P>
             </div>
           </div>
@@ -247,6 +363,14 @@ export default function CaseStudy() {
             that&apos;s unmistakably yours. That makes judgment easier to show and harder to fake.
             Meanwhile, models are now reliable enough at structured output that one person could
             build a tool like this end to end. I know, because I did.
+          </P>
+          <Kicker>The point of Lumo</Kicker>
+          <P>
+            Lumo is a feedback loop for product judgment. It isn&apos;t about writing faster, and
+            it isn&apos;t another tool that hands you an answer. It records what you believed
+            before the model said anything, keeps the decision in your hands, and holds onto the
+            record so it can be checked against what happened. The goal is for experience to turn
+            into better judgment instead of just more confidence.
           </P>
           <P className="cs-sources">
             Sources: Daniel Kahneman and Gary Klein, &ldquo;Strategic decisions: When can you
@@ -336,7 +460,12 @@ export default function CaseStudy() {
           <P>
             This week, the update is what gets a PM to open Lumo. In the weeks after, the record
             is a memory of what happened and why, which is what the beta valued. Over months, the
-            same record is what makes calibration possible.
+            same record is what makes calibration possible. The first two are working today. The
+            third is the bet.
+          </P>
+          <P className="cs-note">
+            This was a small, informal beta, not a controlled study. I read it as direction, not
+            proof.
           </P>
         </Section>
 
@@ -433,7 +562,7 @@ export default function CaseStudy() {
               ["5", "Your choice", "commit, with the trade-off and your confidence", "HUMAN"],
               ["6", "Tell people", "a draft for each audience", "MODEL"],
             ].map(([n, title, sub, who]) => (
-              <div key={n} className="cs-step">
+              <div key={n} className={`cs-step ${who === "HUMAN" ? "is-human" : "is-model"}`}>
                 <div className="cs-step-num">{n}</div>
                 <div className="cs-step-body">
                   <div className="cs-step-title">{title}</div>
@@ -451,13 +580,13 @@ export default function CaseStudy() {
             rows={[
               [
                 "1 · What's happening",
-                "Types out the situation and a gut call: \"Promise Q3, we can make it work.\" Can also note what's making it hard.",
+                "Types out the situation and a gut call: \"Promise Q3, we can make it work.\" Can also note what's making it hard, like a stakeholder who pushed back last time.",
                 "Nothing yet. Lumo saves the instinct and the confidence level before it analyzes anything.",
               ],
               [
                 "2 · What I'm reading",
                 "Reads Lumo's framing, corrects it, and clicks \"Show source\" to see where each point came from.",
-                "The real question, what matters, who's affected, and how urgent it is, each tied to a direct quote. Plus one \"I noticed\" line.",
+                "The real question, what matters, who's affected, and how urgent it is, each tied to a direct quote from what the PM wrote. Plus one \"I noticed\" line about something the PM may have missed.",
               ],
               [
                 "3 · Your options",
@@ -556,12 +685,12 @@ export default function CaseStudy() {
               [
                 "Good options from the model would be enough.",
                 "In testing, the model was good at widening the options. It was weak at naming the political constraint a person already feels but hasn't said out loud.",
-                "I added an optional \"What's making this hard\" field and an \"I noticed\" line in step 2.",
+                "I added an optional \"What's making this hard\" field and an \"I noticed\" line in step 2. The field shapes that line and the tone of the drafts, but Lumo never quotes it back.",
               ],
               [
                 "A schema would keep the model true to what people wrote.",
                 "When the model played the situation back, it invented or paraphrased the user's words.",
-                "Now every part of the framing points to a direct quote from the user's own text, behind \"Show source.\"",
+                "Now every part of the framing points to a direct quote from the user's own text, behind \"Show source.\" The prompt forbids made-up or paraphrased quotes.",
               ],
               [
                 "A schema would guarantee usable output.",
@@ -571,7 +700,7 @@ export default function CaseStudy() {
               [
                 "Saving decisions would be enough to learn from them.",
                 "You can't find patterns in decisions you can't compare.",
-                "Every decision now gets a type: timing, scope, hiring, people, vendor, or strategy.",
+                "Every decision now gets a type: timing, scope, hiring, people, vendor, or strategy. That gives pattern detection something to group by.",
               ],
               [
                 "If it worked in preview, it would work live.",
@@ -664,9 +793,12 @@ export default function CaseStudy() {
             you look closer. It can miss how organizations really work: the stakeholder who&apos;ll
             block the decision, the promise someone made quietly, the constraint that only lives in
             people&apos;s heads. The &ldquo;I noticed&rdquo; line helps, but it doesn&apos;t fix
-            this. And confidence ratings are easy to rush. Because everything is stored in the
-            browser, your record lives on one device. Pattern detection over the long run is still
-            a demonstration, not something proven on months of real decisions.
+            this. And confidence ratings are easy to rush.
+          </P>
+          <P>
+            Because everything is stored in the browser, your record lives on one device. Pattern
+            detection over the long run is still a demonstration, not something proven on months of
+            real decisions.
           </P>
         </Section>
 
@@ -725,13 +857,20 @@ export default function CaseStudy() {
           <div className="cs-path">
             {["Browser", "Rate limit", "Validate input", "Forced tool call", "Check shape", "Retry once", "Clean output"].map(
               (step, i, arr) => (
-                <span key={step} className="cs-path-step">
+                <span
+                  key={step}
+                  className={`cs-path-step ${step === "Forced tool call" || step === "Check shape" ? "is-key" : ""}`}
+                >
                   {step}
                   {i < arr.length - 1 && <span className="cs-path-arrow">›</span>}
                 </span>
               )
             )}
           </div>
+          <P>
+            Most of the reliability comes from the two highlighted steps. If both attempts fail,
+            the user sees a plain error and can try again.
+          </P>
           <Kicker>Stack</Kicker>
           <Table
             head={["Layer", "Choice", "Why"]}
@@ -775,7 +914,29 @@ export default function CaseStudy() {
             Here are three excerpts: two from the route that drafts audience messages, and one
             from the rate limiter. I trimmed them for length but didn&apos;t change the logic.
           </P>
-          <Code label="app/api/decide/route.ts (schema, abridged)">{`const decideTool: Anthropic.Tool = {
+          <Code
+            label="app/api/decide/route.ts (schema, abridged)"
+            notes={[
+              {
+                line: 1,
+                title: "Set the rules first",
+                body: "This is a form the AI has to fill in. Instead of letting it answer however it likes, we tell it exactly what a useful answer looks like.",
+                footer: "The screen knows what to expect.",
+              },
+              {
+                line: 8,
+                title: "Every message has a destination",
+                body: "Each draft needs a person and a channel. The AI can choose the words, but it cannot forget who the message is for or where it should go.",
+                footer: "A useful draft is addressed to someone.",
+              },
+              {
+                line: 13,
+                title: "Reject surprises",
+                body: "Unexpected fields are not allowed. If the response does not match the agreement, the server can catch it before it becomes a confusing screen.",
+                footer: "The guardrails are part of the design.",
+              },
+            ]}
+          >{`const decideTool: Anthropic.Tool = {
   name: "provide_audience_drafts",
   input_schema: { type: "object", properties: {
     claritySummary: { type: "string" },
@@ -791,12 +952,34 @@ export default function CaseStudy() {
     } },
   } },
 }`}</Code>
-          <P>
-            <strong>Why it matters.</strong> The model can&apos;t answer in free text. Every field
-            the screen shows is declared ahead of time, so an empty or broken draft is an error the
-            server can catch, not a confusing screen for the user.
-          </P>
-          <Code label="app/api/decide/route.ts (retry loop, abridged)">{`for (let attempt = 1; attempt <= 2 && !result; attempt++) {
+          <Why>
+            The model can&apos;t answer in free text. Every field the screen shows is declared
+            ahead of time, so an empty or broken draft is an error the server can catch, not a
+            confusing screen for the user.
+          </Why>
+          <Code
+            label="app/api/decide/route.ts (retry loop, abridged)"
+            notes={[
+              {
+                line: 1,
+                title: "Try once, then try again",
+                body: "The route gives the model two chances to return a usable answer. It stops as soon as one passes the checks.",
+                footer: "A temporary AI hiccup does not have to become a broken screen.",
+              },
+              {
+                line: 6,
+                title: "Plain text is not enough",
+                body: "This tells the model to use the structured form from the previous excerpt. The screen receives fields it can read, not a paragraph it has to interpret.",
+                footer: "The answer arrives in a shape the product can use.",
+              },
+              {
+                line: 12,
+                title: "Check the answer on the server",
+                body: "Even after the model fills in the form, the server checks it again. If the answer is incomplete, Lumo records the problem and retries instead of showing a broken draft.",
+                footer: "Trust, but verify, before anything reaches the screen.",
+              },
+            ]}
+          >{`for (let attempt = 1; attempt <= 2 && !result; attempt++) {
   const response = await anthropic.messages.create({
     model: ANTHROPIC_MODEL,
     tools: [decideTool],
@@ -812,12 +995,34 @@ export default function CaseStudy() {
 }
 if (!result && lastFailure)
   return getDiagnosticsResponse(requestStartedAt, attempts, lastFailure)`}</Code>
-          <P>
-            <strong>Why it matters.</strong> Schemas cut down on bad output but don&apos;t
-            eliminate it. A second, independent check on the server and one retry turned occasional
-            broken screens into rare errors that say clearly what went wrong.
-          </P>
-          <Code label="lib/rate-limit.ts (abridged)">{`decide: new Ratelimit({
+          <Why>
+            Schemas cut down on bad output but don&apos;t eliminate it. A second, independent check
+            on the server and one retry turned occasional broken screens into rare errors that say
+            clearly what went wrong.
+          </Why>
+          <Code
+            label="lib/rate-limit.ts (abridged)"
+            notes={[
+              {
+                line: 3,
+                title: "Set a sensible ceiling",
+                body: "Each visitor can make up to 20 decide requests in an hour. This keeps a free public tool from becoming an unexpected AI bill.",
+                footer: "A cost limit protects the experiment.",
+              },
+              {
+                line: 7,
+                title: "Ask whether this request can continue",
+                body: "The limiter returns a yes or no answer and, when needed, a time to try again. The route can explain the pause instead of failing mysteriously.",
+                footer: "A pause is clearer than a mysterious error.",
+              },
+              {
+                line: 13,
+                title: "Keep the product available",
+                body: "If the rate-limit service itself is unavailable, Lumo logs the problem and lets the request through. A safety feature should not take the whole product down.",
+                footer: "The limiter protects the product; it is not the product.",
+              },
+            ]}
+          >{`decide: new Ratelimit({
   redis,
   limiter: Ratelimit.slidingWindow(20, "1 h"),
   prefix: "lumo:ratelimit:decide",
@@ -831,10 +1036,11 @@ try {
   console.error(\`[rate-limit] Redis check failed for "\${route}"\`, error)
   return { allowed: true }
 }`}</Code>
-          <P>
-            <strong>Why it matters.</strong> A free public AI tool needs a cost ceiling, but the
-            limiter protects the product. It isn&apos;t the product. So I made it fail open.
-          </P>
+          <Why>
+            A free public AI tool needs a cost ceiling, but the limiter protects the product. It
+            isn&apos;t the product. So I made it fail open. If Redis is down or not set up, the
+            request goes through and the failure gets logged.
+          </Why>
         </Section>
 
         {/* Appendix C */}
