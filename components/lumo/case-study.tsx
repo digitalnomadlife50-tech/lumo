@@ -1,5 +1,6 @@
 "use client";
 
+import { useId, useState } from "react";
 import { Wordmark, LanguageSwitcher } from "./ui";
 import { useDict, useLocaleHref } from "@/lib/i18n";
 
@@ -66,14 +67,114 @@ function Table({
   );
 }
 
-function Code({ label, children }: { label: string; children: string }) {
+type CodeNote = {
+  line: number;
+  title: string;
+  body: string;
+  footer: string;
+};
+
+function Code({
+  label,
+  children,
+  notes = [],
+}: {
+  label: string;
+  children: string;
+  notes?: CodeNote[];
+}) {
+  const codeId = useId();
+  const noteId = `cs-code-note-${codeId}`;
+  const [activeLine, setActiveLine] = useState<number | null>(notes[0]?.line ?? null);
+  const [isNoteOpen, setIsNoteOpen] = useState(notes.length > 0);
+  const activeNote = notes.find((note) => note.line === activeLine);
+  const showNote = Boolean(isNoteOpen && activeNote);
+  const lines = children.split("\n");
+
   return (
-    <figure className="cs-code">
+    <figure className={`cs-code${notes.length > 0 ? " cs-code-annotated" : ""}`}>
       <figcaption className="cs-code-label">
-        <span className="cs-code-badge">Code</span>
-        {label}
+        <span className="cs-code-file">
+          <span className="cs-code-badge">Code</span>
+          {label}
+        </span>
+        {notes.length > 0 && (
+          <span className="cs-code-hint">
+            Select <span className="cs-code-info-icon" aria-hidden="true">i</span> for plain English
+          </span>
+        )}
       </figcaption>
-      <pre className="cs-code-pre">{children}</pre>
+      {notes.length === 0 ? (
+        <pre className="cs-code-pre">{children}</pre>
+      ) : (
+        <div className={`cs-code-stage${showNote ? " has-note" : ""}`}>
+          <div className="cs-code-main">
+            <div className="cs-code-pre">
+              {lines.map((line, index) => {
+                const lineNumber = index + 1;
+                const note = notes.find((item) => item.line === lineNumber);
+                const isActive = showNote && activeLine === lineNumber;
+
+                return (
+                  <div
+                    className={`cs-code-line-row${isActive ? " is-highlighted" : ""}`}
+                    key={lineNumber}
+                  >
+                    <span className="cs-code-line-number" aria-hidden="true">
+                      {String(lineNumber).padStart(2, "0")}
+                    </span>
+                    <code className="cs-code-line">{line || " "}</code>
+                    {note ? (
+                      <button
+                        type="button"
+                        className={`cs-code-marker${isActive ? " is-active" : ""}`}
+                        aria-label={`Explain line ${lineNumber}: ${note.title}`}
+                        aria-expanded={isActive}
+                        aria-controls={noteId}
+                        onClick={() => {
+                          if (isActive) {
+                            setIsNoteOpen(false);
+                          } else {
+                            setActiveLine(lineNumber);
+                            setIsNoteOpen(true);
+                          }
+                        }}
+                      >
+                        i
+                      </button>
+                    ) : (
+                      <span className="cs-code-marker-spacer" aria-hidden="true" />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          {showNote && activeNote && (
+            <aside className="cs-code-popover" id={noteId} aria-live="polite">
+              <div className="cs-code-popover-top">
+                <span className="cs-code-popover-kicker">
+                  Plain English · {notes.findIndex((note) => note.line === activeNote.line) + 1} of {notes.length}
+                </span>
+                <button
+                  type="button"
+                  className="cs-code-popover-close"
+                  aria-label="Close plain-English explanation"
+                  onClick={() => setIsNoteOpen(false)}
+                >
+                  ×
+                </button>
+              </div>
+              <h3 className="cs-code-popover-title">{activeNote.title}</h3>
+              <p className="cs-code-popover-copy">{activeNote.body}</p>
+              <div className="cs-code-popover-footer">
+                <span className="cs-code-popover-dot" aria-hidden="true" />
+                <span>{activeNote.footer}</span>
+              </div>
+            </aside>
+          )}
+        </div>
+      )}
     </figure>
   );
 }
@@ -813,7 +914,29 @@ export default function CaseStudy() {
             Here are three excerpts: two from the route that drafts audience messages, and one
             from the rate limiter. I trimmed them for length but didn&apos;t change the logic.
           </P>
-          <Code label="app/api/decide/route.ts (schema, abridged)">{`const decideTool: Anthropic.Tool = {
+          <Code
+            label="app/api/decide/route.ts (schema, abridged)"
+            notes={[
+              {
+                line: 1,
+                title: "Set the rules first",
+                body: "This is a form the AI has to fill in. Instead of letting it answer however it likes, we tell it exactly what a useful answer looks like.",
+                footer: "The screen knows what to expect.",
+              },
+              {
+                line: 8,
+                title: "Every message has a destination",
+                body: "Each draft needs a person and a channel. The AI can choose the words, but it cannot forget who the message is for or where it should go.",
+                footer: "A useful draft is addressed to someone.",
+              },
+              {
+                line: 13,
+                title: "Reject surprises",
+                body: "Unexpected fields are not allowed. If the response does not match the agreement, the server can catch it before it becomes a confusing screen.",
+                footer: "The guardrails are part of the design.",
+              },
+            ]}
+          >{`const decideTool: Anthropic.Tool = {
   name: "provide_audience_drafts",
   input_schema: { type: "object", properties: {
     claritySummary: { type: "string" },
@@ -834,7 +957,29 @@ export default function CaseStudy() {
             ahead of time, so an empty or broken draft is an error the server can catch, not a
             confusing screen for the user.
           </Why>
-          <Code label="app/api/decide/route.ts (retry loop, abridged)">{`for (let attempt = 1; attempt <= 2 && !result; attempt++) {
+          <Code
+            label="app/api/decide/route.ts (retry loop, abridged)"
+            notes={[
+              {
+                line: 1,
+                title: "Try once, then try again",
+                body: "The route gives the model two chances to return a usable answer. It stops as soon as one passes the checks.",
+                footer: "A temporary AI hiccup does not have to become a broken screen.",
+              },
+              {
+                line: 6,
+                title: "Plain text is not enough",
+                body: "This tells the model to use the structured form from the previous excerpt. The screen receives fields it can read, not a paragraph it has to interpret.",
+                footer: "The answer arrives in a shape the product can use.",
+              },
+              {
+                line: 12,
+                title: "Check the answer on the server",
+                body: "Even after the model fills in the form, the server checks it again. If the answer is incomplete, Lumo records the problem and retries instead of showing a broken draft.",
+                footer: "Trust, but verify, before anything reaches the screen.",
+              },
+            ]}
+          >{`for (let attempt = 1; attempt <= 2 && !result; attempt++) {
   const response = await anthropic.messages.create({
     model: ANTHROPIC_MODEL,
     tools: [decideTool],
@@ -855,7 +1000,29 @@ if (!result && lastFailure)
             on the server and one retry turned occasional broken screens into rare errors that say
             clearly what went wrong.
           </Why>
-          <Code label="lib/rate-limit.ts (abridged)">{`decide: new Ratelimit({
+          <Code
+            label="lib/rate-limit.ts (abridged)"
+            notes={[
+              {
+                line: 3,
+                title: "Set a sensible ceiling",
+                body: "Each visitor can make up to 20 decide requests in an hour. This keeps a free public tool from becoming an unexpected AI bill.",
+                footer: "A cost limit protects the experiment.",
+              },
+              {
+                line: 7,
+                title: "Ask whether this request can continue",
+                body: "The limiter returns a yes or no answer and, when needed, a time to try again. The route can explain the pause instead of failing mysteriously.",
+                footer: "A pause is clearer than a mysterious error.",
+              },
+              {
+                line: 13,
+                title: "Keep the product available",
+                body: "If the rate-limit service itself is unavailable, Lumo logs the problem and lets the request through. A safety feature should not take the whole product down.",
+                footer: "The limiter protects the product; it is not the product.",
+              },
+            ]}
+          >{`decide: new Ratelimit({
   redis,
   limiter: Ratelimit.slidingWindow(20, "1 h"),
   prefix: "lumo:ratelimit:decide",
