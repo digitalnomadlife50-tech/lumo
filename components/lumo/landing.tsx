@@ -133,6 +133,7 @@ export default function Landing() {
             <div style={{ display: "flex", flexWrap: "wrap", gap: 20 }}>
               <a className="lm-link" href="https://terrance.company" style={{ fontWeight: 500 }}>{t.aboutName}</a>
               <a className="lm-link" href="https://linkedin.com/in/terrancerange" style={{ fontWeight: 500 }}>LinkedIn</a>
+              <a className="lm-link" href={lh("/case-study")} style={{ fontWeight: 500 }}>Case study</a>
             </div>
           </div>
         </div>
