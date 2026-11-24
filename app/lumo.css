@@ -540,6 +540,7 @@
   .lm-nav-links { gap: 12px; }
   .lm-nav-links a.lm-navlink { display: none; }
   .lm-nav-links .lm-btn { padding: 10px !important; font-size: 12px; white-space: nowrap; }
+  .lm-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 20px; }
   .lm-h1 { font-size: 40px; }
   .lm-h2 { font-size: 32px; }
   .lm-lede { font-size: 17px; }
