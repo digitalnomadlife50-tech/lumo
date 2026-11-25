@@ -1,4 +1,4 @@
-export const SHOW_DEBUG_PANEL = true
+export const SHOW_DEBUG_PANEL = process.env.NODE_ENV !== "production"
 
 export type AIFailureStage =
   | "request to Anthropic"
@@ -29,6 +29,10 @@ export interface AIDiagnostics {
   timeTakenMs: number
   rawModelOutput: string | null
   attempts: AIAttemptDiagnostic[]
+}
+
+export function diagnosticsForResponse(diagnostics: AIDiagnostics): AIDiagnostics | undefined {
+  return SHOW_DEBUG_PANEL ? diagnostics : undefined
 }
 
 export function isAIDiagnostics(value: unknown): value is AIDiagnostics {

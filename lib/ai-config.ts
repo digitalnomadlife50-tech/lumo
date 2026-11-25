@@ -1,4 +1,4 @@
-export const SHOW_DEBUG_PANEL = true
+export const SHOW_DEBUG_PANEL = process.env.NODE_ENV !== "production"
 
 export type AIFailureStage =
   | "request_to_anthropic"

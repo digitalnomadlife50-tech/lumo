@@ -17,6 +17,8 @@ const copy = {
     next: "A decision is easier to explain when you can see how you reached it.",
     cta: "Try the product decision demo",
     back: "All product decision guides",
+    privacy: "Privacy",
+    terms: "Terms",
     updated: "Published September 28, 2026",
   },
   es: {
@@ -31,6 +33,8 @@ const copy = {
     next: "Es más fácil explicar una decisión cuando puedes ver cómo llegaste a ella.",
     cta: "Probar la demo de decisiones de producto",
     back: "Todas las guías de decisiones de producto",
+    privacy: "Privacidad",
+    terms: "Términos",
     updated: "Publicado el 28 de septiembre de 2026",
   },
 } as const;
@@ -70,6 +74,8 @@ export function GuideShell({
           <nav aria-label={locale === "en" ? "Footer navigation" : "Navegación del pie de página"}>
             <Link href={guideIndex}>{labels.back}</Link>
             <Link href={liveDemoPath(locale)}>{labels.cta}</Link>
+            <Link href={`/${locale}/privacy`}>{labels.privacy}</Link>
+            <Link href={`/${locale}/terms`}>{labels.terms}</Link>
           </nav>
           <span>© 2026 Lumo</span>
         </div>

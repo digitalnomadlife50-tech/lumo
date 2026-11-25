@@ -7,12 +7,15 @@ import {
   localizedUrl,
 } from "@/lib/seo";
 
-const lastModified = new Date("2026-09-28");
+const lastModified = new Date("2026-11-24");
 const pagePairs = [
   { en: "", es: "" },
   { en: "/app", es: "/app" },
   { en: "/app/demo", es: "/app/demo" },
   { en: GUIDE_PATHS.en, es: GUIDE_PATHS.es },
+  { en: "/case-study", es: "/case-study" },
+  { en: "/privacy", es: "/privacy" },
+  { en: "/terms", es: "/terms" },
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {

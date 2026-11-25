@@ -1,7 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk"
 import { ANTHROPIC_MODEL } from "@/lib/anthropic-model"
 import { cleanAIValue, getAnthropicErrorMetadata, HUMAN_WRITING_RULES, safeAIErrorMessage, safeRawModelOutput } from "@/lib/ai-output-utils"
-import type { AIAttemptDiagnostic, AIDiagnostics } from "@/lib/ai-debug-config"
+import { diagnosticsForResponse, type AIAttemptDiagnostic, type AIDiagnostics } from "@/lib/ai-debug-config"
 import { checkRateLimit, getClientIp, RATE_LIMIT_MESSAGE } from "@/lib/rate-limit"
 import { aiLanguageInstruction, resolveAiLocale } from "@/lib/ai-locale"
 
@@ -153,7 +153,7 @@ function getDiagnosticsResponse(
       : errorCode === "INVALID_RESPONSE"
         ? "We couldn't generate complete audience drafts after two attempts. Please try again."
         : "Something went wrong on our end. Try again, or see an example of Lumo's output instead."
-  return Response.json({ success: false, error, errorCode, diagnostics }, { status: routeStatus })
+  return Response.json({ success: false, error, errorCode, diagnostics: diagnosticsForResponse(diagnostics) }, { status: routeStatus })
 }
 
 export async function POST(req: Request) {
@@ -167,7 +167,7 @@ export async function POST(req: Request) {
       retryResult: "Retry not run because the API key is not configured",
       timeTakenMs: Date.now() - requestStartedAt, rawModelOutput: null, attempts: [],
     }
-    return Response.json({ success: false, error: "API not configured. Please set ANTHROPIC_API_KEY.", errorCode: "SERVER_ERROR", diagnostics }, { status: 500 })
+    return Response.json({ success: false, error: "API not configured. Please set ANTHROPIC_API_KEY.", errorCode: "SERVER_ERROR", diagnostics: diagnosticsForResponse(diagnostics) }, { status: 500 })
   }
 
   const ip = getClientIp(req)
@@ -177,7 +177,10 @@ export async function POST(req: Request) {
   }
 
   try {
-    const body = await req.json() as Partial<DecisionContext>
+    const body = (await req.json().catch(() => null)) as Partial<DecisionContext> | null
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      return Response.json({ success: false, errorCode: "INVALID_INPUT", error: "Please send a valid decision request." }, { status: 400 })
+    }
     const situation = typeof body.situation === "string" ? body.situation.trim() : ""
     const urgency = typeof body.urgency === "string" ? body.urgency.trim() : ""
     const chosenDirection = typeof body.chosenDirection === "string" ? body.chosenDirection.trim() : ""

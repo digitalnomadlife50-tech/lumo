@@ -1089,6 +1089,14 @@ try {
               {d.nav.howItWorks}
             </a>
             <br />
+            <a href={lh("/privacy")} style={{ color: "var(--lm-text-3)" }}>
+              {d.common.privacy}
+            </a>
+            <br />
+            <a href={lh("/terms")} style={{ color: "var(--lm-text-3)" }}>
+              {d.common.terms}
+            </a>
+            <br />
             <a href="https://terrance.company" style={{ color: "var(--lm-text-3)" }}>
               Built by Terrance Range
             </a>
