@@ -1,7 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk"
 import { ANTHROPIC_MODEL } from "@/lib/anthropic-model"
 import { cleanAIValue, getAnthropicErrorMetadata, HUMAN_WRITING_RULES, safeAIErrorMessage, safeRawModelOutput } from "@/lib/ai-output-utils"
-import type { AIAttemptDiagnostic, AIDiagnostics } from "@/lib/ai-debug-config"
+import { diagnosticsForResponse, type AIAttemptDiagnostic, type AIDiagnostics } from "@/lib/ai-debug-config"
 import { checkRateLimit, getClientIp, RATE_LIMIT_MESSAGE } from "@/lib/rate-limit"
 import { aiLanguageInstruction, resolveAiLocale } from "@/lib/ai-locale"
 
@@ -147,7 +147,7 @@ export async function POST(req: Request) {
       attempts: [],
     }
     return Response.json(
-      { success: false, error: "API not configured. Please set ANTHROPIC_API_KEY.", errorCode: "SERVER_ERROR", diagnostics },
+      { success: false, error: "API not configured. Please set ANTHROPIC_API_KEY.", errorCode: "SERVER_ERROR", diagnostics: diagnosticsForResponse(diagnostics) },
       { status: 500 }
     )
   }
@@ -164,14 +164,29 @@ export async function POST(req: Request) {
   }
 
   try {
-    const body: AnalyzeRequest = await req.json()
-    const { situation, urgency } = body
-    const hardship = typeof body.hardship === "string" ? body.hardship.trim().slice(0, 500) : ""
+    const body = (await req.json().catch(() => null)) as Partial<AnalyzeRequest> | null
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      return Response.json(
+        { success: false, error: "Please send a valid decision request.", errorCode: "INVALID_INPUT" },
+        { status: 400 }
+      )
+    }
+
+    const situation = typeof body.situation === "string" ? body.situation.trim() : ""
+    const urgency = typeof body.urgency === "string" ? body.urgency.trim() : ""
+    const hardship = typeof body.hardship === "string" ? body.hardship.trim() : ""
     const locale = resolveAiLocale(body.locale)
 
-    if (!situation || situation.trim().length < 10) {
+    if (situation.length < 10) {
       return Response.json(
         { success: false, error: "Please describe your situation in more detail.", errorCode: "INVALID_INPUT" },
+        { status: 400 }
+      )
+    }
+
+    if (situation.length > 6000 || urgency.length > 500 || hardship.length > 500) {
+      return Response.json(
+        { success: false, error: "Please keep your situation under 6,000 characters and your notes under 500 characters.", errorCode: "INVALID_INPUT" },
         { status: 400 }
       )
     }
@@ -283,7 +298,7 @@ Analyze this situation specifically.`
           : errorCode === "INVALID_RESPONSE"
             ? "We couldn't generate a complete analysis after two attempts. Please try again."
             : diagnostics.exactErrorMessage
-      return Response.json({ success: false, error, errorCode, diagnostics }, { status: routeStatus })
+      return Response.json({ success: false, error, errorCode, diagnostics: diagnosticsForResponse(diagnostics) }, { status: routeStatus })
     }
 
     return Response.json({
@@ -311,7 +326,7 @@ Analyze this situation specifically.`
     }
     
     return Response.json(
-      { success: false, error: message, errorCode: "SERVER_ERROR" },
+      { success: false, error: "Something went wrong on our end. Try again.", errorCode: "SERVER_ERROR" },
       { status: 500 }
     )
   }

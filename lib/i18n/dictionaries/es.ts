@@ -26,6 +26,8 @@ export const es: Dictionary = {
     progressAria: "Progreso",
     stepLabel: "Paso {number}. {name}",
     enter: "Intro",
+    privacy: "Privacidad",
+    terms: "Términos",
   },
 
   status: {

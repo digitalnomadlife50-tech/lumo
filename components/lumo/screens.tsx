@@ -417,6 +417,7 @@ export function Step1Screen({
         <div ref={layerRef} className="lm-paste-layer" aria-hidden="true">{pieces}</div>
         <textarea
           aria-label={t.textareaLabel}
+          maxLength={6000}
           value={text}
           onChange={(e) => onChange(e.target.value)}
           onScroll={(e) => {
@@ -443,6 +444,7 @@ export function Step1Screen({
             id="lm-hardship"
             className="lm-input"
             placeholder={t.hardshipPlaceholder}
+            maxLength={500}
             value={hardship}
             onChange={(e) => onHardshipChange(e.target.value)}
           />

@@ -178,6 +178,10 @@ export default function Landing() {
           <div style={{ fontSize: 14, color: "var(--lm-text-3)", lineHeight: 1.8 }}>
             <a href={lh(d.nav.guides === "Guías" ? "/guias" : "/guides")} style={{ color: "var(--lm-text-3)" }}>{t.footerGuides}</a>
             <br />
+            <a href={lh("/privacy")} style={{ color: "var(--lm-text-3)" }}>{d.common.privacy}</a>
+            <br />
+            <a href={lh("/terms")} style={{ color: "var(--lm-text-3)" }}>{d.common.terms}</a>
+            <br />
             <a href="https://terrance.company" style={{ color: "var(--lm-text-3)" }}>{t.footerBuiltBy}</a>
             <br />
             <a href="https://linkedin.com/in/terrancerange" style={{ color: "var(--lm-text-3)" }}>LinkedIn</a>

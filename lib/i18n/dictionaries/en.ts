@@ -24,6 +24,8 @@ export const en = {
     progressAria: "Progress",
     stepLabel: "Step {number}. {name}",
     enter: "Enter",
+    privacy: "Privacy",
+    terms: "Terms",
   },
 
   status: {

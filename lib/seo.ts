@@ -101,5 +101,5 @@ export function retiredStoreResponse() {
 export function robotsMetadata() {
   return { rules: [{ userAgent: "*", allow: "/", disallow: "/api/" }], sitemap: robotsSitemapUrl() };
 }
-export const staticPagePaths = (locale: Locale) => ["", "/app", "/app/demo", GUIDE_PATHS[locale]];
+export const staticPagePaths = (locale: Locale) => ["", "/app", "/app/demo", GUIDE_PATHS[locale], "/case-study", "/privacy", "/terms"];
 
