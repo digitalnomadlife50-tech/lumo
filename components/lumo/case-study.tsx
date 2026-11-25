@@ -248,27 +248,29 @@ export default function CaseStudy() {
           <div className="cs-short">
             <Kicker>The short version</Kicker>
             <P>
-              AI made the work of product management cheap: the options, the analysis, the docs,
-              the updates. What&apos;s left is the call itself, and the call is the one part of the
-              job that gets almost no feedback. Outcomes show up months later, mixed in with
-              everything else, and nobody connects them back to what was believed at the time. AI
-              makes this worse in a way that&apos;s easy to miss. It can write a convincing case for
-              any choice in seconds, so the written reasoning no longer shows what anyone actually
-              thought.
+              AI has made a lot of product management work faster: options, analysis, specs,
+              stakeholder updates. But you still have to make the decision, and that&apos;s the part
+              of the job you rarely get useful feedback on. Results arrive months later, tangled up
+              with everything else that happened. By then, it&apos;s hard to remember what you
+              believed at the start, let alone whether your reasoning was sound. AI can muddy the
+              record further. A model can make almost any choice sound convincing, so a well-written
+              rationale doesn&apos;t necessarily tell you what anyone actually thought.
             </P>
             <P>
-              Lumo is a feedback loop for product judgment. You write down your instinct and how
-              sure you are before the model says anything. Lumo reads the situation back in your
-              own words, names one thing you may have missed, and lays out options without making
-              the call for you. Then it drafts the update every audience needs. Because the record
-              comes out of work you already have to do, keeping it takes no extra effort, and over
-              time it shows you where your instincts hold up and where they don&apos;t.
+              Lumo starts before the model does. You write down your instinct and how confident you
+              are. It reads the situation back in your own words, points out one thing you might
+              have missed, and lays out the options without making the decision for you. Once
+              you&apos;ve decided, it drafts the updates each audience needs. There&apos;s no
+              separate decision log to maintain; the record comes out of work you were already
+              doing. Later, you can look back and see which instincts held up and which ones
+              didn&apos;t.
             </P>
             <P>
-              I built it end to end and ran a small closed beta with about 15 product managers at
-              early-stage startups. What they valued first was memory: in chaotic weeks, the record
-              gave them back the context that even AI search tools missed. Next, I want Lumo to run
-              as a layer inside the AI tools PMs already use, not just as one more app to open.
+              I built Lumo end to end and ran a small closed beta with about 15 product managers at
+              early-stage startups. Memory was the first thing people found useful: during chaotic
+              weeks, Lumo gave them back context that even their AI search tools missed. Next, I
+              want Lumo to run inside the AI tools PMs already use, rather than ask people to open
+              another app.
             </P>
           </div>
           <aside className="cs-glance">
