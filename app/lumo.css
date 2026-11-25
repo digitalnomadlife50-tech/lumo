@@ -787,8 +787,8 @@
 .cs-p { margin: 0 0 18px; font-size: 16px; line-height: 1.75; color: var(--lm-text); }
 .cs-p strong { font-weight: 600; }
 .cs-pull { margin: 28px 0; padding: 2px 0 2px 20px; border-left: 3px solid var(--lm-accent); font-family: var(--lm-serif); font-style: italic; font-size: 24px; line-height: 1.45; color: var(--lm-text); }
-.cs-sources { font-size: 12px; line-height: 1.6; color: var(--lm-text-3); margin-top: 28px; }
-.cs-note { font-size: 14px; color: var(--lm-text-2); background: var(--lm-muted); border-left: 2px solid var(--lm-accent); padding: 12px 16px; }
+.cs-p.cs-sources { font-size: 12px; line-height: 1.6; color: var(--lm-text-3); margin-top: 28px; }
+.cs-p.cs-note { font-size: 14px; color: var(--lm-text-2); background: var(--lm-muted); border-left: 2px solid var(--lm-accent); padding: 12px 16px; }
 .cs-signoff { margin-top: 28px; font-size: 15px; color: var(--lm-text-2); }
 .cs-signoff a { color: var(--lm-accent); text-decoration: none; }
 
@@ -896,7 +896,7 @@
   .cs-cover-sub { font-size: 16px; }
   .cs-meta { margin-top: 32px; padding-top: 20px; }
   .cs-intro { padding-top: 28px; padding-bottom: 40px; }
-  .cs-short .cs-p { font-size: 15px; }
+  .cs-short .cs-p { font-size: 16px; }
   .cs-glance-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
   .cs-glance-item { padding: 16px; min-height: 120px; }
   .cs-glance-value { font-size: 28px; }
