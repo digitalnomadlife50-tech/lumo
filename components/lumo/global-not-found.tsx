@@ -31,7 +31,7 @@ export default function GlobalNotFoundView() {
   const alternateHref = `/${otherLocale}${pathWithoutLocale === "/" ? "" : pathWithoutLocale}`;
 
   return (
-    <div className="lm-page lm-not-found">
+    <div className="lm-page lm-not-found" style={{ fontFamily: "Arial, Helvetica, sans-serif" }}>
       <div className="lm-wrap">
         <header className="lm-nav">
           <a className="lm-wordmark" href={home} aria-label={t.wordmark}>lumo<i aria-hidden="true" /></a>
